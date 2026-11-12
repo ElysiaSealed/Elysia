@@ -3,27 +3,46 @@ import { useEffect, useRef, useState } from 'react'
 
 /**
  * Animated ELYSIA mascot stage.
- * - Powered by Sovra's 60FPS High-Performance Canvas Persona Engine:
- *   1. 1280x720 HD Continuous Video Frames (frame_0054 to frame_0124) -> 71 dense frames across head turn.
- *   2. Velocity Clamping (MAX_VELOCITY = 0.018) -> Smooth natural head-turn speed limit; prevents skipping poses on fast cursor flicks.
- *   3. Soft Natural Inertia (DAMPING_FACTOR = 0.045) -> Physical mass with liquid ease-in & ease-out.
- *   4. SmoothStep Input Easing -> Eliminates edge border snapping & stabilizes the center gaze.
- *   5. High-DPR Canvas Buffer & Aspect Cover Math -> 1:1 razor-sharp rendering on all displays.
- *   6. Sub-frame 3D Perspective Rotation -> rotateY / rotateX tilts to complement the video frames.
- *   7. Background Cyber Embers -> Glows in the rear aura without obstructing the face.
+ * The frames in /mascot are one continuous take. The head and eyes follow the cursor:
+ *   cursor left / right -> the head turns left / right
+ *   cursor up / down    -> the eyes look up / down
+ * Each axis is an ordered list of frames from its negative end (left, up) to its positive end (right, down).
+ * Exactly one real frame is drawn at a time (the nearest one): blending frames leaves a ghost of the face.
+ * Smoothness comes from the frame density and from soft, velocity-clamped easing of the gaze.
  */
 
-const START_FRAME = 54
-const END_FRAME = 124
-const CENTER_FRAME = 89
-const SWEEP_COUNT = END_FRAME - START_FRAME // 70 steps
+const range = (from: number, to: number): number[] => {
+  const step = from <= to ? 1 : -1
+  const out: number[] = []
+  for (let f = from; f !== to + step; f += step) out.push(f)
+  return out
+}
 
-// Sovra Physics Constants
-const MAX_VELOCITY = 0.018 // Maximum frame step per tick (60FPS) to prevent whipping
-const DAMPING_FACTOR = 0.045 // Soft natural inertia
+// Frames 1-37: eyes down. 63-79: eyes up. 81-109: head turns right. 181 back to 153: head turns left.
+// Frames 40-52 (eyes closing) and 141-149 (eyes closed) are skipped on purpose.
+const X_NEG = range(153, 181) // extreme left .. neutral
+const X_POS = range(81, 109) // neutral .. extreme right
+const Y_NEG = range(63, 79) // extreme up .. neutral
+const Y_POS = range(1, 37) // neutral .. extreme down
+const AXIS_X = [...X_NEG, ...X_POS]
+const AXIS_Y = [...Y_NEG, ...Y_POS]
+
+const CENTER_FRAME = 1
+
+// Pointer physics
+const MAX_VELOCITY = 0.036 // max axis step per tick (60FPS) so fast flicks do not skip poses
+const DAMPING_FACTOR = 0.045 // soft natural inertia
+const DEAD_ZONE = 0.05
+const AXIS_SWITCH_MARGIN = 0.12 // how much the other axis must lead before the pose switches
 
 const NATIVE_WIDTH = 1280
 const NATIVE_HEIGHT = 720
+
+const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max)
+const frameSrc = (n: number) => `/mascot/frame_${String(n).padStart(4, '0')}.webp`
+
+/** Axis position in [-1, 1] -> index into the axis frame list. Neutral sits at the join of both halves. */
+const axisIndex = (p: number, nNeg: number, nPos: number) => Math.round(p < 0 ? (1 + p) * (nNeg - 1) : nNeg - 1 + p * nPos)
 
 export function MascotStage() {
   const root = useRef<HTMLDivElement>(null)
@@ -44,73 +63,52 @@ export function MascotStage() {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reducedMotion) return
 
-    // 1. Preload video frames into memory
+    // 1. Preload the frames used by both axes into memory
     const images: Map<number, HTMLImageElement> = new Map()
     let loadedCount = 0
 
     const onLoadFrame = (frameNum: number) => {
       loadedCount++
-      if (frameNum === CENTER_FRAME || loadedCount >= 8) {
-        setIsLoaded(true)
-      }
+      if (frameNum === CENTER_FRAME || loadedCount >= 8) setIsLoaded(true)
     }
 
-    // Priority 1: Center frame and primary anchors
-    const priority = [CENTER_FRAME, START_FRAME, END_FRAME, 70, 105, 60, 115]
-    for (const fNum of priority) {
+    const load = (fNum: number) => {
+      if (images.has(fNum)) return
       const img = new Image()
       img.decoding = 'async'
       img.onload = () => onLoadFrame(fNum)
-      img.src = `/mascot/frame_${String(fNum).padStart(4, '0')}.webp`
+      img.src = frameSrc(fNum)
       images.set(fNum, img)
     }
 
-    // Priority 2: Preload remaining frames
-    for (let fNum = START_FRAME; fNum <= END_FRAME; fNum++) {
-      if (images.has(fNum)) continue
-      const img = new Image()
-      img.decoding = 'async'
-      img.onload = () => onLoadFrame(fNum)
-      img.src = `/mascot/frame_${String(fNum).padStart(4, '0')}.webp`
-      images.set(fNum, img)
-    }
+    // Priority: neutral poses and the extremes of each axis, then everything else
+    const priority = [CENTER_FRAME, 181, 81, 79, 153, 109, 63, 37]
+    for (const fNum of priority) load(fNum)
+    for (const fNum of [...AXIS_X, ...AXIS_Y]) load(fNum)
 
-    // Pointer Tracking with Sovra's S-curve smoothing
-    const targetProgressRef = { current: 0.5 } // 0.5 is center facing
-    const currentProgressRef = { current: 0.5 }
-    const currentYRef = { current: 0 }
+    // Pointer tracking: target and current gaze in [-1, 1] on both axes
+    const target = { x: 0, y: 0 }
+    const current = { x: 0, y: 0 }
     let lastMoveTime = performance.now()
 
-    const smoothStep = (min: number, max: number, value: number) => {
-      const x = Math.max(0, Math.min(1, (value - min) / (max - min)))
-      return x * x * (3 - 2 * x)
-    }
+    const deadZone = (v: number) => Math.sign(v) * (Math.max(0, Math.abs(v) - DEAD_ZONE) / (1 - DEAD_ZONE))
 
     const onMove = (e: PointerEvent) => {
-      const { innerWidth, innerHeight } = window
-      if (innerWidth <= 0 || innerHeight <= 0) return
-
-      // Normalized coordinates [0, 1]
-      const rawX = e.clientX / innerWidth
-      const rawY = e.clientY / innerHeight
-
-      // Sovra S-curve: softens movement at borders, stabilizes center
-      const smoothedX = smoothStep(0.05, 0.95, rawX)
-
-      // Subtle Y influence adds micro nuance
-      const yInfluence = (rawY - 0.5) * 0.08
-      const combinedTarget = Math.min(Math.max(smoothedX + yInfluence, 0), 1)
-
-      targetProgressRef.current = combinedTarget
-      currentYRef.current = (rawY - 0.5) * 2 // [-1, 1]
+      const r = canvas.getBoundingClientRect()
+      if (r.width <= 0 || r.height <= 0 || window.innerWidth <= 0 || window.innerHeight <= 0) return
+      // Measure from the face (upper-middle of the canvas) so "left of her" really means left
+      const cx = r.left + r.width / 2
+      const cy = r.top + r.height * 0.4
+      target.x = deadZone(clamp((e.clientX - cx) / (window.innerWidth * 0.4), -1, 1))
+      target.y = deadZone(clamp((e.clientY - cy) / (window.innerHeight * 0.4), -1, 1))
       lastMoveTime = performance.now()
     }
     window.addEventListener('pointermove', onMove, { passive: true })
 
     const onMouseLeave = () => {
-      // Gently return gaze to center when cursor leaves window
-      targetProgressRef.current = 0.5
-      currentYRef.current = 0
+      // Gently return the gaze to the center when the cursor leaves the window
+      target.x = 0
+      target.y = 0
     }
     window.addEventListener('mouseleave', onMouseLeave)
 
@@ -157,36 +155,27 @@ export function MascotStage() {
     const mainCtx = canvas.getContext('2d', { alpha: true })
     const start = performance.now()
 
+    // Only one axis is shown at a time; a margin stops it flickering near the diagonal.
+    let axis: 'x' | 'y' = 'x'
+
     const tick = (now: number) => {
       const t = (now - start) / 1000
 
-      // Auto-idle: gently return to calm breathing center after 3.5s
+      // Auto-idle: after 3.5s a slow, small sway around the center
       const isIdle = now - lastMoveTime > 3500
-      let activeTargetProgress: number
+      const goalX = isIdle ? Math.sin(t * 0.45) * 0.12 : target.x
+      const goalY = isIdle ? 0 : target.y
 
-      if (isIdle) {
-        // Natural organic breathing micro-sway around center (0.5)
-        activeTargetProgress = 0.5 + Math.sin(t * 0.45) * 0.08
-      } else {
-        activeTargetProgress = targetProgressRef.current
-      }
+      // Physics: ease toward the goal with a velocity clamp
+      current.x += clamp((goalX - current.x) * DAMPING_FACTOR, -MAX_VELOCITY, MAX_VELOCITY)
+      current.y += clamp((goalY - current.y) * DAMPING_FACTOR, -MAX_VELOCITY, MAX_VELOCITY)
 
-      // Sovra Physics: Calculate distance to target with velocity clamping
-      const diff = activeTargetProgress - currentProgressRef.current
-      const desiredStep = diff * DAMPING_FACTOR
-      const clampedStep = Math.min(Math.max(desiredStep, -MAX_VELOCITY), MAX_VELOCITY)
-      currentProgressRef.current += clampedStep
+      // The dominant axis (with a hysteresis margin) decides which pose is shown
+      const ax = Math.abs(current.x)
+      const ay = Math.abs(current.y)
+      if (axis === 'x' && ay > ax + AXIS_SWITCH_MARGIN) axis = 'y'
+      else if (axis === 'y' && ax > ay + AXIS_SWITCH_MARGIN) axis = 'x'
 
-      // Map progress [0, 1] to continuous video frames [54, 124]
-      // 0.0 (Left) -> Frame 54 (Looking Left)
-      // 0.5 (Center) -> Frame 89 (Looking Center)
-      // 1.0 (Right) -> Frame 124 (Looking Right)
-      const frameIndex = Math.min(
-        Math.max(Math.round(START_FRAME + currentProgressRef.current * SWEEP_COUNT), START_FRAME),
-        END_FRAME
-      )
-
-      // High-DPI Canvas Rendering with Sovra Aspect Ratio Cover Calculations
       if (mainCtx) {
         const cr = canvas.getBoundingClientRect()
         const dpr = Math.min(window.devicePixelRatio || 1, 2)
@@ -198,50 +187,49 @@ export function MascotStage() {
           canvas.height = Math.round(ch * dpr)
         }
 
-        const currentImg = images.get(frameIndex) || images.get(CENTER_FRAME)
+        // A frame that has not loaded yet falls back to the nearest loaded neighbour on the same axis
+        const imageAt = (frames: number[], i: number): HTMLImageElement | null => {
+          for (let dist = 0; dist <= 6; dist++) {
+            for (const j of [i - dist, i + dist]) {
+              const frame = frames[clamp(j, 0, frames.length - 1)]
+              const img = frame === undefined ? undefined : images.get(frame)
+              if (img && img.complete && img.naturalWidth > 0) return img
+            }
+          }
+          return null
+        }
 
-        if (currentImg && currentImg.complete && currentImg.naturalWidth > 0) {
+        const index = axis === 'x' ? axisIndex(current.x, X_NEG.length, X_POS.length) : axisIndex(current.y, Y_NEG.length, Y_POS.length)
+        const img = imageAt(axis === 'x' ? AXIS_X : AXIS_Y, index)
+
+        if (img) {
           mainCtx.save()
           mainCtx.scale(dpr, dpr)
           mainCtx.clearRect(0, 0, cw, ch)
-
-          // Aspect cover calculations with bias toward face center
-          const imgWidth = currentImg.naturalWidth
-          const imgHeight = currentImg.naturalHeight
-          const imgRatio = imgWidth / imgHeight
+          // Aspect cover calculations with bias toward the face
+          const imgRatio = img.naturalWidth / img.naturalHeight
           const canvasRatio = cw / ch
-
           let renderWidth = cw
           let renderHeight = ch
           let offsetX = 0
           let offsetY = 0
-
           if (canvasRatio > imgRatio) {
             renderWidth = cw
             renderHeight = cw / imgRatio
-            offsetY = (ch - renderHeight) * 0.18 // bias toward face center
+            offsetY = (ch - renderHeight) * 0.18
           } else {
             renderHeight = ch
             renderWidth = ch * imgRatio
             offsetX = (cw - renderWidth) / 2
           }
-
-          mainCtx.drawImage(currentImg, offsetX, offsetY, renderWidth, renderHeight)
+          mainCtx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight)
           mainCtx.restore()
         }
       }
 
-      // Continuous 3D Perspective Rotation & Parallax
-      const normalizedX = (currentProgressRef.current - 0.5) * 2 // [-1, 1]
-      const normalizedY = currentYRef.current
-
-      const rotY = (normalizedX * 4.2).toFixed(2)
-      const rotX = (-normalizedY * 3.4).toFixed(2)
-      const rotZ = (normalizedX * normalizedY * 1.2).toFixed(2)
-      const shiftX = (normalizedX * 18).toFixed(2)
-      const shiftY = (normalizedY * 12).toFixed(2)
-
-      bodyEl.style.transform = `perspective(1000px) translate3d(${shiftX}px, ${shiftY}px, 0) rotateY(${rotY}deg) rotateX(${rotX}deg) rotateZ(${rotZ}deg)`
+      // The photo itself is never tilted or shifted: the frames already carry the head turn.
+      const normalizedX = current.x // [-1, 1]
+      const normalizedY = current.y
 
       // Depth Parallax on background halo
       if (haloEl) {

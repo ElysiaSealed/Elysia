@@ -11,12 +11,12 @@
 .mx-embers{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .mx-ring{display:none}
 .mx-body{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform;z-index:3}
-.mx-frame{position:relative;width:100%;height:100%;overflow:hidden;border-radius:12px;-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 12%,#000 88%,transparent 100%),linear-gradient(180deg,#000 0%,#000 78%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent 0%,#000 12%,#000 88%,transparent 100%),linear-gradient(180deg,#000 0%,#000 78%,transparent 100%);mask-composite:intersect}
-.mx-img,.mx-canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;-webkit-backface-visibility:hidden;backface-visibility:hidden;transform:translateZ(0);filter:contrast(1.04) brightness(1.01);image-rendering:-webkit-optimize-contrast}
+.mx-frame{position:relative;width:100%;height:100%;overflow:hidden;border-radius:12px;-webkit-mask-image:radial-gradient(ellipse 60% 66% at 50% 42%,#000 42%,rgba(0,0,0,.6) 70%,transparent 100%),linear-gradient(90deg,transparent 0%,#000 10%,#000 90%,transparent 100%),linear-gradient(180deg,transparent 0%,#000 12%,#000 80%,transparent 100%);-webkit-mask-composite:source-in,source-in;mask-image:radial-gradient(ellipse 60% 66% at 50% 42%,#000 42%,rgba(0,0,0,.6) 70%,transparent 100%),linear-gradient(90deg,transparent 0%,#000 10%,#000 90%,transparent 100%),linear-gradient(180deg,transparent 0%,#000 12%,#000 80%,transparent 100%);mask-composite:intersect,intersect}
+.mx-img,.mx-canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;-webkit-backface-visibility:hidden;backface-visibility:hidden;transform:translateZ(0);filter:contrast(1.08) brightness(.6) saturate(.9);image-rendering:-webkit-optimize-contrast}
 .mx-canvas{opacity:0;transition:opacity .25s ease}
 .mx.mx-loaded .mx-canvas{opacity:1}
 .mx.mx-loaded .mx-img{opacity:0;visibility:hidden}
-.mx-sweep{position:absolute;inset:-20%;background:linear-gradient(115deg,transparent 40%,rgba(140,255,97,.14) 50%,transparent 60%);mix-blend-mode:screen;transform:translateX(-70%);animation:mxSweep 7s ease-in-out infinite;pointer-events:none}
+.mx-sweep{display:none;position:absolute;inset:-20%;background:linear-gradient(115deg,transparent 40%,rgba(140,255,97,.14) 50%,transparent 60%);mix-blend-mode:screen;transform:translateX(-70%);animation:mxSweep 7s ease-in-out infinite;pointer-events:none}
 
 @keyframes mxFloat{0%,100%{translate:0 0}50%{translate:0 -10px}}
 @keyframes mxPulse{0%,100%{opacity:.7;transform:scale(.97)}50%{opacity:1;transform:scale(1.04)}}
