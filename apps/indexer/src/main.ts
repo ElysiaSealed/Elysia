@@ -1,0 +1,197 @@
+import { eq, gte } from 'drizzle-orm'
+import { createPublicClient, getAddress, http, parseAbi, type PublicClient } from 'viem'
+import { z } from 'zod'
+import { createDb, indexerState, ponsTokens } from '@elysia/db'
+import { CHAINS } from '@elysia/shared'
+import { burnedAbi, curveAbi, erc20Abi, factoryAbi, transferAbi } from './abi'
+import { processBurns, type BurnLog } from './burns'
+import { applyTransfers, defaultExcluded, type TransferLog, type WhaleToken } from './holders'
+import { processLogs, type PonsLog, type TokenMeta } from './process'
+import { addr, envSchema, launchpadBlocker } from './config'
+
+const parsedEnv = envSchema.safeParse(process.env)
+if (!parsedEnv.success) {
+  // Hanya nama variabel dan alasan; nilainya tidak pernah dicetak.
+  for (const i of parsedEnv.error.issues) console.error(`indexer: env tidak valid: ${i.path.join('.') || '(root)'} - ${i.message}`)
+  process.exit(1)
+}
+const env = parsedEnv.data
+
+// Before any DB or RPC connection.
+const blocker = launchpadBlocker(env.CHAIN_ENV)
+if (blocker) {
+  console.error(`indexer: ${blocker}`)
+  process.exit(1)
+}
+
+const STATE = 'pons'
+const net = CHAINS[env.CHAIN_ENV]
+const factory = (env.PONS_FACTORY ?? net.pons.factory) as `0x${string}` | null | undefined
+if (!factory) {
+  console.error(`indexer: alamat factory Pons belum ada untuk ${env.CHAIN_ENV} (lihat BLOCKERS #6); berhenti`)
+  process.exit(1)
+}
+
+const { db } = createDb(env.DATABASE_URL)
+const client: PublicClient = createPublicClient({ transport: http(env.RPC_URL ?? net.rpc) })
+type Db = Parameters<typeof processLogs>[0]['db']
+
+const tryRead = async <T>(p: Promise<T>): Promise<T | null> => p.catch(() => null)
+
+async function readMeta(token: string, curve: string, pair: string): Promise<TokenMeta> {
+  const t = token as `0x${string}`
+  const [name, symbol, tax, decimals] = await Promise.all([
+    tryRead(client.readContract({ address: t, abi: erc20Abi, functionName: 'name' })),
+    tryRead(client.readContract({ address: t, abi: erc20Abi, functionName: 'symbol' })),
+    tryRead(client.readContract({ address: curve as `0x${string}`, abi: curveAbi, functionName: 'creatorTaxBps' })),
+    tryRead(client.readContract({ address: pair as `0x${string}`, abi: erc20Abi, functionName: 'decimals' })),
+  ])
+  return { name, symbol, creatorTaxBps: tax === null ? null : Number(tax), pairDecimals: decimals ?? 18 }
+}
+
+const times = new Map<bigint, Date>()
+async function blockTime(n: bigint): Promise<Date> {
+  const hit = times.get(n)
+  if (hit) return hit
+  const b = await client.getBlock({ blockNumber: n })
+  const d = new Date(Number(b.timestamp) * 1000)
+  if (times.size > 5000) times.clear()
+  times.set(n, d)
+  return d
+}
+
+// ---- transfer whale: token yang dipantau + harga dari feed Chainlink
+const aggAbi = parseAbi(['function latestRoundData() view returns (uint80,int256,uint256,uint256,uint80)'])
+const whaleCfg = z
+  .array(z.object({ address: addr, symbol: z.string(), decimals: z.number().int().min(0).max(36), feed: addr }))
+  .parse(
+    env.WHALE_TOKENS
+      ? JSON.parse(env.WHALE_TOKENS)
+      : env.CHAIN_ENV === 'mainnet' && net.chainlink.nvdaUsd
+        ? [{ address: '0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC', symbol: 'NVDA', decimals: 18, feed: net.chainlink.nvdaUsd }]
+        : [],
+  )
+const whaleTokens = new Map<string, WhaleToken>(whaleCfg.map((w) => [w.address.toLowerCase(), { symbol: w.symbol, decimals: w.decimals }]))
+const feedOf = new Map(whaleCfg.map((w) => [w.address.toLowerCase(), w.feed as `0x${string}`]))
+async function priceE8(token: string): Promise<bigint | null> {
+  const feed = feedOf.get(token.toLowerCase())
+  if (!feed) return null
+  const r = await tryRead(client.readContract({ address: feed, abi: aggAbi, functionName: 'latestRoundData' }))
+  return r && r[1] > 0n ? r[1] : null
+}
+
+const excluded = defaultExcluded([net.pons.hook, net.uniswapV4.poolManager, net.pons.graduationExecutor, factory])
+const burnVault = env.BURN_VAULT_ADDRESS ? (env.BURN_VAULT_ADDRESS as `0x${string}`) : null
+// Tanpa BurnVault: burn dibaca langsung dari token $NEXA. Dengan BurnVault, jalur ini mati agar burn tidak terhitung dua kali.
+const nexaToken = !burnVault && env.NEXA_TOKEN_ADDRESS ? (env.NEXA_TOKEN_ADDRESS as `0x${string}`) : null
+const burnFrom = env.BURN_FROM_ADDRESS ? (env.BURN_FROM_ADDRESS as `0x${string}`) : null
+const BURN_SINKS = ['0x0000000000000000000000000000000000000000', '0x000000000000000000000000000000000000dEaD'] as const
+
+async function fetchLogs(from: bigint, to: bigint): Promise<PonsLog[]> {
+  const [launched, curve] = await Promise.all([
+    client.getLogs({ address: factory!, events: factoryAbi, fromBlock: from, toBlock: to }),
+    client.getLogs({ events: curveAbi.filter((x) => x.type === 'event'), fromBlock: from, toBlock: to }),
+  ])
+  return [...launched, ...curve].flatMap((l) =>
+    l.blockNumber === null || l.logIndex === null || l.transactionHash === null ? [] : [l as unknown as PonsLog],
+  )
+}
+
+/** Token yang transfernya dilacak: token Pons yang baru diluncurkan + token whale. Alamat dipecah per 100 agar getLogs tidak terlalu besar. */
+// Daftar token terlacak di-cache di memori (dulu dibaca ulang dari DB tiap tick = egress besar). Dimuat ulang tiap 10 menit
+// (token yang lewat HOLDER_TRACK_DAYS gugur) dan segera setelah ada launch baru, supaya transfer token baru tidak terlewat.
+const TRACKED_TTL_MS = 600_000
+let trackedCache: { at: number; tokens: string[] } | null = null
+async function trackedTokens(d: Db, refresh: boolean): Promise<string[]> {
+  if (!refresh && trackedCache && Date.now() - trackedCache.at < TRACKED_TTL_MS) return trackedCache.tokens
+  const since = new Date(Date.now() - env.HOLDER_TRACK_DAYS * 86_400_000)
+  const recent = await d.select({ a: ponsTokens.address }).from(ponsTokens).where(gte(ponsTokens.launchedAt, since))
+  const tokens = [...new Set([...recent.map((r) => r.a), ...whaleCfg.map((w) => getAddress(w.address))])]
+  trackedCache = { at: Date.now(), tokens }
+  return tokens
+}
+
+async function fetchTransfers(d: Db, from: bigint, to: bigint, refresh: boolean): Promise<TransferLog[]> {
+  const tokens = await trackedTokens(d, refresh)
+  const out: TransferLog[] = []
+  for (let i = 0; i < tokens.length; i += 100) {
+    const logs = await client.getLogs({ address: tokens.slice(i, i + 100) as `0x${string}`[], event: transferAbi[0], fromBlock: from, toBlock: to })
+    for (const l of logs) {
+      if (l.blockNumber === null || l.logIndex === null || l.transactionHash === null) continue
+      out.push({ token: l.address, from: l.args.from!, to: l.args.to!, value: l.args.value!, blockNumber: l.blockNumber, logIndex: l.logIndex, transactionHash: l.transactionHash })
+    }
+  }
+  return out
+}
+
+async function fetchBurns(from: bigint, to: bigint): Promise<BurnLog[]> {
+  if (nexaToken) {
+    const logs = await client.getLogs({
+      address: nexaToken,
+      event: transferAbi[0],
+      args: burnFrom ? { from: burnFrom, to: [...BURN_SINKS] } : { to: [...BURN_SINKS] },
+      fromBlock: from,
+      toBlock: to,
+    })
+    // pairSpent tidak bisa diketahui dari Transfer biasa -> 0.
+    const min = env.BURN_MIN_NEXA * 10n ** 18n
+    return logs.flatMap((l) =>
+      l.blockNumber === null || l.logIndex === null || l.transactionHash === null || l.args.value! < min
+        ? []
+        : [{ args: { caller: l.args.from!, pairSpent: 0n, nexaBurned: l.args.value! }, blockNumber: l.blockNumber, logIndex: l.logIndex, transactionHash: l.transactionHash }],
+    )
+  }
+  if (!burnVault) return []
+  const logs = await client.getLogs({ address: burnVault, event: burnedAbi[0], fromBlock: from, toBlock: to })
+  return logs.flatMap((l) =>
+    l.blockNumber === null || l.logIndex === null || l.transactionHash === null
+      ? []
+      : [{ args: { caller: l.args.caller!, pairSpent: l.args.pairSpent!, nexaBurned: l.args.nexaBurned! }, blockNumber: l.blockNumber, logIndex: l.logIndex, transactionHash: l.transactionHash }],
+  )
+}
+
+async function tick() {
+  const head = await client.getBlockNumber()
+  const [state] = await db.select().from(indexerState).where(eq(indexerState.name, STATE))
+  const next = state ? state.lastBlock + 1n : (env.INDEXER_START_BLOCK ?? head)
+  if (next > head) return
+  const to = next + env.INDEXER_CHUNK_BLOCKS - 1n < head ? next + env.INDEXER_CHUNK_BLOCKS - 1n : head
+
+  const ponsLogs = await fetchLogs(next, to)
+  const burnLogs = await fetchBurns(next, to)
+
+  // Semua tulis dalam satu transaksi bersama kursor: saldo holder bersifat delta, jadi chunk tidak boleh diterapkan dua kali.
+  const r = await db.transaction(async (tx) => {
+    const d = tx as unknown as Db
+    const pons = await processLogs({ db: d, readMeta, blockTime, highCreatorTaxBps: env.HIGH_CREATOR_TAX_BPS }, ponsLogs)
+    const h = await applyTransfers(
+      {
+        db: d,
+        blockTime,
+        excluded,
+        highCreatorTaxBps: env.HIGH_CREATOR_TAX_BPS,
+        concentratedBps: env.HOLDER_CONCENTRATED_BPS,
+        whale: whaleTokens.size ? { tokens: whaleTokens, minUsd: env.WHALE_MIN_USD, priceE8 } : undefined,
+      },
+      await fetchTransfers(d, next, to, pons.launches > 0),
+    )
+    const burned = await processBurns(d, burnLogs, blockTime)
+    await tx
+      .insert(indexerState)
+      .values({ name: STATE, lastBlock: to })
+      .onConflictDoUpdate({ target: indexerState.name, set: { lastBlock: to, updatedAt: new Date() } })
+    return { ...pons, ...h, burned }
+  })
+  if (r.launches || r.trades || r.graduations || r.whales || r.burned)
+    console.log(`indexer: blok ${next}-${to}: ${r.launches} launch, ${r.trades} trade, ${r.graduations} graduation, ${r.whales} whale, ${r.burned} burn`)
+}
+
+console.log(`indexer: ${env.CHAIN_ENV}, factory ${factory}, whale ${[...whaleTokens.values()].map((w) => w.symbol).join(',') || '-'}, burn ${burnVault ? `vault ${burnVault}` : nexaToken ? `transfer $NEXA ${nexaToken}${burnFrom ? ` dari ${burnFrom}` : ''}` : 'nonaktif'}`)
+for (;;) {
+  try {
+    await tick()
+  } catch (e) {
+    console.error('indexer: tick gagal:', e instanceof Error ? e.message : e)
+  }
+  await new Promise((r) => setTimeout(r, env.INDEXER_POLL_SECONDS * 1000))
+}

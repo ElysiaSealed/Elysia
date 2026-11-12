@@ -1,0 +1,13 @@
+packages:
+  - apps/*
+  - packages/*
+
+allowBuilds:
+  esbuild: true
+
+onlyBuiltDependencies:
+  - esbuild
+  - esbuild@0.18.20
+  - esbuild@0.19.12
+  - esbuild@0.21.5
+  - esbuild@0.28.2

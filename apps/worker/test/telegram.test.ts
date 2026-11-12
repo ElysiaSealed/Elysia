@@ -1,0 +1,72 @@
+import { afterAll, beforeEach, describe, expect, it } from 'vitest'
+import { postQueue, proAlerts, riskguardLog } from '@elysia/db'
+import { enqueuePost, getPost } from '../src/queue'
+import { DryTelegram, TelegramBot, approveAndAlert, mirrorToBackup } from '../src/telegram'
+import { testDb } from './test-db'
+
+const { db, client, configured } = testDb()
+let dbUp = !configured
+if (configured) try {
+  await client`select 1`
+  dbUp = true
+} catch {
+  console.warn('Postgres test tidak tersedia: test telegram dilewati')
+}
+
+describe.skipIf(!dbUp)('alert Pro (Telegram dry)', () => {
+  beforeEach(async () => {
+    await db.delete(proAlerts)
+    await db.delete(postQueue)
+    await db.delete(riskguardLog)
+  })
+  afterAll(async () => {
+    await client.end()
+  })
+
+  const summary = (text: string) =>
+    ({ kind: 'daily_summary', mode: 'dry', input: { type: 'daily_summary', text, dataComplete: true } }) as const
+
+  it('menyetujui lalu mengirim alert dengan isi post', async () => {
+    const r = await enqueuePost(db, summary('Selisih DEX vs oracle NVDA 0.4%.'))
+    const tg = new DryTelegram()
+    await approveAndAlert(db, tg, r.id)
+    expect(tg.sent).toEqual(['Selisih DEX vs oracle NVDA 0.4%.'])
+    expect((await getPost(db, r.id))?.status).toBe('approved')
+  })
+
+  it('post yang diblokir tidak pernah dialert', async () => {
+    const r = await enqueuePost(db, summary('Sekarang waktunya beli NVDA'))
+    const tg = new DryTelegram()
+    await expect(approveAndAlert(db, tg, r.id)).rejects.toThrow()
+    expect(tg.sent).toEqual([])
+  })
+})
+
+describe('TelegramBot', () => {
+  it('memanggil Bot API dan tidak membocorkan token di pesan error', async () => {
+    const calls: string[] = []
+    const ok = new TelegramBot('SECRET-TOKEN', '42', (async (u: string) => {
+      calls.push(u)
+      return new Response('{}', { status: 200 })
+    }) as unknown as typeof fetch)
+    await ok.send('halo')
+    expect(calls[0]).toContain('/botSECRET-TOKEN/sendMessage')
+
+    const bad = new TelegramBot('SECRET-TOKEN', '42', (async () => new Response('x', { status: 401 })) as unknown as typeof fetch)
+    await expect(bad.send('halo')).rejects.toThrow(/401/)
+    await bad.send('x').catch((e: Error) => expect(e.message).not.toContain('SECRET-TOKEN'))
+  })
+})
+
+describe('kanal cadangan publik', () => {
+  it('mode dry hanya log (tidak mengirim ke kanal publik); live mengirim; tanpa notifier tidak ada; gagal tidak melempar', async () => {
+    const tg = new DryTelegram()
+    expect(await mirrorToBackup({ mode: 'dry', notifier: tg }, 'isi')).toBe('dry')
+    expect(tg.sent).toEqual([]) // dry tidak menyentuh notifier sama sekali
+    expect(await mirrorToBackup({ mode: 'live', notifier: tg }, 'isi')).toBe('sent')
+    expect(tg.sent).toEqual(['isi'])
+    expect(await mirrorToBackup({ mode: 'live' }, 'isi')).toBe('none')
+    const boom = { send: async () => { throw new Error('Telegram HTTP 500') } }
+    expect(await mirrorToBackup({ mode: 'live', notifier: boom }, 'isi')).toBe('failed')
+  })
+})

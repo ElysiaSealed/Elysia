@@ -1,0 +1,254 @@
+// Proof of Intelligence component: displays verifiable on-chain predictions and scoring.
+import { X_URL } from '@/lib/site'
+import type { NxData } from '@/lib/nx-data'
+
+const STEPS = ['Committed', 'Posted on X', 'Revealed', 'Scored'] as const
+/** Langkah yang sudah selesai (done) dan yang sedang berjalan (now) menurut status commit. */
+function stepClass(i: number, status: 'committed' | 'posted' | 'revealed' | undefined): string {
+  if (!status) return i < 2 ? 'done' : i === 2 ? 'now' : '' // contoh desain
+  const done = status === 'committed' ? 1 : status === 'posted' ? 2 : 4
+  return i < done ? 'done' : i === done ? 'now' : ''
+}
+
+/** `latest` = commit nyata terbaru dari /proof; null = contoh dari desain, berlabel Example. */
+export function Proof({ latest }: { latest: NxData['latest'] }) {
+  const rev = latest?.revealed ?? null
+  return (
+    <section className="sec" id="proof">
+      <div className="head">
+        <div data-reveal="">
+          <div className="label">
+            Proof of Intelligence
+          </div>
+          {" "}
+          <h2>
+            A persona you can audit,
+            <br />
+            <span className="dim">
+              call by call.
+            </span>
+          </h2>
+        </div>
+        {" "}
+        <a href={X_URL} target="_blank" rel="noopener" className="x-btn" aria-label="ELYSIA on X" data-reveal="">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <use href="#nx-x" />
+          </svg>
+        </a>
+      </div>
+      {" "}
+      <div className="why">
+        <div className="card ledger tilt spot" data-reveal="">
+          <div className="lg-top">
+            <span className="tag">
+              {latest ? 'Latest commit' : 'Example commit'}
+            </span>
+            <span className="mono net">
+              <i />
+              Elysium Testnet · 99801
+            </span>
+          </div>
+          {" "}
+          <h3>
+            {latest ? 'The latest call, recorded on-chain' : 'What a call looks like on-chain'}
+          </h3>
+          {" "}
+          <div className="receipt">
+            <div className="rc-head">
+              <span className="k">
+                Commit hash
+              </span>
+              <button className="copy" type="button" id="copyHash" aria-label={latest ? 'Copy commit hash' : 'Copy example hash'}>
+                Copy
+              </button>
+            </div>
+            {" "}
+            <div className="hash" id="exHash" />
+            {" "}
+            <div className="rc-grid">
+              <div>
+                <span className="k">
+                  Asset
+                </span>
+                {latest && !rev ? (
+                  <span className="v">Sealed until reveal</span>
+                ) : (
+                  <span className="v">
+                    <span className="tk">
+                      {rev ? rev.assetSymbol.slice(0, 2).toUpperCase() : 'HY'}
+                    </span>
+                    {rev ? rev.assetSymbol : 'HYPE'}
+                  </span>
+                )}
+              </div>
+              {" "}
+              <div>
+                <span className="k">
+                  Direction
+                </span>
+                {latest && !rev ? (
+                  <span className="v">Sealed until reveal</span>
+                ) : (
+                  <span className={`v ${rev?.direction === 'down' ? 'dn' : 'up'}`}>
+                    {rev?.direction === 'down' ? '↓ Down' : '↑ Up'}
+                  </span>
+                )}
+              </div>
+              {" "}
+              <div>
+                <span className="k">
+                  Horizon
+                </span>
+                <span className="v">
+                  {latest ? `${latest.horizonDays} days` : '7 days'}
+                </span>
+              </div>
+              {" "}
+              <div>
+                <span className="k">
+                  Scored against
+                </span>
+                <span className="v">
+                  Price feed
+                </span>
+              </div>
+            </div>
+            {" "}
+            <div className="rc-reveal">
+              <div className="row">
+                <span className="k">
+                  Reveal in
+                </span>
+                <span className="mono-v" id="exCount">
+                  4d 00:00:00
+                </span>
+              </div>
+              {" "}
+              <div className="pbar">
+                <b id="exBar" />
+              </div>
+            </div>
+            {" "}
+            <ol className="trail">
+              {STEPS.map((label, i) => (
+                <li key={label} className={stepClass(i, latest?.status)}>
+                  {label}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+        {" "}
+        <div className="why-r">
+          <div className="txt" data-reveal="">
+            <p>
+              {"\"Gatekeeper\" is the persona. "}
+              <b>
+                The record is what you can check:
+              </b>
+              {" each assessment, its hash, the block it was committed in, and whether it held up. A person can delete a bad post. ELYSIA's commits sit in a contract."}
+            </p>
+          </div>
+          {" "}
+          <div className="mini" data-stagger="">
+            <div className="card spot">
+              <div>
+                <span className="mono">
+                  Public score
+                </span>
+                {" "}
+                <h4>
+                  Scored against the price feed, not by ELYSIA
+                </h4>
+              </div>
+              {" "}
+              <svg className="gauge" viewBox="0 0 200 110" aria-hidden="true">
+                <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#242424" strokeWidth="14" strokeLinecap="round" />
+                <path id="gArc" d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#8CFF61" strokeWidth="14" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset="1" opacity=".25" />
+                <text id="gTxt" x="100" y="88" textAnchor="middle" fontFamily="Geist Mono, monospace" fontSize="9" fill="#6E6A66">
+                  No scored calls yet
+                </text>
+              </svg>
+              {" "}
+              <p>
+                Published after the first call is scored, with an explorer link for every commit.
+              </p>
+            </div>
+            {" "}
+            <div className="card pod">
+              <div>
+                <span className="mono">
+                  HYPE Daily Call
+                </span>
+                {" "}
+                <h4>
+                  One call, one reveal, one result
+                </h4>
+              </div>
+              {" "}
+              <div>
+                <div className="pod-big">
+                  <em>
+                    Day 4
+                  </em>
+                  <span>
+                    of 7
+                  </span>
+                </div>
+                {" "}
+                <div className="days" id="days">
+                  <i>
+                    <b />
+                    <span>
+                      D1
+                    </span>
+                  </i>
+                  <i>
+                    <b />
+                    <span>
+                      D2
+                    </span>
+                  </i>
+                  <i>
+                    <b />
+                    <span>
+                      D3
+                    </span>
+                  </i>
+                  <i>
+                    <b />
+                    <span>
+                      D4
+                    </span>
+                  </i>
+                  <i>
+                    <b />
+                    <span>
+                      D5
+                    </span>
+                  </i>
+                  <i>
+                    <b />
+                    <span>
+                      D6
+                    </span>
+                  </i>
+                  <i>
+                    <b />
+                    <span>
+                      D7
+                    </span>
+                  </i>
+                </div>
+                {" "}
+                <p>
+                  reveal() runs at expiry and the outcome joins the public record.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

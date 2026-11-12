@@ -1,0 +1,2728 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "NEXA API",
+    "version": "0.1.0",
+    "description": "API publik NEXA. Nilai mentah dan terformat tersedia berdampingan; setiap commit menyertakan link Blockscout. Waktu dalam UTC (ISO 8601)."
+  },
+  "paths": {
+    "/healthz": {
+      "get": {
+        "summary": "Cek hidup",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/proof": {
+      "get": {
+        "summary": "Proof of Intelligence: win rate, rata-rata return, Prediction of the Day berjalan, riwayat terbaru",
+        "responses": {
+          "200": {
+            "description": "Ringkasan rekam jejak",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "public, max-age=15"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stats": {
+                      "type": "object",
+                      "properties": {
+                        "scored": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "wins": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "pending": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "winRate": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "nullable": true
+                        },
+                        "avgReturnBps": {
+                          "type": "integer",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "scored",
+                        "wins",
+                        "pending",
+                        "winRate",
+                        "avgReturnBps"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "formatted": {
+                      "type": "object",
+                      "properties": {
+                        "winRate": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "avgReturn": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "winRate",
+                        "avgReturn"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "current": {
+                      "type": "object",
+                      "properties": {
+                        "day": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "prediction": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "committed",
+                                "posted",
+                                "revealed"
+                              ]
+                            },
+                            "hash": {
+                              "type": "string",
+                              "pattern": "^0x[0-9a-fA-F]+$"
+                            },
+                            "commitTxHash": {
+                              "type": "string",
+                              "pattern": "^0x[0-9a-fA-F]+$"
+                            },
+                            "commitTxUrl": {
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "committedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "maturesAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "horizonDays": {
+                              "type": "integer",
+                              "exclusiveMinimum": true,
+                              "minimum": 0
+                            },
+                            "revealed": {
+                              "type": "object",
+                              "properties": {
+                                "text": {
+                                  "type": "string"
+                                },
+                                "assetSymbol": {
+                                  "type": "string"
+                                },
+                                "direction": {
+                                  "type": "string",
+                                  "enum": [
+                                    "up",
+                                    "down"
+                                  ]
+                                },
+                                "won": {
+                                  "type": "boolean"
+                                },
+                                "returnBps": {
+                                  "type": "integer"
+                                },
+                                "returnFormatted": {
+                                  "type": "string"
+                                },
+                                "revealTxHash": {
+                                  "type": "string",
+                                  "pattern": "^0x[0-9a-fA-F]+$"
+                                },
+                                "revealTxUrl": {
+                                  "type": "string",
+                                  "format": "uri"
+                                }
+                              },
+                              "required": [
+                                "text",
+                                "assetSymbol",
+                                "direction",
+                                "won",
+                                "returnBps",
+                                "returnFormatted",
+                                "revealTxHash",
+                                "revealTxUrl"
+                              ],
+                              "additionalProperties": false,
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "status",
+                            "hash",
+                            "commitTxHash",
+                            "commitTxUrl",
+                            "committedAt",
+                            "maturesAt",
+                            "horizonDays",
+                            "revealed"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "day",
+                        "prediction"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
+                    "recent": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "committed",
+                              "posted",
+                              "revealed"
+                            ]
+                          },
+                          "hash": {
+                            "type": "string",
+                            "pattern": "^0x[0-9a-fA-F]+$"
+                          },
+                          "commitTxHash": {
+                            "type": "string",
+                            "pattern": "^0x[0-9a-fA-F]+$"
+                          },
+                          "commitTxUrl": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "committedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "maturesAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "horizonDays": {
+                            "type": "integer",
+                            "exclusiveMinimum": true,
+                            "minimum": 0
+                          },
+                          "revealed": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "assetSymbol": {
+                                "type": "string"
+                              },
+                              "direction": {
+                                "type": "string",
+                                "enum": [
+                                  "up",
+                                  "down"
+                                ]
+                              },
+                              "won": {
+                                "type": "boolean"
+                              },
+                              "returnBps": {
+                                "type": "integer"
+                              },
+                              "returnFormatted": {
+                                "type": "string"
+                              },
+                              "revealTxHash": {
+                                "type": "string",
+                                "pattern": "^0x[0-9a-fA-F]+$"
+                              },
+                              "revealTxUrl": {
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "required": [
+                              "text",
+                              "assetSymbol",
+                              "direction",
+                              "won",
+                              "returnBps",
+                              "returnFormatted",
+                              "revealTxHash",
+                              "revealTxUrl"
+                            ],
+                            "additionalProperties": false,
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "status",
+                          "hash",
+                          "commitTxHash",
+                          "commitTxUrl",
+                          "committedAt",
+                          "maturesAt",
+                          "horizonDays",
+                          "revealed"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "chainId": {
+                      "type": "integer",
+                      "exclusiveMinimum": true,
+                      "minimum": 0
+                    },
+                    "explorerBaseUrl": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": [
+                    "stats",
+                    "formatted",
+                    "current",
+                    "recent"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predictions/{id}": {
+      "get": {
+        "summary": "Satu prediksi menurut id NexaLedger. Teks dan salt baru terlihat setelah reveal.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prediksi",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "public, max-age=15"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "committed",
+                        "posted",
+                        "revealed"
+                      ]
+                    },
+                    "hash": {
+                      "type": "string",
+                      "pattern": "^0x[0-9a-fA-F]+$"
+                    },
+                    "commitTxHash": {
+                      "type": "string",
+                      "pattern": "^0x[0-9a-fA-F]+$"
+                    },
+                    "commitTxUrl": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "committedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "maturesAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "horizonDays": {
+                      "type": "integer",
+                      "exclusiveMinimum": true,
+                      "minimum": 0
+                    },
+                    "revealed": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string"
+                        },
+                        "assetSymbol": {
+                          "type": "string"
+                        },
+                        "direction": {
+                          "type": "string",
+                          "enum": [
+                            "up",
+                            "down"
+                          ]
+                        },
+                        "won": {
+                          "type": "boolean"
+                        },
+                        "returnBps": {
+                          "type": "integer"
+                        },
+                        "returnFormatted": {
+                          "type": "string"
+                        },
+                        "revealTxHash": {
+                          "type": "string",
+                          "pattern": "^0x[0-9a-fA-F]+$"
+                        },
+                        "revealTxUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "text",
+                        "assetSymbol",
+                        "direction",
+                        "won",
+                        "returnBps",
+                        "returnFormatted",
+                        "revealTxHash",
+                        "revealTxUrl"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "status",
+                    "hash",
+                    "commitTxHash",
+                    "commitTxUrl",
+                    "committedAt",
+                    "maturesAt",
+                    "horizonDays",
+                    "revealed"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "id tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rug-radar": {
+      "get": {
+        "summary": "Launch Pons V2 terbaru dengan red flag",
+        "responses": {
+          "200": {
+            "description": "Daftar launch",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "public, max-age=15"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "token": {
+                            "type": "string",
+                            "pattern": "^0x[0-9a-fA-F]+$"
+                          },
+                          "name": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "symbol": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "launchedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "ageSeconds": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "graduated": {
+                            "type": "boolean"
+                          },
+                          "creatorTaxBps": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "topHolderShareBps": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "redFlags": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "explorerUrl": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        },
+                        "required": [
+                          "token",
+                          "name",
+                          "symbol",
+                          "launchedAt",
+                          "ageSeconds",
+                          "graduated",
+                          "creatorTaxBps",
+                          "topHolderShareBps",
+                          "redFlags",
+                          "explorerUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "updatedAt",
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/market": {
+      "get": {
+        "summary": "Harga Stock Token: oracle vs DEX, perubahan dan seri 24 jam",
+        "responses": {
+          "200": {
+            "description": "Harga per aset",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "public, max-age=15"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "assets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "symbol": {
+                            "type": "string"
+                          },
+                          "oracle": {
+                            "type": "object",
+                            "properties": {
+                              "raw": {
+                                "type": "string",
+                                "pattern": "^\\d+$"
+                              },
+                              "decimals": {
+                                "type": "integer"
+                              },
+                              "formatted": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "raw",
+                              "decimals",
+                              "formatted"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "dex": {
+                            "type": "object",
+                            "properties": {
+                              "raw": {
+                                "type": "string",
+                                "pattern": "^\\d+$"
+                              },
+                              "decimals": {
+                                "type": "integer"
+                              },
+                              "formatted": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "raw",
+                              "decimals",
+                              "formatted"
+                            ],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
+                          "gapBps": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "gapFormatted": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "changeBps": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "changeFormatted": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "windowHours": {
+                            "type": "integer",
+                            "exclusiveMinimum": true,
+                            "minimum": 0,
+                            "nullable": true
+                          },
+                          "series": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                "oracle": {
+                                  "type": "string",
+                                  "pattern": "^\\d+$"
+                                },
+                                "dex": {
+                                  "type": "string",
+                                  "pattern": "^\\d+$",
+                                  "nullable": true
+                                }
+                              },
+                              "required": [
+                                "at",
+                                "oracle",
+                                "dex"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "symbol",
+                          "oracle",
+                          "dex",
+                          "gapBps",
+                          "gapFormatted",
+                          "changeBps",
+                          "changeFormatted",
+                          "windowHours",
+                          "series"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "updatedAt",
+                    "assets"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leaderboard": {
+      "get": {
+        "summary": "NEXA vs KOL: leaderboard akurasi. Hanya KOL yang bersedia dinilai; peringkat butuh minimal minScored call ternilai.",
+        "responses": {
+          "200": {
+            "description": "Peringkat akurasi",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "public, max-age=15"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "minScored": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "rank": {
+                            "type": "integer",
+                            "exclusiveMinimum": true,
+                            "minimum": 0,
+                            "nullable": true
+                          },
+                          "handle": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "isNexa": {
+                            "type": "boolean"
+                          },
+                          "scored": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "wins": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "pending": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "winRate": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "nullable": true
+                          },
+                          "avgReturnBps": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "formatted": {
+                            "type": "object",
+                            "properties": {
+                              "winRate": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "avgReturn": {
+                                "type": "string",
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "winRate",
+                              "avgReturn"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "rank",
+                          "handle",
+                          "displayName",
+                          "isNexa",
+                          "scored",
+                          "wins",
+                          "pending",
+                          "winRate",
+                          "avgReturnBps",
+                          "formatted"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "updatedAt",
+                    "minScored",
+                    "entries"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/burn": {
+      "get": {
+        "summary": "Burn tracker $NEXA (BurnVault)",
+        "responses": {
+          "200": {
+            "description": "Total dan riwayat burn",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "public, max-age=15"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalBurned": {
+                      "type": "object",
+                      "properties": {
+                        "raw": {
+                          "type": "string",
+                          "pattern": "^\\d+$"
+                        },
+                        "decimals": {
+                          "type": "integer"
+                        },
+                        "formatted": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "raw",
+                        "decimals",
+                        "formatted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "burns": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "amount": {
+                            "type": "object",
+                            "properties": {
+                              "raw": {
+                                "type": "string",
+                                "pattern": "^\\d+$"
+                              },
+                              "decimals": {
+                                "type": "integer"
+                              },
+                              "formatted": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "raw",
+                              "decimals",
+                              "formatted"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "txHash": {
+                            "type": "string",
+                            "pattern": "^0x[0-9a-fA-F]+$"
+                          },
+                          "txUrl": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        },
+                        "required": [
+                          "at",
+                          "amount",
+                          "txHash",
+                          "txUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "totalBurned",
+                    "burns"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/nonce": {
+      "get": {
+        "summary": "Login wallet (SIWE): nonce sekali pakai. Mati sampai PAID_FEATURES_ENABLED=true.",
+        "responses": {
+          "200": {
+            "description": "Nonce",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "nonce": {
+                      "type": "string",
+                      "minLength": 8
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "nonce",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "fitur belum aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify": {
+      "post": {
+        "summary": "Verifikasi pesan SIWE + tanda tangan, lalu buat sesi bearer.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "signature": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-fA-F]+$"
+                  }
+                },
+                "required": [
+                  "message",
+                  "signature"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sesi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "token",
+                    "address",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "body tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "invalid_message, domain_mismatch, bad_signature, bad_nonce, expired_message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "fitur belum aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Akhiri sesi (header Authorization: Bearer).",
+        "responses": {
+          "204": {
+            "description": "Selesai"
+          },
+          "503": {
+            "description": "fitur belum aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "summary": "Profil sesi: status holder $NEXA dan benefit (alert lebih cepat, kredit Ask gratis).",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string"
+                    },
+                    "holder": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "isHolder": {
+                          "type": "boolean"
+                        },
+                        "balance": {
+                          "type": "object",
+                          "properties": {
+                            "raw": {
+                              "type": "string",
+                              "pattern": "^\\d+$"
+                            },
+                            "decimals": {
+                              "type": "integer"
+                            },
+                            "formatted": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "raw",
+                            "decimals",
+                            "formatted"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "threshold": {
+                          "type": "object",
+                          "properties": {
+                            "raw": {
+                              "type": "string",
+                              "pattern": "^\\d+$"
+                            },
+                            "decimals": {
+                              "type": "integer"
+                            },
+                            "formatted": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "raw",
+                            "decimals",
+                            "formatted"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "isHolder",
+                        "balance",
+                        "threshold"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "benefits": {
+                      "type": "object",
+                      "properties": {
+                        "earlyAlerts": {
+                          "type": "boolean"
+                        },
+                        "freeAsksPerMonth": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "freeAsksRemaining": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "month": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "earlyAlerts",
+                        "freeAsksPerMonth",
+                        "freeAsksRemaining",
+                        "month"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "pro": {
+                      "type": "object",
+                      "properties": {
+                        "active": {
+                          "type": "boolean"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "telegramLinked": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "active",
+                        "expiresAt",
+                        "telegramLinked"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "address",
+                    "holder",
+                    "benefits",
+                    "pro"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "login_required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "fitur belum aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pro/plan": {
+      "get": {
+        "summary": "NEXA Pro: harga, lama periode, penerima USDG, dan chain. Mati sampai PAID_FEATURES_ENABLED=true.",
+        "responses": {
+          "200": {
+            "description": "Rencana Pro",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "public, max-age=15"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "price": {
+                      "type": "object",
+                      "properties": {
+                        "raw": {
+                          "type": "string",
+                          "pattern": "^\\d+$"
+                        },
+                        "decimals": {
+                          "type": "integer"
+                        },
+                        "formatted": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "raw",
+                        "decimals",
+                        "formatted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "durationDays": {
+                      "type": "integer",
+                      "exclusiveMinimum": true,
+                      "minimum": 0
+                    },
+                    "recipient": {
+                      "type": "string"
+                    },
+                    "usdgAddress": {
+                      "type": "string"
+                    },
+                    "chainId": {
+                      "type": "integer",
+                      "exclusiveMinimum": true,
+                      "minimum": 0
+                    },
+                    "chain": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "rpcUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "explorerUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "rpcUrl",
+                        "explorerUrl"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "telegramBot": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "price",
+                    "durationDays",
+                    "recipient",
+                    "usdgAddress",
+                    "chainId",
+                    "telegramBot"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "fitur berbayar belum aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pro/subscribe": {
+      "post": {
+        "summary": "Aktifkan atau perpanjang NEXA Pro dengan tx pembayaran USDG yang sudah terkonfirmasi. Pengirim tx harus sama dengan alamat sesi; membayar kelipatan harga memberi kelipatan periode.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "txHash": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-fA-F]{64}$"
+                  }
+                },
+                "required": [
+                  "txHash"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Langganan aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "addedDays": {
+                      "type": "integer",
+                      "exclusiveMinimum": true,
+                      "minimum": 0
+                    },
+                    "paymentTxUrl": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": [
+                    "active",
+                    "expiresAt",
+                    "addedDays",
+                    "paymentTxUrl"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "body tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "login_required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "pembayaran tidak sah: tx_not_found, tx_failed, no_payment, underpaid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "payer_mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "payment_already_used",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "fitur berbayar belum aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pro/telegram/link": {
+      "post": {
+        "summary": "Kode sekali pakai (10 menit) untuk menautkan chat Telegram pribadi: kirim `/start <kode>` ke bot. Hanya pelanggan aktif.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Kode tautan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "url",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "login_required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "subscription_required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "paid_features_disabled atau telegram_not_configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pro/telegram/unlink": {
+      "post": {
+        "summary": "Putuskan chat Telegram dari alamat sesi.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Selesai"
+          },
+          "401": {
+            "description": "login_required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "fitur berbayar belum aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts/stream": {
+      "get": {
+        "summary": "Alert Pro real-time (Server-Sent Events). Alert terkirim saat post disetujui, 15 menit sebelum post publik di X. Event `alert` berisi JSON AlertEvent. Tanpa Last-Event-ID stream dimulai dari alert terbaru; dengan itu melanjutkan dari id tersebut. Butuh langganan aktif.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "last-event-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "text/event-stream; setiap event `alert` membawa AlertEvent",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "exclusiveMinimum": true,
+                      "minimum": 0
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "publicAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "content",
+                    "createdAt",
+                    "publicAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "login_required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "subscription_required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "fitur berbayar belum aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ask/plan": {
+      "get": {
+        "summary": "Ask NEXA: harga, penerima USDG, token, dan chain pembayaran, agar web bisa membayar langsung dari wallet. Mati sampai PAID_FEATURES_ENABLED=true.",
+        "responses": {
+          "200": {
+            "description": "Rencana Ask NEXA",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "public, max-age=15"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "price": {
+                      "type": "object",
+                      "properties": {
+                        "raw": {
+                          "type": "string",
+                          "pattern": "^\\d+$"
+                        },
+                        "decimals": {
+                          "type": "integer"
+                        },
+                        "formatted": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "raw",
+                        "decimals",
+                        "formatted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "recipient": {
+                      "type": "string"
+                    },
+                    "usdgAddress": {
+                      "type": "string"
+                    },
+                    "chainId": {
+                      "type": "integer",
+                      "exclusiveMinimum": true,
+                      "minimum": 0
+                    },
+                    "chain": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "rpcUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "explorerUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "rpcUrl",
+                        "explorerUrl"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "price",
+                    "recipient",
+                    "usdgAddress",
+                    "chainId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "fitur berbayar belum aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ask": {
+      "post": {
+        "summary": "Ask ELYSIA (free): risk summary for one token from indexed data. No payment, API key, or login; txHash in the body is ignored. Rate limited per IP (PENDING numbers: 10/min, 100/day).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "address": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-fA-F]{40}$"
+                  },
+                  "txHash": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-fA-F]{64}$"
+                  }
+                },
+                "required": [
+                  "address"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Risk report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string"
+                    },
+                    "generatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "report": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "symbol": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "ageSeconds": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "graduated": {
+                          "type": "boolean"
+                        },
+                        "creatorTaxBps": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "topHolderShareBps": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "trades": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "buys": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "sells": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          },
+                          "required": [
+                            "total",
+                            "buys",
+                            "sells"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "redFlags": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "unknowns": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "riskLevel": {
+                          "type": "string",
+                          "enum": [
+                            "low",
+                            "medium",
+                            "high",
+                            "unknown"
+                          ]
+                        },
+                        "signals": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              },
+                              "level": {
+                                "type": "string",
+                                "enum": [
+                                  "ok",
+                                  "watch",
+                                  "risk",
+                                  "unknown"
+                                ]
+                              },
+                              "note": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "value",
+                              "level",
+                              "note"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "type": "object",
+                              "properties": {
+                                "address": {
+                                  "type": "string"
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "format": "uri"
+                                }
+                              },
+                              "required": [
+                                "address",
+                                "url"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "creator": {
+                              "type": "object",
+                              "properties": {
+                                "address": {
+                                  "type": "string"
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "format": "uri"
+                                }
+                              },
+                              "required": [
+                                "address",
+                                "url"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "curve": {
+                              "type": "object",
+                              "properties": {
+                                "address": {
+                                  "type": "string"
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "format": "uri"
+                                }
+                              },
+                              "required": [
+                                "address",
+                                "url"
+                              ],
+                              "additionalProperties": false,
+                              "nullable": true
+                            },
+                            "pair": {
+                              "type": "object",
+                              "properties": {
+                                "address": {
+                                  "type": "string"
+                                },
+                                "symbol": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "decimals": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "nullable": true
+                                }
+                              },
+                              "required": [
+                                "address",
+                                "symbol",
+                                "decimals"
+                              ],
+                              "additionalProperties": false,
+                              "nullable": true
+                            },
+                            "launchedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "graduatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "nullable": true
+                            },
+                            "activity": {
+                              "type": "object",
+                              "properties": {
+                                "uniqueTraders": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "uniqueBuyers": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "uniqueSellers": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "tradesLast1h": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "tradesLast24h": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "firstTradeAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "nullable": true
+                                },
+                                "lastTradeAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "nullable": true
+                                },
+                                "volume": {
+                                  "type": "object",
+                                  "properties": {
+                                    "buyRaw": {
+                                      "type": "string"
+                                    },
+                                    "sellRaw": {
+                                      "type": "string"
+                                    },
+                                    "netRaw": {
+                                      "type": "string"
+                                    },
+                                    "buyFormatted": {
+                                      "type": "string"
+                                    },
+                                    "sellFormatted": {
+                                      "type": "string"
+                                    },
+                                    "netFormatted": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "buyRaw",
+                                    "sellRaw",
+                                    "netRaw",
+                                    "buyFormatted",
+                                    "sellFormatted",
+                                    "netFormatted"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "largestTrade": {
+                                  "type": "object",
+                                  "properties": {
+                                    "side": {
+                                      "type": "string",
+                                      "enum": [
+                                        "buy",
+                                        "sell"
+                                      ]
+                                    },
+                                    "quoteRaw": {
+                                      "type": "string"
+                                    },
+                                    "quoteFormatted": {
+                                      "type": "string"
+                                    },
+                                    "trader": {
+                                      "type": "string"
+                                    },
+                                    "at": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    }
+                                  },
+                                  "required": [
+                                    "side",
+                                    "quoteRaw",
+                                    "quoteFormatted",
+                                    "trader",
+                                    "at"
+                                  ],
+                                  "additionalProperties": false,
+                                  "nullable": true
+                                }
+                              },
+                              "required": [
+                                "uniqueTraders",
+                                "uniqueBuyers",
+                                "uniqueSellers",
+                                "tradesLast1h",
+                                "tradesLast24h",
+                                "firstTradeAt",
+                                "lastTradeAt",
+                                "volume",
+                                "largestTrade"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "creatorActivity": {
+                              "type": "object",
+                              "properties": {
+                                "trades": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "buys": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "sells": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "soldRaw": {
+                                  "type": "string"
+                                },
+                                "soldFormatted": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "trades",
+                                "buys",
+                                "sells",
+                                "soldRaw",
+                                "soldFormatted"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "holders": {
+                              "type": "object",
+                              "properties": {
+                                "count": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "top5ShareBps": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "top10ShareBps": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "top": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "address": {
+                                        "type": "string"
+                                      },
+                                      "url": {
+                                        "type": "string",
+                                        "format": "uri"
+                                      },
+                                      "shareBps": {
+                                        "type": "integer",
+                                        "minimum": 0
+                                      }
+                                    },
+                                    "required": [
+                                      "address",
+                                      "url",
+                                      "shareBps"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": [
+                                "count",
+                                "top5ShareBps",
+                                "top10ShareBps",
+                                "top"
+                              ],
+                              "additionalProperties": false,
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "token",
+                            "creator",
+                            "curve",
+                            "pair",
+                            "launchedAt",
+                            "graduatedAt",
+                            "activity",
+                            "creatorActivity",
+                            "holders"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "disclaimer": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "symbol",
+                        "ageSeconds",
+                        "graduated",
+                        "creatorTaxBps",
+                        "topHolderShareBps",
+                        "trades",
+                        "redFlags",
+                        "unknowns",
+                        "riskLevel",
+                        "signals",
+                        "details",
+                        "disclaimer"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "paymentTxUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "address",
+                    "generatedAt",
+                    "report",
+                    "paymentTxUrl"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "token_too_new (< 1 hour) or no_data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limited (Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signals/whales": {
+      "get": {
+        "summary": "Unavailable: whale transfers were Robinhood Stock Token data. Returns 503 until an ELYSIA data source exists.",
+        "responses": {
+          "503": {
+            "description": "unavailable (no ELYSIA data source yet)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signals": {
+      "get": {
+        "summary": "Signals API (berbayar): feed post publik NEXA. Butuh header x-api-key; mati sampai PAID_FEATURES_ENABLED=true.",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Feed sinyal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "content": {
+                            "type": "string"
+                          },
+                          "postedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "ledgerId": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "content",
+                          "postedAt",
+                          "ledgerId"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "kunci API tidak ada atau tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "batas laju terlampaui (header Retry-After)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "fitur berbayar belum aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

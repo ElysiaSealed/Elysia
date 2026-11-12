@@ -1,0 +1,90 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793374198456,
+      "tag": "0000_nice_moira_mactaggert",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793379017870,
+      "tag": "0001_tearful_ares",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793420920753,
+      "tag": "0002_loud_korg",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793421297455,
+      "tag": "0003_pretty_gateway",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793436034608,
+      "tag": "0004_nappy_star_brand",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793444227483,
+      "tag": "0005_robust_makkari",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793449102053,
+      "tag": "0006_brief_steel_serpent",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793458275718,
+      "tag": "0007_long_black_panther",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793463726752,
+      "tag": "0008_safe_silver_centurion",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793533468379,
+      "tag": "0009_fat_firelord",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793537586348,
+      "tag": "0010_ambiguous_sleepwalker",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794151201776,
+      "tag": "0011_bitter_killmonger",
+      "breakpoints": true
+    }
+  ]
+}

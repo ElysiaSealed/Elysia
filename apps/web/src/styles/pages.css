@@ -1,0 +1,165 @@
+/* Halaman dashboard (proof, rug radar, leaderboard, burn, ask). Hanya memakai token & kelas dasar desain landing. */
+.pg{padding:130px 24px 40px;min-height:70vh}
+.pg-head{margin-bottom:34px;display:flex;flex-direction:column;gap:14px;max-width:760px}
+.pg-head h1{font-size:clamp(38px,5vw,64px);font-weight:300;letter-spacing:-.035em;line-height:1.02}
+.pg-head h1 .dim{color:var(--ink-3)}
+.pg-head p{color:var(--ink-2);font-size:16px;max-width:620px}
+.pg-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.pg-stat{padding:20px;display:flex;flex-direction:column;gap:8px}
+.pg-stat .n{font-size:clamp(28px,3vw,40px);font-weight:300;letter-spacing:-.03em;line-height:1}
+.pg-stat .n.up{color:var(--org-2)}
+.pg-stat .t{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.pg-card{padding:24px;display:flex;flex-direction:column;gap:16px;margin-bottom:28px}
+.pg-card h3{font-size:22px;font-weight:300;letter-spacing:-.02em}
+.pg-kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pg-kv > div{background:var(--bg-3);padding:12px 14px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.pg-kv .k{color:var(--ink-3)}
+.pg-kv .v{word-break:break-all}
+.pg-hash{font-family:var(--mono);font-size:13px;color:var(--amber);word-break:break-all;line-height:1.6}
+.pg-list{display:grid;gap:8px}
+.pg-row{display:grid;grid-template-columns:minmax(0,1.3fr) repeat(3,minmax(0,.8fr)) minmax(0,1.3fr);align-items:center;gap:14px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;transition:border-color .2s}
+a.pg-row:hover{border-color:var(--line-2)}
+.pg-row .main{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pg-row .main b{font-weight:500;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pg-row .main span{color:var(--ink-3);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pg-row .cell{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pg-row .cell .k{color:var(--ink-3)}
+.pg-row.lb{grid-template-columns:44px minmax(0,1.6fr) repeat(3,minmax(0,1fr))}
+.pg-row.lb.nexa, .pg-row.lb.elysia{border-color:#1e4515;background:radial-gradient(90% 120% at 0% 0%,rgba(140,255,97,.16),transparent 60%),var(--bg-2)}
+.pg-rank{font-family:var(--mono);font-size:14px;color:var(--ink-2)}
+.pg-pill{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
+.pg-pill.win{color:var(--org);border-color:#1e4515;background:rgba(140,255,97,.08)}
+.pg-pill.loss{color:var(--ink-3)}
+.pg-flags{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.pg-flag{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:999px;color:var(--amber);border:1px solid #1e4515;background:rgba(140,255,97,.07)}
+.pg-flag.ok{color:var(--ink-3);border-color:var(--line);background:none}
+.pg-note{color:var(--ink-3);font-size:13px;line-height:1.6;max-width:760px}
+.pg-empty{padding:34px 24px;text-align:center;color:var(--ink-2);border:1px dashed var(--line-2);border-radius:var(--r)}
+.pg-empty b{display:block;color:var(--ink);font-weight:500;margin-bottom:6px;font-size:17px}
+.pg-link{color:var(--org);border-bottom:1px solid rgba(140,255,97,.35);transition:border-color .2s,color .2s}
+.pg-link:hover{border-color:var(--org);color:var(--org-2)}
+.pg-form{display:grid;gap:12px;max-width:640px}
+.pg-form label{display:grid;gap:6px}
+.pg-form input{font:inherit;color:var(--ink);background:var(--bg-3);border:1px solid var(--line-2);border-radius:12px;padding:12px 14px;font-family:var(--mono);font-size:13px;min-width:0}
+.pg-form input:focus{outline:none;border-color:var(--org)}
+.pg-form .btn{justify-self:start}
+.pg-msg{padding:14px 16px;border-radius:12px;border:1px solid var(--line-2);font-size:14px;color:var(--ink-2)}
+.pg-msg.err{border-color:#5A2610;color:var(--amber)}
+.pg-steps{display:grid;gap:10px;counter-reset:s;list-style:none}
+.pg-steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;color:var(--ink-2);font-size:14.5px}
+.pg-steps li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--ink)}
+.pg-big{font-size:clamp(40px,6vw,76px);font-weight:300;letter-spacing:-.04em;line-height:1}
+.pg-live{display:inline-flex;align-items:center;gap:8px}
+@media (max-width:900px){
+  .pg-grid{grid-template-columns:repeat(2,1fr)}
+  .pg-row,.pg-row.lb{grid-template-columns:1fr 1fr}
+  .pg-row .main,.pg-row.lb .main{grid-column:1/-1}
+}
+@media (max-width:560px){
+  .pg{padding-top:110px}
+}
+
+/* Navbar: ikon X bulat tanpa latar putih, tombol connect wallet, dan 8 tautan */
+.nav-x{width:44px;height:44px;flex:none}
+.links a{padding:8px 12px}
+.wallet{position:relative}
+.wallet-btn{min-height:44px;font-size:13.5px}
+.wallet-btn:disabled{opacity:.7;cursor:progress}
+.wallet-pop{position:absolute;right:0;top:calc(100% + 10px);width:min(320px,calc(100vw - 32px));padding:18px;display:flex;flex-direction:column;gap:10px;z-index:60;background:#121212;overflow:visible}
+.wallet-pop .k{color:var(--ink-3)}
+.wallet-row{display:flex;justify-content:space-between;gap:12px;align-items:baseline;border-top:1px solid var(--line);padding-top:10px}
+.wallet-row .v{font-size:13.5px;text-align:right}
+.wallet-note{color:var(--ink-3);font-size:13px}
+.wallet-err{color:var(--amber);font-size:13px;line-height:1.5}
+.wallet-link{font-size:13px;width:fit-content}
+.wallet-out{align-self:flex-start;min-height:40px}
+.wl-short{display:none}
+@media (max-width:1180px){
+  .links{display:none}
+  .menu-btn{display:flex}
+}
+@media (max-width:560px){
+  .nav-x{display:none}
+  .wallet-btn{padding-left:16px}
+}
+
+/* Navbar: ikon X bulat tanpa latar putih, tombol connect wallet, dan 8 tautan */
+.nav-x{width:44px;height:44px;flex:none}
+.links a{padding:8px 12px}
+.wallet{position:relative}
+.wallet-btn{min-height:44px;font-size:13.5px}
+.wallet-btn:disabled{opacity:.7;cursor:progress}
+.wallet-pop{position:absolute;right:0;top:calc(100% + 10px);width:min(320px,calc(100vw - 32px));padding:18px;display:flex;flex-direction:column;gap:10px;z-index:60;background:#121212;overflow:visible}
+.wallet-pop .k{color:var(--ink-3)}
+.wallet-row{display:flex;justify-content:space-between;gap:12px;align-items:baseline;border-top:1px solid var(--line);padding-top:10px}
+.wallet-row .v{font-size:13.5px;text-align:right}
+.wallet-note{color:var(--ink-3);font-size:13px}
+.wallet-err{color:var(--amber);font-size:13px;line-height:1.5}
+.wallet-link{font-size:13px;width:fit-content}
+.wallet-out{align-self:flex-start;min-height:40px}
+@media (max-width:1180px){
+  .links{display:none}
+  .menu-btn{display:flex}
+}
+@media (max-width:560px){
+  .nav-x{display:none}
+  .wallet-btn{padding-left:16px}
+}
+@media (max-width:350px){
+  .nav .logo{font-size:15px}
+}
+/* Ikon X di navbar: efek hover sama dengan tombol oranye (warna aksen + gerak magnet dari NavMagnet) */
+.nav-x{color:var(--ink);will-change:transform}
+.nav-x:hover{background:var(--org);border-color:var(--org);color:#0A0A0A;box-shadow:0 0 18px -4px rgba(140,255,97,.5)}
+@media (max-width:620px){
+  .wl-full{display:none}
+  .wl-short{display:inline}
+  .wallet-pop{right:-52px}
+}
+.pg-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.pg-feed{display:grid;gap:8px;list-style:none;padding:0;margin:0}
+.pg-feed li{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:6px;font-size:14.5px;line-height:1.55;color:var(--ink-2)}
+.pg-feed .meta{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.pg-code{font-family:var(--mono);font-size:12.5px;line-height:1.6;color:var(--ink-2);background:var(--bg-3);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto;margin:0;white-space:pre}
+
+/* ELYSIA vs KOL: "Coming soon" page until suitable KOLs join */
+.cs{border:1px solid var(--line-2);border-radius:var(--r);padding:44px 28px 30px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:radial-gradient(60% 120% at 50% 0,rgba(140,255,97,.08),transparent 70%)}
+.cs-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1px solid rgba(140,255,97,.45);color:var(--org,#8cff61);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.cs-badge i{width:7px;height:7px;border-radius:50%;background:var(--org,#8cff61);animation:cs-dot 1.6s ease-in-out infinite}
+.cs b{font-weight:300;font-size:clamp(22px,3vw,32px);letter-spacing:-.02em;color:var(--ink)}
+.cs p{color:var(--ink-2);max-width:480px;font-size:15px}
+.cs-list{margin-top:18px;width:100%;max-width:640px;display:flex;flex-direction:column;gap:8px;opacity:.55;
+  -webkit-mask-image:linear-gradient(#000 40%,transparent);mask-image:linear-gradient(#000 40%,transparent)}
+.cs-row{display:grid;grid-template-columns:44px 1fr 90px 60px;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--line-2);border-radius:12px;text-align:left}
+.cs-row.nexa, .cs-row.elysia{border-color:rgba(140,255,97,.4)}
+.cs-row em{display:block;font-style:normal;color:var(--ink);font-size:15px}
+.cs-row small{color:var(--ink-3);font-size:12px}
+.cs-bar{height:8px;border-radius:4px;background:var(--line-2)}
+.cs-bar.s{width:70%}
+@keyframes cs-dot{0%,100%{opacity:1}50%{opacity:.3}}
+@media (max-width:560px){.cs-row{grid-template-columns:36px 1fr 60px}.cs-row .cs-bar.s{display:none}}
+
+/* Ask ELYSIA: detailed report */
+.pg-level{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg-3)}
+.pg-level .k{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.pg-level b{font-weight:500;font-size:18px}
+.pg-level.high b{color:var(--red)}
+.pg-level.medium b{color:var(--amber)}
+.pg-level.low b{color:var(--ink)}
+.pg-level.unknown b{color:var(--ink-3)}
+.pg-signals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.pg-sig{display:flex;flex-direction:column;gap:5px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg-3);min-width:0}
+.pg-sig .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.pg-sig .top b{font-weight:500;font-size:14px}
+.pg-sig .lv{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.pg-sig.watch .lv{color:var(--amber)}
+.pg-sig.risk{border-color:#5A1F14}
+.pg-sig.risk .lv{color:var(--red)}
+.pg-sig .val{font-size:16px;word-break:break-word}
+.pg-sig .note{font-size:12px;line-height:1.45;color:var(--ink-3)}
+.pg-holders{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pg-holders a{display:grid;grid-template-columns:32px 1fr auto;gap:10px;padding:10px 14px;background:var(--bg-3);font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
+.pg-holders a + a{border-top:1px solid var(--line)}
+.pg-holders a:hover{color:var(--ink)}
+.pg-links{display:flex;flex-wrap:wrap;gap:8px 20px}

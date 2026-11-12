@@ -1,0 +1,41 @@
+/*
+ * Splash loader screen: A green ring rotates twice, then smoothly fades out.
+ * Exit is purely CSS-driven (animation-fill + visibility hidden), ensuring the overlay never traps the user even if JS fails.
+ * Displayed on first load and hard refresh; skipped on internal route transitions or when the user requests reduced motion
+ * (html[data-splash="skip"], set by inline script in <head>).
+ * Note: Following the logo policy, the logo area remains empty when no official ELYSIA logo asset exists.
+ */
+.nx-splash{position:fixed;inset:0;z-index:9999;background:var(--bg,#0A0A0A);display:grid;place-items:center;cursor:pointer;
+  animation:nx-exit .6s cubic-bezier(.4,0,.2,1) 2.85s both}
+.nx-stage{width:min(34vmin,260px);aspect-ratio:1;position:relative}
+
+/* Dim track to provide clear rotational context */
+.nx-track{position:absolute;inset:-14%;border-radius:50%;border:2px solid rgba(255,255,255,.07);
+  animation:nx-track-in .3s ease-out 0s both,nx-ring-out .4s cubic-bezier(.4,0,.2,1) 1.2s both}
+.nx-ring{position:absolute;inset:-14%;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 30%,rgba(140,255,97,.25) 60%,var(--org,#8cff61) 100%);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+          mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+  animation:nx-ring-spin 1.5s cubic-bezier(.45,0,.35,1) 0s both,nx-ring-out .4s cubic-bezier(.4,0,.2,1) 1.2s both}
+
+.nx-mark{position:absolute;inset:0;
+  animation:nx-mark-in .5s cubic-bezier(.2,.7,.2,1) 1.3s both,nx-mark-out .6s cubic-bezier(.4,0,.2,1) 2.85s forwards}
+.nx-halo{position:absolute;inset:0;animation:nx-pulse .8s ease-in-out 2.1s both}
+.nx-glow{position:absolute;inset:0;
+  -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 38%,transparent 62%);
+          mask-image:linear-gradient(90deg,#000 0%,#000 38%,transparent 62%);
+  -webkit-mask-size:260% 100%;mask-size:260% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  animation:nx-wipe .9s cubic-bezier(.65,0,.35,1) 1.3s both}
+
+@keyframes nx-track-in{from{opacity:0}to{opacity:1}}
+@keyframes nx-ring-spin{from{transform:rotate(-90deg) scale(.7);opacity:0}12%{opacity:1}to{transform:rotate(630deg) scale(1);opacity:1}}
+@keyframes nx-ring-out{from{opacity:1}to{opacity:0;transform:scale(.8)}}
+@keyframes nx-mark-in{from{opacity:0;transform:scale(.9);filter:blur(8px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+@keyframes nx-wipe{from{-webkit-mask-position:100% 0;mask-position:100% 0}to{-webkit-mask-position:0% 0;mask-position:0% 0}}
+@keyframes nx-pulse{0%,100%{filter:drop-shadow(0 0 0 rgba(140,255,97,0))}50%{filter:drop-shadow(0 0 34px rgba(140,255,97,.7))}}
+@keyframes nx-mark-out{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.14)}}
+@keyframes nx-exit{from{opacity:1}to{opacity:0;visibility:hidden}}
+
+/* Skipped when moving between internal pages, or if reduced motion is requested */
+html[data-splash="skip"] .nx-splash{display:none}
+@media (prefers-reduced-motion:reduce){.nx-splash{display:none}}

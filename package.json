@@ -1,0 +1,22 @@
+{
+  "name": "elysia",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "check:wallets": "node scripts/check-wallets.mjs",
+    "telegram:test": "node scripts/telegram-test.mjs",
+    "review:testnet": "node scripts/review-testnet.mjs",
+    "indexer:local": "node scripts/indexer-local.mjs",
+    "lint": "echo \"no lint targets yet\"",
+    "typecheck": "pnpm -r --workspace-concurrency=1 --if-present typecheck",
+    "test": "pnpm -r --workspace-concurrency=1 --if-present test"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "turbo": "^2.11.10",
+    "viem": "^2.21.0"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "network": "elysium-testnet",
+  "chainId": 99801,
+  "deployer": null,
+  "agent": null,
+  "keeper": null,
+  "contracts": {
+    "NexaLedger": null,
+    "MockFeedHYPE": null,
+    "MockFeedETH": null,
+    "MockAssetHYPE": null,
+    "MockAssetETH": null
+  },
+  "_note": "Empty until ELYSIA wallets exist and contracts are deployed with explicit approval. See docs/ELYSIA_BLOCKERS.md. The NexaLedger key is a legacy name kept because the worker still reads it; the final ledger name is PENDING."
+}
