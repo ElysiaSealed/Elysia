@@ -197,3 +197,8 @@ Catatan ini mencatat pekerjaan nyata dan tidak mengubah status keputusan FINAL a
 - [di luar brief] `/daily-call` dan `/recap` hanya membaca `/proof` yang sudah ada; tidak ada endpoint, tabel, atau kontrak baru. `/recap` mengelompokkan panggilan per minggu UTC dari daftar `recent`, jadi hanya mencakup minggu-minggu panggilan terbaru.
 - Label Won/Lost memakai definisi `won` dari `/proof` yang sudah ada. Definisi "menang" untuk ELYSIA masih PENDING; halaman tidak menetapkannya.
 - Belum dibuat karena bentuk kontraknya bergantung pada keputusan PENDING: halaman Gate Report (`/gate-report`) dan Graduation Watch (`/graduations`), serta rekap Gate Report di `/recap`. Menunggu keputusan jalur Gate Report on-chain, skema hash, dan alamat launchpad (EB-10, EB-12).
+
+**2026-11-12 — Halaman Gate Report dan Graduation Watch (permintaan eksplisit pemilik: halaman dulu, data nanti; status PENDING sampai disetujui).**
+- [di luar brief] `/gate-report` dan `/graduations` adalah halaman statis tanpa API, tanpa fixture, dan tanpa skema data: isinya penjelasan dari brief (empat bidang Gate Report; tiga tahap AMM, HyperCore, HIP-3; alur AI, RiskGuard, commit, persetujuan, publikasi) dan keadaan kosong "belum ada". Tidak ada angka atau token karangan.
+- Bentuk endpoint `/gate-report` dan `/graduations` tetap tidak ditetapkan; menunggu keputusan jalur Gate Report on-chain, skema hash, dan alamat launchpad (EB-10, EB-12). Aturan umur token dan aturan URL (PENDING) sengaja tidak ditulis di halaman.
+- Nav: item "Gate Report" dan "Graduation Watch" ditambahkan di grup Tools; halaman warisan NEXA belum diubah.

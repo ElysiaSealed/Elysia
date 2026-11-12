@@ -23,6 +23,8 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Tools',
     items: [
+      { label: 'Gate Report', href: '/gate-report' },
+      { label: 'Graduation Watch', href: '/graduations' },
       { label: 'Rug radar', href: '/rug-radar' },
       { label: 'Ask ELYSIA', href: '/ask' },
       { label: 'Signals API', href: '/signals' },
