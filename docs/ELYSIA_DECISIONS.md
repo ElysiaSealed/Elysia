@@ -188,3 +188,7 @@ Catatan ini mencatat pekerjaan nyata dan tidak mengubah status keputusan FINAL a
 - Rename package root `nexa-ai` menjadi `elysia` dan scope `@nexa-ai/*` menjadi `@elysia/*` (82 file kode dan konfigurasi, lockfile diregenerasi offline). Aturan deny `Read(~/.config/nexa-ai/**)` sengaja tidak diubah (melindungi folder rahasia NEXA). Catatan di atas yang menyebut rename `@nexa-ai/*` sebagai PENDING kini usang.
 - Dokumen operasional NEXA diarsipkan di luar repository; `addresses/*.json` dikosongkan dan alamat deployer NEXA di `DeployElysiumMocks.s.sol` dihapus. Dependensi `htmlparser2` dihapus karena tidak dipakai lagi. `docker-compose.yml` memakai nama, user, DB, container, dan volume ELYSIA (port host 55433, hanya localhost).
 - Masih PENDING: kontrak `NexaLedger`/BurnVault/FeeSplitter, modul Pro/Ask/Signals legacy, variabel `NEXA_*`, konstanta chain 4663/46630 di `chains.ts`, dan konfirmasi pemegang hak cipta `LICENSE`.
+
+**2026-11-12 — Kebijakan Git permanen (perintah eksplisit pemilik; tidak mengubah keputusan FINAL/PENDING lain).**
+- Commit: Conventional Commits Bahasa Inggris; tanpa `Co-Authored-By` atau atribusi AI. `.githooks/commit-msg` memvalidasi dan menolak (tidak menulis ulang); `core.hooksPath=.githooks` (lokal, diatur ulang oleh script `prepare`).
+- Push: hanya `origin/main` ke `ElysiaSealed/Elysia`, tanpa force push; `.githooks/pre-push` menjalankan typecheck, build, test non-DB, dan `forge test`. Test DB hanya dengan `TEST_DATABASE_URL` eksplisit ke DB lokal `elysia_test` (bukan NEXA). Perintah ringkas: `pnpm push`.

@@ -68,6 +68,14 @@ Tanpa persetujuan eksplisit, jangan: deploy, mengirim transaksi wallet, menghapu
 - TypeScript strict; input eksternal divalidasi zod; uang dan harga `bigint` dengan desimal eksplisit; waktu UTC; rahasia hanya di `.env` (jangan di repo); perbarui `.env.example` bila ada variabel baru.
 - Salt, API key, dan private key tidak pernah di log.
 - Bahasa: komunikasi dan dokumen planning dalam Bahasa Indonesia; kode, komentar, nama, log developer, commit message, branch, dan PR dalam Bahasa Inggris (Conventional Commits). Konten publik ELYSIA dalam Bahasa Inggris.
+- **Kebijakan Git (permanen):**
+  - Commit message: hanya Bahasa Inggris dan Conventional Commits (`feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `build`, `ci`, `perf`, `style`, `revert`), subjek maksimal 100 karakter.
+  - Dilarang menambahkan `Co-Authored-By`, atribusi AI, atau "Generated with Claude" ke commit message, PR, atau file mana pun.
+  - `.githooks/commit-msg` memvalidasi dan **menolak** pesan yang tidak valid; hook tidak pernah menulis ulang pesan. Hook aktif lewat `core.hooksPath=.githooks` (diatur otomatis oleh `pnpm install` lewat script `prepare`).
+  - Push hanya ke `origin/main` repository ELYSIA (`ElysiaSealed/Elysia`), lewat `pnpm push`. `.githooks/pre-push` menolak force push, branch lain, hapus branch, dan working tree yang kotor, lalu menjalankan typecheck, production build, test non-DB, dan `forge test`.
+  - Test DB hanya berjalan bila `TEST_DATABASE_URL` diset eksplisit ke DB lokal ELYSIA bernama `elysia_test` (tanpa kata NEXA); tidak ada fallback ke DB lain. Tanpa itu, test DB dilaporkan **belum dijalankan**, bukan lolos.
+  - Dilarang memakai `--no-verify`, mengubah atau menonaktifkan hook, dan memakai `git push` langsung untuk menghindari hook. Hook tidak pernah membuat commit dan tidak pernah men-deploy.
+  - Commit dan push tetap hanya atas persetujuan eksplisit pengguna (lihat bagian 5 dan 6).
 - Task gagal 3 kali dengan pendekatan berbeda: catat di `docs/ELYSIA_BLOCKERS.md` dan lanjut task lain.
 
 ## 8. Skill dan agent

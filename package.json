@@ -12,7 +12,13 @@
     "indexer:local": "node scripts/indexer-local.mjs",
     "lint": "echo \"no lint targets yet\"",
     "typecheck": "pnpm -r --workspace-concurrency=1 --if-present typecheck",
-    "test": "pnpm -r --workspace-concurrency=1 --if-present test"
+    "build": "pnpm -r --workspace-concurrency=1 --if-present build",
+    "test": "pnpm -r --workspace-concurrency=1 --if-present test",
+    "test:scripts": "node --test scripts/lib/test-db-url.test.mjs",
+    "test:non-db": "node scripts/run-tests.mjs",
+    "test:db": "node scripts/run-tests.mjs --db",
+    "push": "git push origin main",
+    "prepare": "node scripts/hooks/install.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
