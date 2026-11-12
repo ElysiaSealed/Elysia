@@ -1,38 +1,13 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import type { Prediction } from '@elysia/api-client'
 import { Empty, PageShell } from '@/components/pages/PageShell'
+import { PredictionRow } from '@/components/pages/PredictionRow'
 import { apiForChain, hasElysium, safe } from '@/lib/api'
 import { ChainPicker } from '@/components/pages/ChainPicker'
-import { fmtUtc, shortHash } from '@/lib/format'
+import { fmtUtc } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Proof of Intelligence · ELYSIA', alternates: { canonical: '/proof' } }
-
-function Row({ p }: { p: Prediction }) {
-  const r = p.revealed
-  return (
-    <a className="pg-row" href={`/predictions/${p.id}`}>
-      <div className="main">
-        <b>{r ? r.text : `Commit #${p.id}`}</b>
-        <span className="mono">{shortHash(p.hash)}</span>
-      </div>
-      <div className="cell">
-        <span className="k">Committed</span>
-        <span className="mono-v">{fmtUtc(p.committedAt)}</span>
-      </div>
-      <div className="cell">
-        <span className="k">{r ? 'Asset' : 'Matures'}</span>
-        <span className="mono-v">{r ? `${r.assetSymbol} ${r.direction === 'up' ? '↑' : '↓'}` : fmtUtc(p.maturesAt)}</span>
-      </div>
-      <div className="cell">
-        <span className="k">Return</span>
-        <span className="mono-v">{r ? r.returnFormatted : 'n/a'}</span>
-      </div>
-      <span className={`pg-pill ${r ? (r.won ? 'win' : 'loss') : ''}`}>{r ? (r.won ? 'Won' : 'Lost') : 'Pending'}</span>
-    </a>
-  )
-}
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
@@ -108,7 +83,7 @@ export default async function ProofPage(props: Props) {
           ) : (
             <div className="pg-list">
               {proof.recent.map((p) => (
-                <Row key={p.id} p={p} />
+                <PredictionRow key={p.id} p={p} />
               ))}
             </div>
           )}

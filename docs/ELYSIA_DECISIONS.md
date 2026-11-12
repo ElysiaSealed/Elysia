@@ -192,3 +192,8 @@ Catatan ini mencatat pekerjaan nyata dan tidak mengubah status keputusan FINAL a
 **2026-11-12 — Kebijakan Git permanen (perintah eksplisit pemilik; tidak mengubah keputusan FINAL/PENDING lain).**
 - Commit: Conventional Commits Bahasa Inggris; tanpa `Co-Authored-By` atau atribusi AI. `.githooks/commit-msg` memvalidasi dan menolak (tidak menulis ulang); `core.hooksPath=.githooks` (lokal, diatur ulang oleh script `prepare`).
 - Push: hanya `origin/main` ke `ElysiaSealed/Elysia`, tanpa force push; `.githooks/pre-push` menjalankan typecheck, build, test non-DB, dan `forge test`. Test DB hanya dengan `TEST_DATABASE_URL` eksplisit ke DB lokal `elysia_test` (bukan NEXA). Perintah ringkas: `pnpm push`.
+
+**2026-11-12 — Halaman web HYPE Daily Call dan The Gate Remembers (permintaan eksplisit pemilik; status PENDING sampai disetujui).**
+- [di luar brief] `/daily-call` dan `/recap` hanya membaca `/proof` yang sudah ada; tidak ada endpoint, tabel, atau kontrak baru. `/recap` mengelompokkan panggilan per minggu UTC dari daftar `recent`, jadi hanya mencakup minggu-minggu panggilan terbaru.
+- Label Won/Lost memakai definisi `won` dari `/proof` yang sudah ada. Definisi "menang" untuk ELYSIA masih PENDING; halaman tidak menetapkannya.
+- Belum dibuat karena bentuk kontraknya bergantung pada keputusan PENDING: halaman Gate Report (`/gate-report`) dan Graduation Watch (`/graduations`), serta rekap Gate Report di `/recap`. Menunggu keputusan jalur Gate Report on-chain, skema hash, dan alamat launchpad (EB-10, EB-12).

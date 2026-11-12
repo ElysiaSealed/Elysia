@@ -14,6 +14,8 @@ export const NAV_GROUPS: NavGroup[] = [
     label: 'Track record',
     items: [
       { label: 'Proof of Intelligence', href: '/proof' },
+      { label: 'HYPE Daily Call', href: '/daily-call' },
+      { label: 'The Gate Remembers', href: '/recap' },
       { label: 'ELYSIA vs KOL', href: '/leaderboard' },
       { label: 'Burn tracker', href: '/burn' },
     ],
