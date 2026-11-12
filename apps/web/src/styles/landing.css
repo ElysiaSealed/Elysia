@@ -120,7 +120,7 @@ em.s{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-
 .hero-btn-ghost{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;background:rgba(10,10,10,.7);color:#F2EFEA;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);transition:background .2s,border-color .2s,color .2s,box-shadow .2s,transform .2s;white-space:nowrap;cursor:pointer}
 .hero-btn-ghost:hover{background:rgba(140,255,97,.08);border-color:#8cff61;color:#8cff61;box-shadow:0 0 18px -4px rgba(140,255,97,.35);transform:translateY(-1px)}
 .btn-arrow{font-family:var(--sans);font-weight:400;font-size:13px}
-.copy-b{position:absolute;left:28px;right:28px;top:50%;max-width:1240px;margin:0 auto;transform:translateY(-50%);opacity:0;pointer-events:none}
+.copy-b{position:absolute;left:28px;right:28px;top:calc(50% + clamp(48px,8vh,96px));max-width:1240px;margin:0 auto;transform:translateY(-50%);opacity:0;pointer-events:none}
 .copy-b h2{max-width:560px}
 .copy-b code{display:inline-block;margin-top:22px;font-family:var(--mono);font-size:12.5px;color:var(--amber);background:#141414;border:1px solid var(--line);border-radius:10px;padding:10px 14px;max-width:100%;overflow-x:auto;white-space:nowrap}
 .copy-b .stage-foot{margin-top:36px}
