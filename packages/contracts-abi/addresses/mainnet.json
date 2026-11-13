@@ -1,4 +1,10 @@
 {
   "network": "mainnet",
-  "contracts": {}
+  "contracts": {
+    "ElysiaLedger": "0x89D5E9A903af6dA38977BaD6954E0Bd380429B53"
+  },
+  "chainId": 4663,
+  "deployTx": "0xa5410a1c34da90692f8a96b43bf1d139ca8634232caba11e21c0e514ae6a1d19",
+  "deployer": "0x30E12875b1cc04cE06c4a889CDA435f475678D82",
+  "agent": "0x399c038d0946b358A94F3DDdeE64A87df051a9fC"
 }
