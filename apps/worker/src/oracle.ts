@@ -37,7 +37,7 @@ const feedAbi = parseAbi([
 
 export interface OracleAsset {
   symbol: string
-  /** Aset yang dicatat di NexaLedger (feedOf(asset) harus menunjuk ke feed ini). */
+  /** Aset yang dicatat di ElysiaLedger (feedOf(asset) harus menunjuk ke feed ini). */
   asset: Address
   feed: Address
 }

@@ -7,7 +7,7 @@ export interface CallScore {
 }
 
 /**
- * Aturan skor yang sama dengan NexaLedger.reveal: naik menang bila return > 0 dan >= minMoveBps,
+ * Aturan skor yang sama dengan ElysiaLedger.reveal: naik menang bila return > 0 dan >= minMoveBps,
  * turun menang bila return < 0 dan -return >= minMoveBps. Harga bigint dengan desimal yang sama.
  */
 export function scoreCall(p: { direction: Direction; startPrice: bigint; endPrice: bigint; minMoveBps?: number }): CallScore {

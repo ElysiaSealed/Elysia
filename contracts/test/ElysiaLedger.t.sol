@@ -3,14 +3,14 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {stdJson} from "forge-std/StdJson.sol";
-import {NexaLedger} from "../src/NexaLedger.sol";
+import {ElysiaLedger} from "../src/ElysiaLedger.sol";
 import {AggregatorV3Interface} from "../src/interfaces/AggregatorV3Interface.sol";
 import {MockAggregator} from "./mocks/MockAggregator.sol";
 
-contract NexaLedgerTest is Test {
+contract ElysiaLedgerTest is Test {
     using stdJson for string;
 
-    NexaLedger ledger;
+    ElysiaLedger ledger;
     MockAggregator feed;
 
     address owner = makeAddr("owner");
@@ -23,7 +23,7 @@ contract NexaLedgerTest is Test {
 
     function setUp() public {
         vm.warp(1_800_000_000);
-        ledger = new NexaLedger(owner, agent);
+        ledger = new ElysiaLedger(owner, agent);
         feed = new MockAggregator();
         vm.prank(owner);
         ledger.setFeed(asset, AggregatorV3Interface(address(feed)));
@@ -75,13 +75,13 @@ contract NexaLedgerTest is Test {
     // ---------------------------------------------------------------- commit
 
     function test_commit_onlyAgent() public {
-        vm.expectRevert(NexaLedger.NotAgent.selector);
+        vm.expectRevert(ElysiaLedger.NotAgent.selector);
         ledger.commit(_hash(1));
     }
 
     function test_commit_storesAndEmits() public {
         vm.expectEmit(true, true, false, true);
-        emit NexaLedger.Committed(0, _hash(1), uint64(block.timestamp));
+        emit ElysiaLedger.Committed(0, _hash(1), uint64(block.timestamp));
         vm.prank(agent);
         uint256 id = ledger.commit(_hash(1));
         assertEq(id, 0);
@@ -91,10 +91,10 @@ contract NexaLedgerTest is Test {
 
     function test_commit_rejectsZeroAndDuplicate() public {
         vm.startPrank(agent);
-        vm.expectRevert(NexaLedger.ZeroHash.selector);
+        vm.expectRevert(ElysiaLedger.ZeroHash.selector);
         ledger.commit(bytes32(0));
         ledger.commit(_hash(1));
-        vm.expectRevert(NexaLedger.HashAlreadyCommitted.selector);
+        vm.expectRevert(ElysiaLedger.HashAlreadyCommitted.selector);
         ledger.commit(_hash(1));
         vm.stopPrank();
     }
@@ -104,7 +104,7 @@ contract NexaLedgerTest is Test {
     function test_reveal_upWins() public {
         (uint256 id, uint80 s, uint80 e) = _cycle(1, 100e8, 110e8);
         _reveal(id, 1, s, e);
-        NexaLedger.Prediction memory p = ledger.getPrediction(id);
+        ElysiaLedger.Prediction memory p = ledger.getPrediction(id);
         assertTrue(p.revealed);
         assertTrue(p.won);
         assertEq(p.returnBps, 1000);
@@ -144,14 +144,14 @@ contract NexaLedgerTest is Test {
 
     function test_reveal_onlyAgent() public {
         (uint256 id, uint80 s, uint80 e) = _cycle(1, 100e8, 110e8);
-        vm.expectRevert(NexaLedger.NotAgent.selector);
+        vm.expectRevert(ElysiaLedger.NotAgent.selector);
         ledger.reveal(id, TEXT, asset, 1, HORIZON, SALT, s, e);
     }
 
     function test_reveal_hashMismatch() public {
         (uint256 id, uint80 s, uint80 e) = _cycle(1, 100e8, 110e8);
         vm.prank(agent);
-        vm.expectRevert(NexaLedger.HashMismatch.selector);
+        vm.expectRevert(ElysiaLedger.HashMismatch.selector);
         ledger.reveal(id, TEXT, asset, 2, HORIZON, SALT, s, e); // arah diganti
     }
 
@@ -162,7 +162,7 @@ contract NexaLedgerTest is Test {
         vm.warp(block.timestamp + HORIZON - 1);
         uint80 e = feed.push(110e8, block.timestamp);
         vm.prank(agent);
-        vm.expectRevert(NexaLedger.NotMatured.selector);
+        vm.expectRevert(ElysiaLedger.NotMatured.selector);
         ledger.reveal(id, TEXT, asset, 1, HORIZON, SALT, 1, e);
     }
 
@@ -170,13 +170,13 @@ contract NexaLedgerTest is Test {
         (uint256 id, uint80 s, uint80 e) = _cycle(1, 100e8, 110e8);
         _reveal(id, 1, s, e);
         vm.prank(agent);
-        vm.expectRevert(NexaLedger.AlreadyRevealed.selector);
+        vm.expectRevert(ElysiaLedger.AlreadyRevealed.selector);
         ledger.reveal(id, TEXT, asset, 1, HORIZON, SALT, s, e);
     }
 
     function test_reveal_unknownPrediction() public {
         vm.prank(agent);
-        vm.expectRevert(NexaLedger.UnknownPrediction.selector);
+        vm.expectRevert(ElysiaLedger.UnknownPrediction.selector);
         ledger.reveal(99, TEXT, asset, 1, HORIZON, SALT, 1, 2);
     }
 
@@ -187,7 +187,7 @@ contract NexaLedgerTest is Test {
         uint256 id = ledger.commit(h);
         vm.warp(block.timestamp + HORIZON);
         vm.prank(agent);
-        vm.expectRevert(NexaLedger.NoFeed.selector);
+        vm.expectRevert(ElysiaLedger.NoFeed.selector);
         ledger.reveal(id, TEXT, other, 1, HORIZON, SALT, 1, 2);
     }
 
@@ -199,7 +199,7 @@ contract NexaLedgerTest is Test {
         vm.warp(block.timestamp + HORIZON + 1);
         uint80 e = feed.push(110e8, block.timestamp - 5);
         vm.prank(agent);
-        vm.expectRevert(NexaLedger.InvalidStartRound.selector);
+        vm.expectRevert(ElysiaLedger.InvalidStartRound.selector);
         ledger.reveal(id, TEXT, asset, 1, HORIZON, SALT, early, e);
     }
 
@@ -211,7 +211,7 @@ contract NexaLedgerTest is Test {
         vm.warp(block.timestamp + HORIZON + 1);
         uint80 e = feed.push(110e8, block.timestamp - 5);
         vm.prank(agent);
-        vm.expectRevert(NexaLedger.InvalidStartRound.selector);
+        vm.expectRevert(ElysiaLedger.InvalidStartRound.selector);
         ledger.reveal(id, TEXT, asset, 1, HORIZON, SALT, later, e);
     }
 
@@ -223,7 +223,7 @@ contract NexaLedgerTest is Test {
         feed.push(105e8, block.timestamp - 1); // round pertama setelah jatuh tempo
         uint80 e2 = feed.push(200e8, block.timestamp); // cherry-pick
         vm.prank(agent);
-        vm.expectRevert(NexaLedger.InvalidEndRound.selector);
+        vm.expectRevert(ElysiaLedger.InvalidEndRound.selector);
         ledger.reveal(id, TEXT, asset, 1, HORIZON, SALT, s, e2);
     }
 
@@ -235,7 +235,7 @@ contract NexaLedgerTest is Test {
         vm.warp(block.timestamp + HORIZON + 1);
         feed.push(110e8, block.timestamp - 5);
         vm.prank(agent);
-        vm.expectRevert(NexaLedger.InvalidEndRound.selector);
+        vm.expectRevert(ElysiaLedger.InvalidEndRound.selector);
         ledger.reveal(id, TEXT, asset, 1, HORIZON, SALT, s, early);
     }
 
@@ -257,7 +257,7 @@ contract NexaLedgerTest is Test {
         vm.prank(owner);
         ledger.setAgent(newAgent);
         vm.prank(agent);
-        vm.expectRevert(NexaLedger.NotAgent.selector);
+        vm.expectRevert(ElysiaLedger.NotAgent.selector);
         ledger.commit(_hash(1));
         vm.prank(newAgent);
         ledger.commit(_hash(1));
@@ -265,14 +265,14 @@ contract NexaLedgerTest is Test {
 
     function test_renounceOwnership_disabled() public {
         vm.prank(owner);
-        vm.expectRevert(NexaLedger.RenounceDisabled.selector);
+        vm.expectRevert(ElysiaLedger.RenounceDisabled.selector);
         ledger.renounceOwnership();
         assertEq(ledger.owner(), owner);
     }
 
     function test_constructor_zeroAgentReverts() public {
-        vm.expectRevert(NexaLedger.ZeroAddress.selector);
-        new NexaLedger(owner, address(0));
+        vm.expectRevert(ElysiaLedger.ZeroAddress.selector);
+        new ElysiaLedger(owner, address(0));
     }
 
     // ------------------------------------------------------------------ fuzz
@@ -297,7 +297,7 @@ contract NexaLedgerTest is Test {
         (uint256 id, uint80 s, uint80 e) = _cycle(dir, int256(uint256(startPx)), int256(uint256(endPx)));
         _reveal(id, dir, s, e);
 
-        NexaLedger.Prediction memory p = ledger.getPrediction(id);
+        ElysiaLedger.Prediction memory p = ledger.getPrediction(id);
         int256 ret = ((int256(uint256(endPx)) - int256(uint256(startPx))) * 10_000) / int256(uint256(startPx));
         assertEq(p.returnBps, ret);
         bool expected = dir == 1 ? (ret > 0 && ret >= int256(uint256(minMove))) : (ret < 0 && -ret >= int256(uint256(minMove)));

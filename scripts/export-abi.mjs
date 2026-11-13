@@ -1,7 +1,7 @@
 // Jalankan di: ROOT. Ekspor ABI hasil `forge build` ke TS bertipe (as const) + JSON.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 const SRC = { CreatorFeeSplitter: 'FeeSplitter', ProtocolFeeSplitter: 'FeeSplitter' } // beberapa kontrak berbagi satu file
-const contracts = ['NexaLedger', 'BurnVault', 'CreatorFeeSplitter', 'ProtocolFeeSplitter']
+const contracts = ['ElysiaLedger', 'BurnVault', 'CreatorFeeSplitter', 'ProtocolFeeSplitter']
 mkdirSync('packages/contracts-abi/abi', { recursive: true })
 let index = '// DIHASILKAN oleh scripts/export-abi.mjs dari contracts/out. Jangan diedit manual.\n'
 for (const name of contracts) {

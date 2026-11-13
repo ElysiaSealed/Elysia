@@ -2,7 +2,7 @@ import type { Address, Hex } from 'viem'
 import type { FeedReader, FeedReading } from './oracle'
 
 /**
- * KEEPER TESTNET. Robinhood Chain Testnet tidak punya feed Chainlink, jadi NexaLedger testnet memakai MockAggregator.
+ * KEEPER TESTNET. Robinhood Chain Testnet tidak punya feed Chainlink, jadi ElysiaLedger testnet memakai MockAggregator.
  * Keeper menyalin harga feed Chainlink MAINNET (NVDA, ETH) ke feed tiruan itu, mirip perilaku Chainlink asli:
  * dorong round baru saat heartbeat habis atau harga bergeser >= deviationBps. Tanpa round baru setelah jatuh tempo,
  * reveal prediksi gagal ("belum ada round oracle setelah jatuh tempo").

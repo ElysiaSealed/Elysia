@@ -9,7 +9,7 @@ import {
   type Hex,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { nexaLedgerAbi } from '@elysia/contracts-abi'
+import { elysiaLedgerAbi } from '@elysia/contracts-abi'
 
 const aggregatorAbi = parseAbi([
   'function getRoundData(uint80) view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)',
@@ -67,15 +67,15 @@ export function createLedgerClient(cfg: LedgerConfig) {
     },
 
     async feedOf(asset: Address): Promise<Address> {
-      return pub.readContract({ address, abi: nexaLedgerAbi, functionName: 'feedOf', args: [asset] })
+      return pub.readContract({ address, abi: elysiaLedgerAbi, functionName: 'feedOf', args: [asset] })
     },
 
     /** commit(hash): menunggu receipt sukses; baru setelah itu boleh diposting. */
     async commit(hash: Hex): Promise<{ ledgerId: number; txHash: Hex; committedAt: bigint }> {
-      const txHash = await wallet.writeContract({ address, abi: nexaLedgerAbi, functionName: 'commit', args: [hash] })
+      const txHash = await wallet.writeContract({ address, abi: elysiaLedgerAbi, functionName: 'commit', args: [hash] })
       const receipt = await pub.waitForTransactionReceipt({ hash: txHash })
       if (receipt.status !== 'success') throw new Error(`commit gagal (tx ${txHash})`)
-      const [ev] = parseEventLogs({ abi: nexaLedgerAbi, logs: receipt.logs, eventName: 'Committed' })
+      const [ev] = parseEventLogs({ abi: elysiaLedgerAbi, logs: receipt.logs, eventName: 'Committed' })
       if (!ev) throw new Error(`event Committed tidak ditemukan (tx ${txHash})`)
       return { ledgerId: Number(ev.args.id), txHash, committedAt: BigInt(ev.args.committedAt) }
     },
@@ -117,13 +117,13 @@ export function createLedgerClient(cfg: LedgerConfig) {
     }): Promise<RevealResult> {
       const txHash = await wallet.writeContract({
         address,
-        abi: nexaLedgerAbi,
+        abi: elysiaLedgerAbi,
         functionName: 'reveal',
         args: [BigInt(p.ledgerId), p.text, p.asset, p.direction, p.horizon, p.salt, p.startRoundId, p.endRoundId],
       })
       const receipt = await pub.waitForTransactionReceipt({ hash: txHash })
       if (receipt.status !== 'success') throw new Error(`reveal gagal (tx ${txHash})`)
-      const [ev] = parseEventLogs({ abi: nexaLedgerAbi, logs: receipt.logs, eventName: 'Revealed' })
+      const [ev] = parseEventLogs({ abi: elysiaLedgerAbi, logs: receipt.logs, eventName: 'Revealed' })
       if (!ev) throw new Error(`event Revealed tidak ditemukan (tx ${txHash})`)
       return {
         txHash,

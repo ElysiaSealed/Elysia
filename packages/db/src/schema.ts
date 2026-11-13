@@ -145,7 +145,7 @@ export const predictions = pgTable(
   'predictions',
   {
     id: serial('id').primaryKey(),
-    ledgerId: integer('ledger_id'), // id di NexaLedger setelah commit
+    ledgerId: integer('ledger_id'), // id di ElysiaLedger setelah commit
     hash: text('hash').notNull(),
     status: predictionStatus('status').notNull().default('draft'),
     commitTxHash: text('commit_tx_hash'),

@@ -5,7 +5,7 @@ import { scoreCall } from '../src/scoring'
 const D = 8
 const p = (usd: number) => BigInt(Math.round(usd * 10 ** D))
 
-describe('scoreCall (sama dengan NexaLedger.reveal)', () => {
+describe('scoreCall (sama dengan ElysiaLedger.reveal)', () => {
   it('naik menang bila harga naik; return dalam bps', () => {
     expect(scoreCall({ direction: DIRECTION.UP, startPrice: p(100), endPrice: p(105) })).toEqual({ returnBps: 500, won: true })
   })

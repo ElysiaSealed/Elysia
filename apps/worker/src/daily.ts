@@ -9,7 +9,7 @@ import { priceChange, readOracleCandidates, type FeedHistory, type FeedReader, t
 export interface DailyConfig {
   /** Jam UTC paling awal Prediction of the Day dibuat (0-23). */
   hourUtc: number
-  /** Aset yang boleh diprediksi; feed-nya dibaca dari NexaLedger (feedOf), jadi harus sudah didaftarkan di kontrak. */
+  /** Aset yang boleh diprediksi; feed-nya dibaca dari ElysiaLedger (feedOf), jadi harus sudah didaftarkan di kontrak. */
   assets: readonly { symbol: string; asset: Address }[]
   /** Batas percobaan membuat draft per hari UTC (draft ditolak RiskGuard atau LLM gagal). */
   maxAttemptsPerDay: number

@@ -10,7 +10,7 @@ ELYSIA is a free service and an independent project. It was developed from an ex
 
 Planning is complete. Implementation has not started. Phases and approval gates are in [docs/ELYSIA_IMPLEMENTATION_ROADMAP.md](docs/ELYSIA_IMPLEMENTATION_ROADMAP.md).
 
-Some names in the code are inherited and pending a rename (for example the `NexaLedger` contract and the `NEXA_*` environment variable names). Do not run a global replace; see [docs/ELYSIA_MIGRATION_PLAN.md](docs/ELYSIA_MIGRATION_PLAN.md).
+Some names in the code are inherited and pending a rename (for example the `ElysiaLedger` contract and the `NEXA_*` environment variable names). Do not run a global replace; see [docs/ELYSIA_MIGRATION_PLAN.md](docs/ELYSIA_MIGRATION_PLAN.md).
 
 ## Scope
 

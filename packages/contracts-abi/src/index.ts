@@ -1,5 +1,5 @@
 // DIHASILKAN oleh scripts/export-abi.mjs dari contracts/out. Jangan diedit manual.
-export const nexaLedgerAbi = [
+export const elysiaLedgerAbi = [
   {
     "type": "constructor",
     "inputs": [
@@ -192,7 +192,7 @@ export const nexaLedgerAbi = [
       {
         "name": "",
         "type": "tuple",
-        "internalType": "struct NexaLedger.Prediction",
+        "internalType": "struct ElysiaLedger.Prediction",
         "components": [
           {
             "name": "hash",

@@ -54,7 +54,7 @@ export function buildOpenApi() {
       },
       '/predictions/{id}': {
         get: {
-          summary: 'Satu prediksi menurut id NexaLedger. Teks dan salt baru terlihat setelah reveal.',
+          summary: 'Satu prediksi menurut id ElysiaLedger. Teks dan salt baru terlihat setelah reveal.',
           parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer', minimum: 0 } }],
           responses: { '200': ok('Prediksi', predictionResponseSchema), '400': err('id tidak valid'), '404': err('tidak ditemukan') },
         },

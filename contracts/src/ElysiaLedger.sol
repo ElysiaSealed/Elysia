@@ -4,15 +4,15 @@ pragma solidity 0.8.28;
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {AggregatorV3Interface} from "./interfaces/AggregatorV3Interface.sol";
 
-/// @title NexaLedger
-/// @notice Commit-reveal untuk prediksi NEXA. `commit(hash)` dicatat sebelum posting, `reveal()` saat jatuh tempo,
-///         dan skor dihitung otomatis dari harga oracle Chainlink.
+/// @title ElysiaLedger
+/// @notice Commit-reveal for Elysia predictions. `commit(hash)` is recorded before posting, `reveal()` runs at maturity,
+///         and the score is computed on-chain from the Chainlink oracle price.
 /// @dev Hash = keccak256(abi.encode(string text, address asset, uint8 direction, uint32 horizon, bytes32 salt)).
 ///      Aset tersembunyi saat commit, jadi harga awal/akhir dibuktikan lewat roundId saat reveal. Kontrak memverifikasi
 ///      bahwa round awal adalah round terakhir sebelum commit dan round akhir adalah round pertama sesudah jatuh tempo,
 ///      sehingga agent tidak bisa memilih round yang menguntungkan.
 ///      Catatan: `roundId + 1` / `roundId - 1` hanya valid dalam satu phase aggregator Chainlink.
-contract NexaLedger is Ownable2Step {
+contract ElysiaLedger is Ownable2Step {
     uint8 public constant UP = 1;
     uint8 public constant DOWN = 2;
     uint32 public constant MIN_HORIZON = 1 hours;

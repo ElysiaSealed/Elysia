@@ -123,7 +123,7 @@ export const signalsResponseSchema = z.object({
       kind: z.string(),
       content: z.string(),
       postedAt: iso,
-      /** Id NexaLedger bila post ini adalah prediksi yang ter-commit; selain itu null. */
+      /** Id ElysiaLedger bila post ini adalah prediksi yang ter-commit; selain itu null. */
       ledgerId: z.number().int().nonnegative().nullable(),
     }),
   ),

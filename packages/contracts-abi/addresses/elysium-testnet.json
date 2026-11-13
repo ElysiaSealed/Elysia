@@ -5,7 +5,7 @@
   "agent": null,
   "keeper": null,
   "contracts": {
-    "NexaLedger": null,
+    "ElysiaLedger": null,
     "MockFeedHYPE": null,
     "MockFeedETH": null,
     "MockAssetHYPE": null,
@@ -30,5 +30,5 @@
     "mempool": "none public; single sequencer"
   },
   "_externalNote": "external = third-party contracts already deployed on Elysium Testnet (not ELYSIA contracts). Saved for future use; nothing reads them yet. Source: Elysium docs, provided by the owner.",
-  "_note": "Empty until ELYSIA wallets exist and contracts are deployed with explicit approval. See docs/ELYSIA_BLOCKERS.md. The NexaLedger key is a legacy name kept because the worker still reads it; the final ledger name is PENDING."
+  "_note": "Empty until ELYSIA wallets exist and contracts are deployed with explicit approval. See docs/ELYSIA_BLOCKERS.md. The ElysiaLedger key is a legacy name kept because the worker still reads it; the final ledger name is PENDING."
 }

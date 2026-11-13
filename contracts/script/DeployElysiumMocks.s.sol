@@ -2,18 +2,18 @@
 pragma solidity 0.8.28;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {NexaLedger} from "../src/NexaLedger.sol";
+import {ElysiaLedger} from "../src/ElysiaLedger.sol";
 import {MockAggregator} from "../test/mocks/MockAggregator.sol";
 
 /// SOLO ELYSIUM TESTNET (chain 99801). Tidak ada Chainlink di Elysium, jadi aset dan feed tiruan
-/// didaftarkan di NexaLedger supaya siklus commit -> reveal -> skor HYPE bisa diuji.
+/// didaftarkan di ElysiaLedger supaya siklus commit -> reveal -> skor HYPE bisa diuji.
 /// MockAggregator.push() terbuka untuk siapa pun: JANGAN dipakai di mainnet.
-/// Dijalankan oleh owner NexaLedger (deployer), karena setFeed hanya untuk owner.
+/// Dijalankan oleh owner ElysiaLedger (deployer), karena setFeed hanya untuk owner.
 ///
 /// Alamat aset tiruan deterministik: mockAsset("HYPE") dan mockAsset("ETH")
 /// (sama dengan fungsi yang sama di DeployTestnetMocks.s.sol, beda simbol).
 ///
-/// Env: NEXA_LEDGER (wajib). Opsional: MOCK_HYPE_E8 (default 35,00 USD), MOCK_ETH_E8 (default 2236,56 USD).
+/// Env: ELYSIA_LEDGER (wajib). Opsional: MOCK_HYPE_E8 (default 35,00 USD), MOCK_ETH_E8 (default 2236,56 USD).
 /// forge script script/DeployElysiumMocks.s.sol \
 ///   --rpc-url https://testnet-rpc.elysium.kinetiq.xyz \
 ///   --chain 99801 \
@@ -21,13 +21,13 @@ import {MockAggregator} from "../test/mocks/MockAggregator.sol";
 ///   --sender <DEPLOYER_ADDRESS> \
 ///   --broadcast
 contract DeployElysiumMocks is Script {
-    /// Alamat aset tiruan = kunci pengenal di NexaLedger; deterministik supaya mudah diisi di config.
+    /// Alamat aset tiruan = kunci pengenal di ElysiaLedger; deterministik supaya mudah diisi di config.
     function mockAsset(string memory symbol) public pure returns (address) {
         return address(uint160(uint256(keccak256(abi.encodePacked("nexa.mock.", symbol)))));
     }
 
     function run() external {
-        NexaLedger ledger = NexaLedger(vm.envAddress("NEXA_LEDGER"));
+        ElysiaLedger ledger = ElysiaLedger(vm.envAddress("ELYSIA_LEDGER"));
         // Harga awal: HYPE ~$35 (harga referensi Hyperliquid testnet), ETH ~$2236,56.
         // Keeper akan memperbarui harga dari Hyperliquid API (HYPE) dan Chainlink mainnet (ETH).
         int256 hypePrice = int256(vm.envOr("MOCK_HYPE_E8", uint256(3_500_000_000)));  // $35,00 × 1e8

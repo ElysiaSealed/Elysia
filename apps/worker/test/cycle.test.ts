@@ -7,7 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { createPublicClient, createTestClient, createWalletClient, defineChain, http, type Address, type Hex } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { costLog, postQueue, proAlerts, predictions, riskguardLog } from '@elysia/db'
-import { nexaLedgerAbi } from '@elysia/contracts-abi'
+import { elysiaLedgerAbi } from '@elysia/contracts-abi'
 import { DIRECTION } from '@elysia/shared'
 import { approvePost } from '../src/queue'
 import { createLedgerClient } from '../src/ledger'
@@ -46,7 +46,7 @@ if (configured) try {
 const exe = process.platform === 'win32' ? '.exe' : ''
 const anvilBin = process.env.ANVIL_BIN ?? join(homedir(), '.foundry', 'bin', `anvil${exe}`)
 const outDir = fileURLToPath(new URL('../../../contracts/out/', import.meta.url))
-const ledgerArtifact = join(outDir, 'NexaLedger.sol', 'NexaLedger.json')
+const ledgerArtifact = join(outDir, 'ElysiaLedger.sol', 'ElysiaLedger.json')
 const feedArtifact = join(outDir, 'MockAggregator.sol', 'MockAggregator.json')
 const chainReady = existsSync(anvilBin) && existsSync(ledgerArtifact) && existsSync(feedArtifact)
 if (!chainReady) console.warn('anvil atau artifact forge (contracts/out) tidak ada: test on-chain dilewati')
@@ -172,7 +172,7 @@ describe.skipIf(!dbUp || !chainReady)('siklus prediksi penuh (Anvil + Postgres)'
       account: ownerAccount,
       chain,
       address: ledgerAddress,
-      abi: nexaLedgerAbi,
+      abi: elysiaLedgerAbi,
       functionName: 'setFeed',
       args: [ASSET, feed],
     })

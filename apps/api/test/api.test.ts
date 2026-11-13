@@ -138,7 +138,7 @@ describe.skipIf(!dbUp)('API publik', () => {
   })
 
   describe('GET /predictions/:id', () => {
-    it('mengembalikan prediksi menurut id NexaLedger', async () => {
+    it('mengembalikan prediksi menurut id ElysiaLedger', async () => {
       await revealed(7, 1, 380, true, 9)
       const res = await get('/predictions/7')
       expect(res.statusCode).toBe(200)

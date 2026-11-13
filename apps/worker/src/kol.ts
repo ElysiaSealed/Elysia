@@ -60,7 +60,7 @@ export async function addCall(db: Db, read: FeedReader, c: NewCall, now = new Da
 }
 
 /**
- * Nilai call yang sudah jatuh tempo dengan aturan yang sama dengan NexaLedger (scoreCall). Harga akhir = round oracle terbaru
+ * Nilai call yang sudah jatuh tempo dengan aturan yang sama dengan ElysiaLedger (scoreCall). Harga akhir = round oracle terbaru
  * HANYA jika baru diperbarui sesudah jatuh tempo dan masih dalam SCORE_WINDOW_SECONDS; selain itu dilewati (tidak ditebak).
  * Ini pendekatan: kontrak memakai round pertama setelah jatuh tempo, sedangkan call KOL tidak ada di chain.
  */

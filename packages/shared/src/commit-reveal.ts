@@ -15,7 +15,7 @@ export interface PredictionPreimage {
 
 /**
  * keccak256(abi.encode(string text, address asset, uint8 direction, uint32 horizon, bytes32 salt))
- * Harus identik dengan `NexaLedger.computeHash`.
+ * Harus identik dengan `ElysiaLedger.computeHash`.
  */
 export function computePredictionHash(p: PredictionPreimage): Hex {
   return keccak256(

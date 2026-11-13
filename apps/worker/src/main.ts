@@ -29,7 +29,7 @@ const env = z
     RPC_URL: z.string().url().optional(),
     CHAIN_ID: z.coerce.number().int().default(CHAINS.elysiumTestnet.id),
     PREIMAGE_KEY: optionalEncKey,
-    NEXA_LEDGER_ADDRESS: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
+    ELYSIA_LEDGER_ADDRESS: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
     AGENT_PRIVATE_KEY: optionalPrivateKey,
     X_POST_MODE: z.enum(['dry', 'live']).default('dry'),
     /** X credentials (OAuth 1.0a, the ELYSIA X account). Set by the owner in the host dashboard and never logged. All are required when X_POST_MODE=live. */
@@ -67,7 +67,7 @@ const env = z
     /** Selisih DEX vs oracle: pool Uniswap v4 NVDA/USDG terdalam dipilih otomatis; DEX_POOL_ID mengunci satu pool (0x + 64 heks). Kedalaman minimum dalam USDG. */
     DEX_POOL_ID: z.string().regex(/^0x[0-9a-fA-F]{64}$/).optional().or(z.literal('')),
     DEX_MIN_DEPTH_USDG: z.coerce.number().positive().default(1000),
-    /** JSON [{"symbol":"NVDA","asset":"0x..."}]; kosong = aset mainnet bila CHAIN_ID=4663. Feed harus terdaftar di NexaLedger. */
+    /** JSON [{"symbol":"NVDA","asset":"0x..."}]; kosong = aset mainnet bila CHAIN_ID=4663. Feed harus terdaftar di ElysiaLedger. */
     PREDICTION_ASSETS: z.string().optional(),
     /** Keeper harga TESTNET: wallet sendiri (bukan agent) yang mendorong round ke feed tiruan. Kosong = nonaktif. */
     KEEPER_PRIVATE_KEY: optionalPrivateKey,
@@ -105,7 +105,7 @@ const backup = env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID ? new TelegramBot(
 const publishDeps: PublishDeps = { db, ...(publish ? { publish } : {}), ...(backup ? { backup } : {}) }
 
 // Commit/reveal aktif hanya jika kunci agent, alamat ledger, dan kunci enkripsi semuanya ada.
-const ledgerReady = Boolean(env.AGENT_PRIVATE_KEY && env.NEXA_LEDGER_ADDRESS && env.PREIMAGE_KEY)
+const ledgerReady = Boolean(env.AGENT_PRIVATE_KEY && env.ELYSIA_LEDGER_ADDRESS && env.PREIMAGE_KEY)
 const deps: CycleDeps | null = ledgerReady
   ? {
       db,
@@ -116,7 +116,7 @@ const deps: CycleDeps | null = ledgerReady
       ledger: createLedgerClient({
         rpcUrl,
         chainId: env.CHAIN_ID,
-        ledgerAddress: env.NEXA_LEDGER_ADDRESS as `0x${string}`,
+        ledgerAddress: env.ELYSIA_LEDGER_ADDRESS as `0x${string}`,
         agentPrivateKey: env.AGENT_PRIVATE_KEY as `0x${string}`,
       }),
     }
@@ -299,7 +299,7 @@ console.log(
 console.log(
   ledgerReady
     ? `worker: commit/reveal aktif (mode post ${env.X_POST_MODE}${publish ? `, batas ${env.X_LIVE_POST_CAP} post, jeda ${env.POST_INTERVAL_MINUTES} menit, persetujuan ${env.APPROVAL_MODE}` : ''})`
-    : 'worker: commit/reveal NONAKTIF (butuh AGENT_PRIVATE_KEY, NEXA_LEDGER_ADDRESS, PREIMAGE_KEY)',
+    : 'worker: commit/reveal NONAKTIF (butuh AGENT_PRIVATE_KEY, ELYSIA_LEDGER_ADDRESS, PREIMAGE_KEY)',
 )
 
 async function tick(): Promise<void> {

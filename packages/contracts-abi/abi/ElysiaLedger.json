@@ -191,7 +191,7 @@
       {
         "name": "",
         "type": "tuple",
-        "internalType": "struct NexaLedger.Prediction",
+        "internalType": "struct ElysiaLedger.Prediction",
         "components": [
           {
             "name": "hash",
