@@ -4,9 +4,9 @@ pragma solidity 0.8.28;
 import {Script, console2} from "forge-std/Script.sol";
 import {ElysiaLedger} from "../src/ElysiaLedger.sol";
 
-/// Env: AGENT_ADDRESS (wajib). Owner = akun yang menjalankan script (deployer).
-/// Testnet:  forge script script/DeployElysiaLedger.s.sol --rpc-url https://rpc.testnet.chain.robinhood.com --account deployer --broadcast
-/// Mainnet:  HANYA dry run (tanpa --broadcast).
+/// Env: AGENT_ADDRESS (required). Owner = the account that runs the script (the Deployer wallet).
+/// Robinhood Chain mainnet (4663): simulate first without --broadcast, using the keystore named elysia-deployer.
+/// Broadcasting is a mainnet transaction: only a human runs it, after explicit approval (roadmap gate R3).
 contract DeployElysiaLedger is Script {
     function run() external returns (ElysiaLedger ledger) {
         address agent = vm.envAddress("AGENT_ADDRESS");
