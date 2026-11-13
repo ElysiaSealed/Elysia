@@ -2,6 +2,8 @@
 name: riskguard-rule
 description: Dipakai saat diminta menambah atau mengubah aturan konten RiskGuard ELYSIA. Memisahkan aturan FINAL, PENDING, dan rekomendasi keamanan, lalu mengatur cara menulis aturan dan test fail-closed. Tidak mengubah RiskGuard tanpa persetujuan developer.
 ---
+> **Pembaruan `dev-rh` (2026-11-13):** isi di bawah ditulis untuk varian Elysium dan sebagian belum disesuaikan. Untuk `dev-rh`, `CLAUDE.md` yang berlaku: target Robinhood Chain mainnet (4663); peran Deployer, Agent, dan Treasury (tanpa Keeper); Ask gratis, Pro, Signals API, dan Sponsored berbayar dalam USDG; token $ELYS; disclaimer "Not affiliated with Robinhood"; tanpa Gate Report, Graduation Watch, HYPE Daily Call, dan rekap mingguan. Abaikan bagian yang bertentangan.
+
 # riskguard-rule (ELYSIA)
 
 Skill ini untuk RiskGuard **ELYSIA**. Kode di `packages/riskguard` masih **warisan NEXA** (aturan `$NEXA`, tipe konten `burn_report`/`sponsored`/`mention_reply`, bahasa ID dan EN, disclaimer NEXA). Aturan itu **bukan** otomatis aturan ELYSIA. Nama package `@elysia/riskguard` bukan identitas final package ELYSIA; baca nama sebenarnya dari `packages/riskguard/package.json` dan jangan mengasumsikannya.

@@ -1,7 +1,9 @@
 ---
 name: post-pipeline
-description: Dipakai saat menyentuh atau merancang alur publikasi ELYSIA (Gate Report, HYPE Daily Call, Graduation Watch, rekap mingguan) dari data sampai publikasi. Mengatur urutan, status konten, perlindungan rahasia, dan aturan yang masih PENDING. Tidak menjalankan pipeline dan tidak memublikasikan apa pun.
+description: Dipakai saat menyentuh atau merancang alur publikasi ELYSIA (Prediction of the Day, laporan harian dan Pons, pulse) dari data sampai publikasi. Mengatur urutan, status konten, perlindungan rahasia, dan aturan yang masih PENDING. Tidak menjalankan pipeline dan tidak memublikasikan apa pun.
 ---
+> **Pembaruan `dev-rh` (2026-11-13):** isi di bawah ditulis untuk varian Elysium dan sebagian belum disesuaikan. Untuk `dev-rh`, `CLAUDE.md` yang berlaku: target Robinhood Chain mainnet (4663); peran Deployer, Agent, dan Treasury (tanpa Keeper); Ask gratis, Pro, Signals API, dan Sponsored berbayar dalam USDG; token $ELYS; disclaimer "Not affiliated with Robinhood"; tanpa Gate Report, Graduation Watch, HYPE Daily Call, dan rekap mingguan. Abaikan bagian yang bertentangan.
+
 # post-pipeline (ELYSIA)
 
 Skill ini untuk alur publikasi **ELYSIA** (Gatekeeper of Elysium), proyek independen, bukan NEXA dengan nama baru. Kode worker/queue di repo masih warisan NEXA; jangan mengasumsikan seluruh aturan NEXA berlaku.

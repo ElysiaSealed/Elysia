@@ -2,6 +2,8 @@
 name: progress-log
 description: Panduan pencatatan progres, blocker, dan keputusan ELYSIA ke dokumen ELYSIA. Hanya atas permintaan developer, tidak otomatis. Tidak menulis ke dokumen NEXA, tidak mengubah keputusan atau status blocker tanpa persetujuan, dan tidak mencatat klaim tanpa bukti.
 ---
+> **Pembaruan `dev-rh` (2026-11-13):** isi di bawah ditulis untuk varian Elysium dan sebagian belum disesuaikan. Untuk `dev-rh`, `CLAUDE.md` yang berlaku: target Robinhood Chain mainnet (4663); peran Deployer, Agent, dan Treasury (tanpa Keeper); Ask gratis, Pro, Signals API, dan Sponsored berbayar dalam USDG; token $ELYS; disclaimer "Not affiliated with Robinhood"; tanpa Gate Report, Graduation Watch, HYPE Daily Call, dan rekap mingguan. Abaikan bagian yang bertentangan.
+
 # progress-log (ELYSIA)
 
 Skill ini mengatur cara mencatat progres di proyek **ELYSIA**. Ia **bukan otomatisasi**: tidak berjalan di akhir setiap task, tidak menjadi hook, dan hanya dipakai bila developer meminta pencatatan.

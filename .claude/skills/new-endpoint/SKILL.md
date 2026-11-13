@@ -2,6 +2,8 @@
 name: new-endpoint
 description: Dipakai saat mengusulkan atau menambah endpoint API ELYSIA. Memeriksa kebutuhan terhadap brief, lalu urutan teknis zod, route Fastify, OpenAPI, api-client, fixture, dan test. Tidak otomatis menyetujui endpoint mana pun.
 ---
+> **Pembaruan `dev-rh` (2026-11-13):** isi di bawah ditulis untuk varian Elysium dan sebagian belum disesuaikan. Untuk `dev-rh`, `CLAUDE.md` yang berlaku: target Robinhood Chain mainnet (4663); peran Deployer, Agent, dan Treasury (tanpa Keeper); Ask gratis, Pro, Signals API, dan Sponsored berbayar dalam USDG; token $ELYS; disclaimer "Not affiliated with Robinhood"; tanpa Gate Report, Graduation Watch, HYPE Daily Call, dan rekap mingguan. Abaikan bagian yang bertentangan.
+
 # new-endpoint (ELYSIA)
 
 Skill ini untuk API **ELYSIA**. API di repo ini masih warisan NEXA (sekitar 20 route); **jangan menganggap endpoint NEXA dibutuhkan ELYSIA** dan jangan menjadikannya acuan kebutuhan.
