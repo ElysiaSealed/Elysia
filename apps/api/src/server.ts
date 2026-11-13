@@ -41,11 +41,11 @@ const env = z
     /** Legacy holder benefit RPC. No default (was Robinhood); the holder benefit needs it set explicitly. */
     HOLDER_RPC_URL: z.string().url().optional(),
     SESSION_TTL_HOURS: z.coerce.number().int().min(1).default(24),
-    EXPLORER_URL: z.string().url().default(CHAINS.elysiumTestnet.explorer),
-    /** Path separator tx di explorer; '/tx/' untuk Robinhood, '/transaction/' untuk Elysium. */
-    EXPLORER_TX_PATH: z.string().default(CHAINS.elysiumTestnet.explorerTxPath),
+    EXPLORER_URL: z.string().url().default(CHAINS.mainnet.explorer),
+    /** Path separator tx di explorer; '/tx/' for Robinhood Chain. */
+    EXPLORER_TX_PATH: z.string().default(CHAINS.mainnet.explorerTxPath),
     /** Chain ID yang dilayani service ini (untuk validasi ?chain= param). Default mainnet Robinhood. */
-    CHAIN_ID: z.coerce.number().int().default(CHAINS.elysiumTestnet.id),
+    CHAIN_ID: z.coerce.number().int().default(CHAINS.mainnet.id),
     /** Explorer untuk link token Pons: token yang diindeks ada di mainnet, jadi default mainnet (bukan EXPLORER_URL). */
     TOKEN_EXPLORER_URL: z.string().url().optional(),
     /** JSON: {"0xalamat": "NVDA"} */
@@ -116,7 +116,7 @@ const app = buildApp({
   explorerTxPath: env.EXPLORER_TX_PATH.startsWith('/') ? env.EXPLORER_TX_PATH : `/${env.EXPLORER_TX_PATH}`,
   chainId: env.CHAIN_ID,
   chainSlugValue: chainSlug(env.CHAIN_ID),
-  // Without TOKEN_EXPLORER_URL, token links fall back to EXPLORER_URL (Elysium Testnet by default).
+  // Without TOKEN_EXPLORER_URL, token links fall back to EXPLORER_URL (Robinhood Chain mainnet by default).
   ...(env.TOKEN_EXPLORER_URL ? { tokenExplorerUrl: env.TOKEN_EXPLORER_URL.replace(/\/$/, '') } : {}),
   webOrigin: env.WEB_ORIGIN,
   leaderboardMinScored: env.LEADERBOARD_MIN_SCORED,

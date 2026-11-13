@@ -214,3 +214,8 @@ Catatan ini mencatat pekerjaan nyata dan tidak mengubah status keputusan FINAL a
 - Alamat publik (checksum valid, tidak ada di repo sebelumnya): Deployer `0x30E12875b1cc04cE06c4a889CDA435f475678D82`, Agent `0x399c038d0946b358A94F3DDdeE64A87df051a9fC`, Treasury `0x582660f6C3D5560D7797e1BC79DbB571Dd5a8121`. Keeper belum diberikan. Ditulis di `.env.example`; tidak ada private key atau transaksi.
 - Alamat USDG dan Pons V2 di `packages/shared/src/chains.ts` (mainnet 4663) diverifikasi baca-saja: USDG `0x5fc5…d168` (6 desimal, kodenya pendek sehingga kemungkinan proxy), Pons V2 factory/hook/graduationExecutor dan Uniswap v4 PoolManager punya kode; `hook.factory()` dan `hook.poolManager()` cocok.
 - Handle X publik: `ElysiaSealed` (ditetapkan developer). Mode X tetap `dry`.
+
+**2026-11-13 — `dev-rh`: Elysium chain removed, defaults moved to Robinhood Chain mainnet.**
+- Removed the Elysium Testnet entry (`CHAINS.elysiumTestnet`), its addresses file, the Hyperliquid price source, the Elysium mirror feeds, the launchpad blocker and the web chain picker. Defaults of the API, worker and indexer now point to mainnet 4663. The Robinhood testnet entry remains in the registry only for tests and explicit selection.
+- `.env.example` rewritten for `dev-rh` (mainnet RPC, explorer, MiMo LLM names, wallets, payments, burn contract). The Keeper wallet is not needed on mainnet because the ledger reads Chainlink feeds directly.
+- Verified: typecheck, production build, non-DB tests and `forge test` pass. No transaction was sent.

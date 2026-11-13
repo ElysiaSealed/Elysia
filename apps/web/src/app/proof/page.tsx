@@ -1,21 +1,14 @@
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
 import { Empty, PageShell } from '@/components/pages/PageShell'
 import { PredictionRow } from '@/components/pages/PredictionRow'
-import { apiForChain, hasElysium, safe } from '@/lib/api'
-import { ChainPicker } from '@/components/pages/ChainPicker'
+import { api, safe } from '@/lib/api'
 import { fmtUtc } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Proof of Intelligence · ELYSIA', alternates: { canonical: '/proof' } }
 
-type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
-
-export default async function ProofPage(props: Props) {
-  const rawParams = await Promise.resolve(props.searchParams)
-  const chain = typeof rawParams.chain === 'string' ? rawParams.chain : undefined
-  const proof = await safe(apiForChain(chain).getProof())
-  const elysiumEnabled = hasElysium()
+export default async function ProofPage() {
+  const proof = await safe(api().getProof())
   return (
     <PageShell
       label="Proof of Intelligence"
@@ -23,9 +16,6 @@ export default async function ProofPage(props: Props) {
       dim="on-chain and scored."
       intro="Each prediction is hashed and committed on-chain before it is posted, then scored automatically against the oracle price. The record below cannot be edited or deleted."
     >
-      <Suspense>
-        <ChainPicker elysiumEnabled={elysiumEnabled} />
-      </Suspense>
       {!proof ? (
         <Empty title="Data unavailable">The record could not be loaded right now. Try again in a moment.</Empty>
       ) : (

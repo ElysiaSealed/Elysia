@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Empty, PageShell } from '@/components/pages/PageShell'
 import { PredictionRow } from '@/components/pages/PredictionRow'
-import { apiForChain, safe } from '@/lib/api'
+import { api, safe } from '@/lib/api'
 import { fmtUtc } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
@@ -15,7 +15,7 @@ const STEPS = [
 ] as const
 
 export default async function DailyCallPage() {
-  const proof = await safe(apiForChain().getProof())
+  const proof = await safe(api().getProof())
   return (
     <PageShell
       label="HYPE Daily Call"

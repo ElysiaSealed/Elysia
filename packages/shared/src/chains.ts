@@ -8,7 +8,7 @@ export interface ChainConfig {
   readonly rpc: string
   /** Basis URL explorer, tanpa slash akhir (mis. https://robinhoodchain.blockscout.com). */
   readonly explorer: string
-  /** Path separator antara basis explorer dan hash/alamat transaksi. '/tx/' untuk Robinhood; '/transaction/' untuk Elysium. */
+  /** Path separator antara basis explorer dan hash/alamat transaksi. '/tx/' for Robinhood Chain. */
   readonly explorerTxPath: string
   readonly faucet: string | null
   readonly nativeCurrency: { readonly symbol: string; readonly name: string; readonly decimals: number }
@@ -61,23 +61,6 @@ export const CHAINS = {
     usdg: '0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168',
     uniswapV4: { poolManager: '0x8366a39CC670B4001A1121B8F6A443A643e40951' },
   },
-  // Elysium testnet (Arbitrum Nitro, gas: HYPE). Sumber: elysium.kinetiq.xyz/docs, dibaca 2026-11-09.
-  // PERINGATAN: elysiumTestnet bawaan viem adalah chain 1338 (Vulcan Forged, token LAVA) — BUKAN ini.
-  // Gunakan defineChain(CHAINS.elysiumTestnet) agar tidak tertukar.
-  elysiumTestnet: {
-    id: 99801, // 0x185d9; parent: HyperEVM testnet (998)
-    name: 'Elysium Testnet',
-    rpc: 'https://testnet-rpc.elysium.kinetiq.xyz',
-    explorer: 'https://elysium.kinetiq.xyz/testnet-explorer',
-    // Format explorer berbeda: /transaction/<hash> (bukan /tx/), /address/<addr> sama
-    explorerTxPath: '/transaction/',
-    faucet: 'https://elysium.kinetiq.xyz/testnet-faucet',
-    nativeCurrency: { symbol: 'HYPE', name: 'HYPE', decimals: 18 },
-    // Launchpad Elysium (Pump.fun, Ascend, Montra): alamat belum dikonfirmasi (BLOCKERS #E7)
-    pons: { factory: null, hook: null, graduationExecutor: null },
-    // Tidak ada Chainlink di Elysium; memakai MockV3Aggregator + keeper harga
-    ...unknownAddrs,
-  },
 } as const satisfies Record<string, ChainConfig>
 
 export type NetworkName = keyof typeof CHAINS
@@ -88,7 +71,6 @@ export type NetworkName = keyof typeof CHAINS
 export const CHAIN_ID_TO_SLUG: Readonly<Record<number, string>> = {
   4663: 'robinhood',
   46630: 'robinhood',  // service testnet tetap melayani slug 'robinhood' supaya ?chain=robinhood jalan di testnet
-  99801: 'elysium-testnet',
 }
 
 /** Chain slug for a chain ID. Fails closed: an unknown chain ID throws instead of falling back to another chain. */

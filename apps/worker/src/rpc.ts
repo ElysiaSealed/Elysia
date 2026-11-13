@@ -3,7 +3,7 @@ import { CHAINS } from '@elysia/shared'
 const strip = (u: string) => u.replace(/\/+$/, '').toLowerCase()
 
 /**
- * RPC for the chain the worker runs on. Elysium Testnet (99801) falls back to its configured RPC; any other chain needs an
+ * RPC for the chain the worker runs on. Robinhood Chain mainnet (4663) falls back to its configured RPC; any other chain needs an
  * explicit RPC_URL. An explicit URL that is the known RPC of a different chain is rejected (chain id / RPC mismatch).
  * Offline check only: it cannot know the chain id of an unknown URL.
  */
@@ -15,6 +15,6 @@ export function resolveRpcUrl(chainId: number, rpcUrl: string | undefined): stri
     }
     return rpcUrl
   }
-  if (chainId === CHAINS.elysiumTestnet.id) return CHAINS.elysiumTestnet.rpc
-  throw new Error(`RPC_URL is required when CHAIN_ID=${chainId}: the default RPC exists only for Elysium Testnet (${CHAINS.elysiumTestnet.id}).`)
+  if (chainId === CHAINS.mainnet.id) return CHAINS.mainnet.rpc
+  throw new Error(`RPC_URL is required when CHAIN_ID=${chainId}: the default RPC exists only for Robinhood Chain mainnet (${CHAINS.mainnet.id}).`)
 }

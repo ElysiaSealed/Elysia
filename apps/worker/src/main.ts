@@ -3,7 +3,6 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { z } from 'zod'
 import { CHAINS } from '@elysia/shared'
 import testnetAddresses from '../../../packages/contracts-abi/addresses/testnet.json'
-import elysiumTestnetAddresses from '../../../packages/contracts-abi/addresses/elysium-testnet.json'
 import { createDb } from '@elysia/db'
 import { configureRiskGuard } from './queue'
 import { createXClient } from './x'
@@ -15,7 +14,7 @@ import { createLedgerClient } from './ledger'
 import { dispatchProAlerts, pollTelegram } from './pro'
 import { TelegramApi, TelegramBot } from './telegram'
 import { OpenAiCompatibleLlm, pricingFromEnv } from './llm'
-import { MAINNET_ORACLE_ASSETS, createFeedHistory, createFeedReader, createHyperliquidReader } from './oracle'
+import { MAINNET_ORACLE_ASSETS, createFeedHistory, createFeedReader } from './oracle'
 import { createDexClient, makeDexSource } from './dex'
 import { recordMarketSnapshots, type MarketDeps } from './market'
 import { runDailyReports, type ReportDeps } from './reports'
@@ -25,9 +24,9 @@ import { resolveRpcUrl } from './rpc'
 const env = z
   .object({
     DATABASE_URL: z.string().min(1),
-    /** Optional: Elysium Testnet (CHAIN_ID 99801) defaults to its configured RPC; any other chain needs it explicitly. An empty value is invalid. */
+    /** Optional: Robinhood Chain mainnet (CHAIN_ID 4663) defaults to its configured RPC; any other chain needs it explicitly. An empty value is invalid. */
     RPC_URL: z.string().url().optional(),
-    CHAIN_ID: z.coerce.number().int().default(CHAINS.elysiumTestnet.id),
+    CHAIN_ID: z.coerce.number().int().default(CHAINS.mainnet.id),
     PREIMAGE_KEY: optionalEncKey,
     ELYSIA_LEDGER_ADDRESS: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
     AGENT_PRIVATE_KEY: optionalPrivateKey,
@@ -79,7 +78,7 @@ const env = z
   })
   .parse(process.env)
 
-// Fails at startup on a missing RPC (non-Elysium chain) or a chain id / RPC mismatch.
+// Fails at startup on a missing RPC (non-mainnet chain) or a chain id / RPC mismatch.
 const rpcUrl = resolveRpcUrl(env.CHAIN_ID, env.RPC_URL)
 
 configureRiskGuard({ approvalMode: env.APPROVAL_MODE })
@@ -226,37 +225,12 @@ const defaultRobinhoodTestnetMirrors = (): MirrorFeed[] => {
   return out
 }
 
-/**
- * Default mirrors untuk Elysium testnet (99801):
- * - HYPE: dari Hyperliquid public API (tidak ada Chainlink di Elysium)
- * - ETH: dari Chainlink mainnet Robinhood
- */
-const defaultElysiumTestnetMirrors = (): MirrorFeed[] => {
-  const c = elysiumTestnetAddresses.contracts as Record<string, string | null | undefined>
-  const out: MirrorFeed[] = []
-  if (c.MockFeedHYPE) out.push({
-    symbol: 'HYPE',
-    source: null,
-    httpSource: createHyperliquidReader('HYPE'),
-    target: c.MockFeedHYPE as `0x${string}`,
-  })
-  // ETH mirror reads a Robinhood Chainlink feed: only with an explicit ORACLE_RPC_URL.
-  if (env.ORACLE_RPC_URL && CHAINS.mainnet.chainlink.ethUsd && c.MockFeedETH) out.push({
-    symbol: 'ETH',
-    source: CHAINS.mainnet.chainlink.ethUsd,
-    target: c.MockFeedETH as `0x${string}`,
-  })
-  return out
-}
-
 const mirrors = (
   env.KEEPER_FEEDS
     ? (mirrorSchema.parse(JSON.parse(env.KEEPER_FEEDS)) as MirrorFeed[])
     : env.CHAIN_ID === 46630
       ? defaultRobinhoodTestnetMirrors()
-      : env.CHAIN_ID === 99801
-        ? defaultElysiumTestnetMirrors()
-        : []
+      : []
 ) as MirrorFeed[]
 const pushAbi = [{ type: 'function', name: 'push', stateMutability: 'nonpayable', inputs: [{ name: 'answer', type: 'int256' }, { name: 'updatedAt', type: 'uint256' }], outputs: [{ type: 'uint80' }] }] as const
 

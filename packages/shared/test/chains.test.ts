@@ -3,7 +3,7 @@ import { CHAINS, chainSlug } from '../src/chains'
 
 describe('chainSlug', () => {
   it('maps Elysium Testnet to its slug', () => {
-    expect(chainSlug(CHAINS.elysiumTestnet.id)).toBe('elysium-testnet')
+    expect(chainSlug(CHAINS.mainnet.id)).toBe('robinhood')
   })
 
   it('fails closed for an unknown chain ID instead of falling back to another chain', () => {

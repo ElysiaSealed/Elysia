@@ -351,7 +351,7 @@ describe.skipIf(!dbUp)('API publik', () => {
   })
 
   it('GET /healthz: Elysium Testnet is the default chain, not Robinhood; explicit config is passed through', async () => {
-    expect((await get('/healthz')).json()).toEqual({ ok: true, chainId: 99801, chain: 'elysium-testnet' })
+    expect((await get('/healthz')).json()).toEqual({ ok: true, chainId: 4663, chain: 'robinhood' })
     const custom = buildApp({ db, explorerUrl: EXPLORER, chainId: 46630, chainSlugValue: 'custom', now: () => NOW })
     expect((await custom.inject({ method: 'GET', url: '/healthz' })).json()).toEqual({ ok: true, chainId: 46630, chain: 'custom' })
   })

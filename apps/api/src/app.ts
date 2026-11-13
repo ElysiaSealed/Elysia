@@ -50,11 +50,11 @@ export interface AppConfig {
   db: Db
   /** Basis Blockscout, tanpa slash akhir (mis. https://explorer.testnet.chain.robinhood.com). */
   explorerUrl: string
-  /** Path separator tx di explorer ('/tx/' Robinhood, '/transaction/' Elysium). Default: '/tx/'. */
+  /** Explorer tx path separator. Default: '/tx/'. */
   explorerTxPath?: string
-  /** Chain ID yang dilayani service ini (untuk validasi ?chain= dan respons). Default: Elysium Testnet (99801). */
+  /** Chain ID yang dilayani service ini (untuk validasi ?chain= dan respons). Default: Robinhood Chain mainnet (4663). */
   chainId?: number
-  /** Slug chain API. Default: slug Elysium Testnet ('elysium-testnet'). */
+  /** Slug chain API. Default: slug of Robinhood Chain ('robinhood'). */
   chainSlugValue?: string
   /** Basis Blockscout untuk alamat token Pons (indexer membaca mainnet, sedangkan explorerUrl bisa testnet). Default: explorerUrl. */
   tokenExplorerUrl?: string
@@ -98,8 +98,8 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
   const symbols = cfg.symbols ?? {}
   const txPath = (cfg.explorerTxPath ?? '/tx/')
   const tx = (hash: string) => `${cfg.explorerUrl}${txPath}${hash}`
-  // ELYSIA serves one chain: Elysium Testnet. Robinhood is not a default (out of scope).
-  const serviceChainId = cfg.chainId ?? CHAINS.elysiumTestnet.id
+  // The service serves one chain, Robinhood Chain mainnet, unless overridden.
+  const serviceChainId = cfg.chainId ?? CHAINS.mainnet.id
   const serviceChainSlug = cfg.chainSlugValue ?? chainSlug(serviceChainId)
 
   if (cfg.webOrigin) void app.register(cors, { origin: cfg.webOrigin.split(',').map((o) => o.trim().replace(/\/$/, '')).filter(Boolean), methods: ['GET', 'POST'], allowedHeaders: ['content-type', 'x-api-key', 'authorization', 'last-event-id'] })
@@ -155,7 +155,7 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
 
   /**
    * Validasi ?chain= param: harus cocok dengan slug chain yang dilayani service ini.
-   * Misalnya, service Elysium (chainSlug='elysium-testnet') menolak ?chain=robinhood.
+   * Misalnya, a service with another chainSlug rejects ?chain=robinhood.
    * Tanpa param = klien lama / tidak peduli chain; selalu diterima.
    */
   function validateChain(req: FastifyRequest, reply: FastifyReply): boolean {

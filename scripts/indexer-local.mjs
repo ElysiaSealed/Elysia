@@ -21,9 +21,9 @@ if (!line) {
   process.exit(1)
 }
 const env = { ...process.env, DATABASE_URL: line.slice('DATABASE_URL='.length).replace(/^["']|["']$/g, '') }
-// CHAIN_ENV is not set here: the indexer default (elysiumTestnet) applies unless you set CHAIN_ENV in your shell.
+// CHAIN_ENV is not set here: the indexer default (mainnet) applies unless you set CHAIN_ENV in your shell.
 if (process.argv[2]) env.INDEXER_START_BLOCK = process.argv[2]
 
-console.log('indexer lokal -> database dari ~/.config/elysia (chain mengikuti CHAIN_ENV; default elysiumTestnet, indexer berhenti sampai adaptor launchpad tersedia). Ctrl+C untuk berhenti.')
+console.log('local indexer -> database from ~/.config/elysia (chain follows CHAIN_ENV, default mainnet). Press Ctrl+C to stop.')
 const child = spawn('pnpm', ['--filter', '@elysia/indexer', 'start'], { stdio: 'inherit', env, shell: true })
 child.on('exit', (code) => process.exit(code ?? 0))

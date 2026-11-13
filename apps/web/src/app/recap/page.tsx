@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import type { Prediction } from '@elysia/api-client'
 import { Empty, PageShell } from '@/components/pages/PageShell'
-import { apiForChain, safe } from '@/lib/api'
+import { api, safe } from '@/lib/api'
 import { fmtUtc, shortHash } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
@@ -57,7 +57,7 @@ function Row({ p }: { p: Prediction }) {
 }
 
 export default async function RecapPage() {
-  const proof = await safe(apiForChain().getProof())
+  const proof = await safe(api().getProof())
   const weeks = proof ? groupByWeek(proof.recent) : []
   return (
     <PageShell

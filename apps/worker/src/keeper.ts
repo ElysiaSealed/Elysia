@@ -18,7 +18,7 @@ export interface MirrorFeed {
    */
   source: Address | null
   /**
-   * Sumber harga HTTP alternatif untuk aset tanpa Chainlink (mis. Hyperliquid untuk HYPE di Elysium).
+   * Sumber harga HTTP alternatif untuk aset tanpa Chainlink.
    * Dipanggil tanpa argumen; mengembalikan FeedReading dengan 8 desimal.
    * Diprioritaskan di atas source jika keduanya ada.
    */

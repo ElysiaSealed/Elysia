@@ -3,27 +3,27 @@ import { z } from 'zod'
 import { CHAINS } from '@elysia/shared'
 import { resolveRpcUrl } from '../src/rpc'
 
-const ELYSIUM = CHAINS.elysiumTestnet
+const MAINNET = CHAINS.mainnet
 
 describe('resolveRpcUrl', () => {
-  it('Elysium Testnet without RPC_URL uses the configured Elysium RPC', () => {
-    expect(resolveRpcUrl(99801, undefined)).toBe(ELYSIUM.rpc)
+  it('Robinhood Chain mainnet without RPC_URL uses the configured mainnet RPC', () => {
+    expect(resolveRpcUrl(4663, undefined)).toBe(MAINNET.rpc)
   })
 
-  it('an explicit RPC_URL is kept (Elysium and other chains)', () => {
-    expect(resolveRpcUrl(99801, 'https://rpc.example.test')).toBe('https://rpc.example.test')
+  it('an explicit RPC_URL is kept (mainnet and other chains)', () => {
+    expect(resolveRpcUrl(4663, 'https://rpc.example.test')).toBe('https://rpc.example.test')
     expect(resolveRpcUrl(31337, 'http://127.0.0.1:8545')).toBe('http://127.0.0.1:8545')
   })
 
-  it('any other chain without RPC_URL is an error (no Robinhood default)', () => {
+  it('any other chain without RPC_URL is an error (no default RPC)', () => {
     expect(() => resolveRpcUrl(46630, undefined)).toThrow(/RPC_URL is required when CHAIN_ID=46630/)
-    expect(() => resolveRpcUrl(4663, undefined)).toThrow(/RPC_URL is required/)
+    expect(() => resolveRpcUrl(31337, undefined)).toThrow(/RPC_URL is required/)
   })
 
   it('rejects the known RPC of a different chain (mismatch), also with a trailing slash or other case', () => {
-    expect(() => resolveRpcUrl(99801, CHAINS.mainnet.rpc)).toThrow(/CHAIN_ID=99801/)
-    expect(() => resolveRpcUrl(99801, `${CHAINS.testnet.rpc.toUpperCase()}/`)).toThrow(/46630/)
-    expect(() => resolveRpcUrl(46630, ELYSIUM.rpc)).toThrow(/chain 99801/)
+    expect(() => resolveRpcUrl(4663, CHAINS.testnet.rpc)).toThrow(/CHAIN_ID=4663/)
+    expect(() => resolveRpcUrl(4663, `${CHAINS.testnet.rpc.toUpperCase()}/`)).toThrow(/46630/)
+    expect(() => resolveRpcUrl(46630, MAINNET.rpc)).toThrow(/chain 4663/)
   })
 
   it('the known RPC of the same chain is accepted when chosen explicitly', () => {

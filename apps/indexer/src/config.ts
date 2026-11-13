@@ -8,8 +8,8 @@ export const envSchema = z
     DATABASE_URL: z.string().min(1),
     /** Tanpa nilai: memakai RPC chain yang dipilih (CHAINS[CHAIN_ENV].rpc). */
     RPC_URL: z.string().url().optional(),
-    /** Default Elysium Testnet (99801). mainnet/testnet (Robinhood, legacy) hanya bila dipilih eksplisit. */
-    CHAIN_ENV: z.enum(['elysiumTestnet', 'testnet', 'mainnet']).default('elysiumTestnet'),
+    /** Default: Robinhood Chain mainnet (4663). The testnet is selectable only explicitly. */
+    CHAIN_ENV: z.enum(['testnet', 'mainnet']).default('mainnet'),
     PONS_FACTORY: z.string().optional(),
     /** Blok awal bila belum ada kursor. Kosong = mulai dari ujung chain (tanpa backfill). */
     INDEXER_START_BLOCK: z.coerce.bigint().optional(),
@@ -33,12 +33,3 @@ export const envSchema = z
     BURN_MIN_ELYS: z.coerce.bigint().nonnegative().default(1n),
   })
 
-/**
- * Fail-closed: the Elysium launchpad adapter (addresses and ABI) does not exist yet. The indexer only decodes Pons V2
- * events, so it must not run against Elysium even when PONS_FACTORY is set. Returns the reason to stop, or null.
- */
-export function launchpadBlocker(chainEnv: z.infer<typeof envSchema>['CHAIN_ENV']): string | null {
-  return chainEnv === 'elysiumTestnet'
-    ? 'Elysium launchpad adapter is not available yet (launchpad addresses and ABI are unconfirmed); stopping. PONS_FACTORY is ignored for this chain.'
-    : null
-}

@@ -7,7 +7,7 @@ import { burnedAbi, curveAbi, erc20Abi, factoryAbi, transferAbi } from './abi'
 import { processBurns, type BurnLog } from './burns'
 import { applyTransfers, defaultExcluded, type TransferLog, type WhaleToken } from './holders'
 import { processLogs, type PonsLog, type TokenMeta } from './process'
-import { addr, envSchema, launchpadBlocker } from './config'
+import { addr, envSchema } from './config'
 
 const parsedEnv = envSchema.safeParse(process.env)
 if (!parsedEnv.success) {
@@ -16,13 +16,6 @@ if (!parsedEnv.success) {
   process.exit(1)
 }
 const env = parsedEnv.data
-
-// Before any DB or RPC connection.
-const blocker = launchpadBlocker(env.CHAIN_ENV)
-if (blocker) {
-  console.error(`indexer: ${blocker}`)
-  process.exit(1)
-}
 
 const STATE = 'pons'
 const net = CHAINS[env.CHAIN_ENV]
