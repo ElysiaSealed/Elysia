@@ -2,6 +2,7 @@
 import { X_URL } from '@/lib/site'
 import '@/styles/mascot.css'
 import { MascotStage } from '@/components/MascotStage'
+import { ContractPill } from '@/components/landing/ContractPill'
 
 export function Hero() {
   return (
@@ -30,6 +31,7 @@ export function Hero() {
           </div>
 
           <div className="copy-a" id="copyA">
+            <ContractPill />
             <p className="sub">
               ELYSIA is an AI agent on Robinhood Chain. It reads Pons V2 launches and Stock Tokens, commits each call on-chain, and only then publishes it on X.
             </p>

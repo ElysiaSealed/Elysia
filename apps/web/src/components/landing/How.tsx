@@ -128,9 +128,9 @@ export function How() {
             <svg viewBox="0 0 300 150" fill="none" aria-hidden="true">
               <defs>
                 <linearGradient id="tkG" x1="0" x2="1">
-                  <stop offset="0" stopColor="#E3341B" />
+                  <stop offset="0" stopColor="#5CCB3D" />
                   <stop offset=".5" stopColor="#CFFFBD" />
-                  <stop offset="1" stopColor="#E3341B" />
+                  <stop offset="1" stopColor="#5CCB3D" />
                 </linearGradient>
               </defs>
               <g stroke="#2A2A2A" strokeWidth="1.2">
@@ -246,7 +246,7 @@ export function How() {
                 </path>
               </g>
               <path d="M118 75 H158" stroke="#2A2A2A" strokeDasharray="2 4" />
-              <path d="M206 22 L244 36 V70 C244 96 228 112 206 122 C184 112 168 96 168 70 V36Z" fill="#120A07" stroke="#4A2A1C" strokeWidth="1.5" />
+              <path d="M206 22 L244 36 V70 C244 96 228 112 206 122 C184 112 168 96 168 70 V36Z" fill="#0A1207" stroke="#2F5A22" strokeWidth="1.5" />
               <g clipPath="url(#shC)">
                 <rect x="160" y="-30" width="100" height="30" fill="url(#shS)">
                   <animate attributeName="y" values="-30;125" dur="2.6s" repeatCount="indefinite" />
@@ -317,7 +317,7 @@ export function How() {
               <text x="242" y="78" fontFamily="Geist Mono, monospace" fontSize="10" fill="#B4FF98" textAnchor="middle">
                 0x9f…
               </text>
-              <text x="242" y="92" fontFamily="Geist Mono, monospace" fontSize="7.5" fill="#C79A80" textAnchor="middle">
+              <text x="242" y="92" fontFamily="Geist Mono, monospace" fontSize="7.5" fill="#9FCF8A" textAnchor="middle">
                 salt ●●●
               </text>
               <text x="150" y="132" fontFamily="Geist Mono, monospace" fontSize="8" fill="#6E6A66" textAnchor="middle" letterSpacing=".08em">

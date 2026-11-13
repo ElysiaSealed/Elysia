@@ -10,8 +10,9 @@ export const X_URL = X_HANDLE ? `https://x.com/${X_HANDLE}` : '#'
 /** ELYSIA public Telegram channel (https://t.me/ElysiaAlert), set via env. "#" until set. */
 export const TELEGRAM_URL = process.env.NEXT_PUBLIC_TELEGRAM_URL || '#'
 
-/** $ELYSIA token is deferred (no address, no chain). Empty = ContractPill renders nothing. */
-export const ELYSIA_CA = process.env.NEXT_PUBLIC_ELYSIA_CA || ''
+/** $ELYS contract address. Empty or malformed = ContractPill renders nothing (token not announced yet). */
+const RAW_CA = process.env.NEXT_PUBLIC_ELYSIA_CA || ''
+export const ELYSIA_CA = /^0x[0-9a-fA-F]{40}$/.test(RAW_CA) ? RAW_CA : ''
 
-/** Explorer link for the token: not defined while the token is deferred. */
-export const ELYSIA_CA_URL = process.env.NEXT_PUBLIC_ELYSIA_CA_URL || ''
+/** Robinhood Chain explorer page of the token. Derived from the address; NEXT_PUBLIC_ELYSIA_CA_URL overrides it. */
+export const ELYSIA_CA_URL = ELYSIA_CA ? process.env.NEXT_PUBLIC_ELYSIA_CA_URL || `https://robinhoodchain.blockscout.com/token/${ELYSIA_CA}` : ''

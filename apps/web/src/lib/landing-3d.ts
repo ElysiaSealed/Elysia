@@ -38,7 +38,7 @@ void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.0,d); gl_F
   scene.fog=new THREE.Fog(BG,12,26);
   const camera=new THREE.PerspectiveCamera(30,1,.1,100);
 
-  const key=new THREE.DirectionalLight(0xfff1e6,.5); key.position.set(-5,6,6); scene.add(key);
+  const key=new THREE.DirectionalLight(0xf2ffee,.5); key.position.set(-5,6,6); scene.add(key);
   const rim=new THREE.DirectionalLight(0x8cff61,4.2); rim.position.set(6,2,-5); scene.add(rim);
   const back=new THREE.DirectionalLight(0xcfffbd,.9); back.position.set(-6,3,-6); scene.add(back);
 
@@ -63,7 +63,7 @@ void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.0,d); gl_F
   core.scale.set(1,1.14,1); head.add(core);
   const shell=new THREE.Mesh(new THREE.SphereGeometry(1.515,128,128),new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,
     vertexShader:`varying vec3 vN; varying vec3 vV; void main(){vec4 mv=modelViewMatrix*vec4(position,1.); vN=normalize(normalMatrix*normal); vV=normalize(-mv.xyz); gl_Position=projectionMatrix*mv;}`,
-    fragmentShader:`varying vec3 vN; varying vec3 vV; void main(){ float f=pow(1.-max(dot(vN,vV),0.),3.2); float side=smoothstep(-.3,.9,vN.x)*.75+.25; gl_FragColor=vec4(vec3(1.,.42,.14)*f*side*1.25,f); }`}));
+    fragmentShader:`varying vec3 vN; varying vec3 vV; void main(){ float f=pow(1.-max(dot(vN,vV),0.),3.2); float side=smoothstep(-.3,.9,vN.x)*.75+.25; gl_FragColor=vec4(vec3(.55,1.,.38)*f*side*1.25,f); }`}));
   core.add(shell);
 
   // visor: dark glass recess, segmented LED strip, chrome lips
@@ -82,11 +82,11 @@ void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.0,d); gl_F
       float peak=exp(-d*d*260.); float trail=exp(-d*d*28.)*.55;
       float tw=step(.965,h(id+floor(uT*7.)))*.5;
       float lvl=(.16+trail+peak*2.2+tw)*uI;
-      vec3 col=mix(vec3(1.,.26,.04),vec3(1.,.62,.3),clamp(trail*1.4,0.,1.)); col=mix(col,vec3(1.,.9,.78),peak);
+      vec3 col=mix(vec3(.3,1.,.12),vec3(.62,1.,.45),clamp(trail*1.4,0.,1.)); col=mix(col,vec3(.85,1.,.8),peak);
       gl_FragColor=vec4(col*lvl*1.6,cell*row*ends);
     }`});
   core.add(new THREE.Mesh(new THREE.SphereGeometry(1.507,220,8,Math.PI/2-1.36,2.72,Math.PI/2-.205,.135),ledMat));
-  const chrome=new THREE.MeshPhysicalMaterial({color:0x8a7f76,metalness:1,roughness:.38,envMapIntensity:.32});
+  const chrome=new THREE.MeshPhysicalMaterial({color:0x7f8a76,metalness:1,roughness:.38,envMapIntensity:.32});
   [[-.255,.016],[-.026,.016]].forEach(([o,hh])=>core.add(new THREE.Mesh(new THREE.SphereGeometry(1.512,220,3,Math.PI/2-1.44,2.88,Math.PI/2+o,hh),chrome)));
   const modLED=[];
 
@@ -107,7 +107,7 @@ void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.0,d); gl_F
       vec3 pos=mix(aDir*(6.5+aSeed*5.),aDir*1.8,e);
       vA=smoothstep(0.,.25,p)*(1.-smoothstep(.8,1.,p))*uAmt*.7; vW=step(.8,aSeed);
       vec4 mv=modelViewMatrix*vec4(pos,1.); gl_PointSize=uPR*(1.+aSeed*2.)*(16./-mv.z); gl_Position=projectionMatrix*mv; }`,
-    fragmentShader:`varying float vA; varying float vW; void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,0.,d); vec3 c=mix(vec3(1.,.42,.12),vec3(1.,.86,.72),vW); gl_FragColor=vec4(c*(1.+smoothstep(.22,0.,d)),a*vA); }`});
+    fragmentShader:`varying float vA; varying float vW; void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,0.,d); vec3 c=mix(vec3(.55,1.,.38),vec3(.85,1.,.78),vW); gl_FragColor=vec4(c*(1.+smoothstep(.22,0.,d)),a*vA); }`});
   const inflow=new THREE.Points(ig,inMat); inflow.frustumCulled=false; rig.add(inflow);
 
   // rings: instrument ticks, fine line with riders, dashed commit orbit
@@ -115,7 +115,7 @@ void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.0,d); gl_F
   function pivot(rx,rz){const pv=new THREE.Group();pv.rotation.set(rx,0,rz);rig.add(pv);const sp=new THREE.Group();pv.add(sp);return [pv,sp];}
   {
     const [pv,sp]=pivot(1.25,.25), R=2.35, N=240;
-    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(.007,.05,.007),new THREE.MeshBasicMaterial({color:new THREE.Color(1,.45,.18),transparent:true,opacity:.6,toneMapped:false}),N);
+    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(.007,.05,.007),new THREE.MeshBasicMaterial({color:new THREE.Color(.5,1,.3),transparent:true,opacity:.6,toneMapped:false}),N);
     const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),sc=new THREE.Vector3(),ps=new THREE.Vector3(),z=new THREE.Vector3(0,0,1);
     for(let i=0;i<N;i++){const a=i/N*Math.PI*2,lg=i%10===0;ps.set(Math.cos(a)*R,Math.sin(a)*R,0);q.setFromAxisAngle(z,a-Math.PI/2);sc.set(1,lg?2.6:1,1);m4.compose(ps,q,sc);im.setMatrixAt(i,m4);}
     sp.add(im); spins.push([sp,.12]);
@@ -123,18 +123,18 @@ void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.0,d); gl_F
   let riderMat;
   {
     const [pv,sp]=pivot(1.05,-.35), R=2.85;
-    pv.add(new THREE.Mesh(new THREE.TorusGeometry(R,.0035,6,360),new THREE.MeshBasicMaterial({color:new THREE.Color(1,.5,.25),transparent:true,opacity:.32,toneMapped:false})));
+    pv.add(new THREE.Mesh(new THREE.TorusGeometry(R,.0035,6,360),new THREE.MeshBasicMaterial({color:new THREE.Color(.55,1,.38),transparent:true,opacity:.32,toneMapped:false})));
     const n=4,g=new THREE.BufferGeometry(),off=new Float32Array(n),sp2=new Float32Array(n);
     for(let i=0;i<n;i++){off[i]=i/n*6.283+Math.random()*.4;sp2[i]=-.22*(.8+Math.random()*.5);}
     g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3),3)); g.setAttribute('aOff',new THREE.BufferAttribute(off,1)); g.setAttribute('aSpd',new THREE.BufferAttribute(sp2,1));
-    riderMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,uniforms:{uT:{value:0},uR:{value:R},uPR:{value:PR},uC:{value:new THREE.Color(1.6,.75,.3)}},
+    riderMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,uniforms:{uT:{value:0},uR:{value:R},uPR:{value:PR},uC:{value:new THREE.Color(.9,1.6,.5)}},
       vertexShader:`attribute float aOff; attribute float aSpd; uniform float uT; uniform float uR; uniform float uPR; varying float vA; void main(){ float a=aOff+uT*aSpd; vec3 pos=vec3(cos(a)*uR,sin(a)*uR,0.); vA=1.; vec4 mv=modelViewMatrix*vec4(pos,1.); gl_PointSize=uPR*8.*(12./-mv.z); gl_Position=projectionMatrix*mv; }`,
       fragmentShader:PT_FRAG});
     const rd=new THREE.Points(g,riderMat); rd.frustumCulled=false; pv.add(rd);
   }
   const [pvC,spC]=pivot(1.32,.08), RC=3.35;
   const cpts=[]; for(let i=0;i<=480;i++){const a=i/480*Math.PI*2;cpts.push(new THREE.Vector3(Math.cos(a)*RC,Math.sin(a)*RC,0));}
-  const dash=new THREE.Line(new THREE.BufferGeometry().setFromPoints(cpts),new THREE.LineDashedMaterial({color:new THREE.Color(1,.5,.25),dashSize:.06,gapSize:.08,transparent:true,opacity:.25,toneMapped:false}));
+  const dash=new THREE.Line(new THREE.BufferGeometry().setFromPoints(cpts),new THREE.LineDashedMaterial({color:new THREE.Color(.55,1,.38),dashSize:.06,gapSize:.08,transparent:true,opacity:.25,toneMapped:false}));
   dash.computeLineDistances(); pvC.add(dash); spins.push([spC,.12]);
 
   // commit crystals
@@ -145,16 +145,16 @@ void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.0,d); gl_F
   const kGeo=new THREE.OctahedronGeometry(.085,0);
   for(let i=0;i<BN;i++){
     const g=new THREE.Group();
-    const kern=new THREE.Mesh(kGeo,new THREE.MeshBasicMaterial({color:new THREE.Color(2.6,1.,.36),toneMapped:false})); g.add(kern);
+    const kern=new THREE.Mesh(kGeo,new THREE.MeshBasicMaterial({color:new THREE.Color(1.,2.6,.5),toneMapped:false})); g.add(kern);
     g.add(new THREE.Mesh(bGeo,bMat));
-    const em=new THREE.LineBasicMaterial({color:new THREE.Color(1.3,.5,.16),transparent:true,toneMapped:false}); g.add(new THREE.LineSegments(eGeo,em));
+    const em=new THREE.LineBasicMaterial({color:new THREE.Color(.55,1.3,.3),transparent:true,toneMapped:false}); g.add(new THREE.LineSegments(eGeo,em));
     const a=Math.PI/2-1.75+i/(BN-1)*3.5;
     g.visible=false; spC.add(g);
     blocks.push({g,em,kern,target:new THREE.Vector3(Math.cos(a)*RC,Math.sin(a)*RC,0),spin:(Math.random()-.5)*2});
   }
   const linkGeo=new THREE.BufferGeometry(), linkPos=new Float32Array((BN-1)*6);
   linkGeo.setAttribute('position',new THREE.BufferAttribute(linkPos,3));
-  const links=new THREE.LineSegments(linkGeo,new THREE.LineBasicMaterial({color:new THREE.Color(1.5,.55,.18),transparent:true,opacity:.7,toneMapped:false}));
+  const links=new THREE.LineSegments(linkGeo,new THREE.LineBasicMaterial({color:new THREE.Color(.6,1.5,.35),transparent:true,opacity:.7,toneMapped:false}));
   links.frustumCulled=false; spC.add(links);
 
   const composer=new EffectComposer(renderer);
@@ -233,8 +233,8 @@ void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.0,d); gl_F
       float rim=pow(f,5.);
       float lat=abs(sin(atan(vP.z,vP.x)*36.+uT*.05))*.0+0.;
       float grid=smoothstep(.985,1.,abs(sin(vP.x*1.6)))*.06+smoothstep(.985,1.,abs(sin(vP.z*1.6)))*.06;
-      vec3 base=vec3(.02,.016,.014)+vec3(.9,.3,.08)*grid*(1.-f)*.6;
-      vec3 c=base+vec3(1.,.42,.12)*rim*1.8+vec3(1.,.86,.7)*pow(f,14.)*1.2;
+      vec3 base=vec3(.014,.02,.014)+vec3(.35,.9,.2)*grid*(1.-f)*.6;
+      vec3 c=base+vec3(.55,1.,.38)*rim*1.8+vec3(.85,1.,.78)*pow(f,14.)*1.2;
       gl_FragColor=vec4(c,1.);
     }`}));
   planet.position.y=planetY; scene.add(planet);
@@ -244,7 +244,7 @@ void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.0,d); gl_F
     vertexShader:`varying vec3 vN; varying vec3 vW; void main(){ vN=normalize(normalMatrix*normal); vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }`,
     fragmentShader:`varying vec3 vN; varying vec3 vW;
     void main(){ vec3 V=normalize(cameraPosition-vW); float d=dot(normalize(vN),V); float g=pow(clamp(1.+d*1.0,0.,1.),5.);
-      gl_FragColor=vec4(vec3(1.,.38,.1)*g*1.25,g); }`}));
+      gl_FragColor=vec4(vec3(.55,1.,.38)*g*1.25,g); }`}));
   atmo.position.y=planetY; scene.add(atmo);
 
   const tex=glowTex();
@@ -257,17 +257,17 @@ void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.0,d); gl_F
   const DN=500, dg=new THREE.BufferGeometry(), dp=new Float32Array(DN*3);
   for(let i=0;i<DN;i++){dp[i*3]=(Math.random()-.5)*30; dp[i*3+1]=Math.random()*12-1.5; dp[i*3+2]=-Math.random()*14;}
   dg.setAttribute('position',new THREE.BufferAttribute(dp,3));
-  const dust=new THREE.Points(dg,new THREE.PointsMaterial({map:tex,size:.12,transparent:true,opacity:.6,depthWrite:false,blending:THREE.AdditiveBlending,color:0xffb38a}));
+  const dust=new THREE.Points(dg,new THREE.PointsMaterial({map:tex,size:.12,transparent:true,opacity:.6,depthWrite:false,blending:THREE.AdditiveBlending,color:0xb4ff98}));
   scene.add(dust);
 
   // floating commit cards (glass, rounded, with sparkline)
   function tileTex(i){
     const W=1024,H=640,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
     const path=()=>{g.beginPath();g.roundRect(6,6,W-12,H-12,46)};
-    path(); let gr=g.createLinearGradient(0,0,W,H); gr.addColorStop(0,'rgba(48,20,9,.95)'); gr.addColorStop(.55,'rgba(18,13,11,.95)'); gr.addColorStop(1,'rgba(10,10,10,.95)'); g.fillStyle=gr; g.fill();
+    path(); let gr=g.createLinearGradient(0,0,W,H); gr.addColorStop(0,'rgba(14,40,12,.95)'); gr.addColorStop(.55,'rgba(11,17,11,.95)'); gr.addColorStop(1,'rgba(10,10,10,.95)'); g.fillStyle=gr; g.fill();
     g.save(); path(); g.clip();
     g.strokeStyle='rgba(180,255,152,.05)'; g.lineWidth=2; for(let x=0;x<W;x+=48){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke()} for(let y=0;y<H;y+=48){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke()}
-    gr=g.createLinearGradient(0,0,0,H*.55); gr.addColorStop(0,'rgba(255,210,180,.12)'); gr.addColorStop(1,'rgba(255,210,180,0)'); g.fillStyle=gr; g.fillRect(0,0,W,H*.55);
+    gr=g.createLinearGradient(0,0,0,H*.55); gr.addColorStop(0,'rgba(200,255,180,.12)'); gr.addColorStop(1,'rgba(200,255,180,0)'); g.fillStyle=gr; g.fillRect(0,0,W,H*.55);
     g.restore();
     path(); gr=g.createLinearGradient(0,0,W,H); gr.addColorStop(0,'rgba(180,255,152,.95)'); gr.addColorStop(.5,'rgba(180,255,152,.12)'); gr.addColorStop(1,'rgba(180,255,152,.55)'); g.strokeStyle=gr; g.lineWidth=4; g.stroke();
     const revealed=i%2===0;
