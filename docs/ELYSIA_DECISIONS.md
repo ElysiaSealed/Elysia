@@ -224,3 +224,8 @@ Catatan ini mencatat pekerjaan nyata dan tidak mengubah status keputusan FINAL a
 - Prices set by the developer (temporary): Pro $5 per 30 days, Ask free, Signals API $499 per 30 days, Sponsored report $750. Stored as USDG micros in `PRO_PRICE_USDG_MICROS`, `ASK_PRICE_USDG_MICROS`, `SIGNALS_PRICE_USDG_MICROS`, `SIGNALS_PERIOD_DAYS`, `SPONSORED_PRICE_USDG_MICROS` (and `PRO_DAYS`).
 - The API exposes them at `GET /pricing` (cached 15 s) and the web reads that endpoint, so a price change needs only an env edit on the API service. Pro payment is verified on-chain against the same price; Signals API and Sponsored are sold by contact and only display the price.
 - `PAID_FEATURES_ENABLED` stays `false` until payments are verified end to end; `GET /pricing` reports it as `paymentsOpen`.
+
+**2026-11-13 — Developer decision: the Elysium variant is dropped and `dev-rh` is promoted to `main`.**
+- The developer confirmed that the Elysium Testnet plan will not go ahead. `dev-rh` was fast-forwarded into `main`, so `main` now carries the Robinhood Chain plan: mainnet 4663, `ElysiaLedger`, $ELYS, paid features with editable prices, and the rewritten `CLAUDE.md`, roadmap and infrastructure checklist.
+- The FINAL entries above that describe the Elysium-only scope (single chain 99801, free service, no payments) are superseded by this decision and by the 2026-11-13 `dev-rh` entry. They remain in this log as history. Written confirmation from Head Dev for the `dev-rh` direction is still tracked as RB-01.
+- The `dev-rh` branch is kept as is; new work can continue on `main`.
