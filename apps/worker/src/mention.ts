@@ -15,7 +15,7 @@ export interface MentionDeps {
 }
 
 export interface Mention {
-  /** id post X yang menyebut NEXA; balasan diarahkan ke post ini. */
+  /** id post X yang menyebut Elysia; balasan diarahkan ke post ini. */
   id: string
   text: string
 }
@@ -26,14 +26,14 @@ export type MentionResult =
 
 const ADDRESS_RE = /0x[a-fA-F0-9]{40}(?![a-fA-F0-9])/
 
-/** Alamat kontrak pertama di mention ("@nexa analisis kontrak 0x…"). Teks lain di mention tidak dipakai. */
+/** Alamat kontrak pertama di mention ("@elysia analisis kontrak 0x…"). Teks lain di mention tidak dipakai. */
 export function parseMention(text: string): { address: string } | null {
   const m = ADDRESS_RE.exec(text)
   return m ? { address: m[0] } : null
 }
 
 // Templat "tidak tahu" (tanpa angka, tanpa kata kontras) agar lolos jalur isUnknownReply RiskGuard tanpa disclaimer.
-export const UNKNOWN_REPLY = 'Not enough data on this contract. NEXA does not guess.'
+export const UNKNOWN_REPLY = 'Not enough data on this contract. Elysia does not guess.'
 const MIN_AGE_SECONDS = 3600
 const NFA = 'Not financial advice.'
 
@@ -64,7 +64,7 @@ Reply with JSON ONLY: {"text": "<reply text>"}`
 }
 
 /**
- * Balasan untuk mention "@nexa analisis kontrak 0x…". Hanya alamat yang diambil dari mention; teks mention TIDAK pernah
+ * Balasan untuk mention "@elysia analisis kontrak 0x…". Hanya alamat yang diambil dari mention; teks mention TIDAK pernah
  * dikirim ke LLM (input tak tepercaya, risiko prompt injection). Token tidak dikenal atau berumur < 1 jam dijawab "tidak tahu"
  * (templat tetap, tanpa LLM). Balasan selalu masuk antrian persetujuan (RiskGuard: mention_reply wajib ditinjau).
  */

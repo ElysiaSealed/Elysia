@@ -87,7 +87,7 @@ async function seedToken(ageHours: number) {
   await db.insert(ponsTrades).values([row(1, 'buy'), row(2, 'buy'), row(3, 'sell')].map((r) => ({ ...r, token: t!.address })))
 }
 
-describe('GET /ask/plan (legacy NEXA payment plan, unused by the free Ask)', () => {
+describe('GET /ask/plan (legacy Elysia payment plan, unused by the free Ask)', () => {
   it('returns the plan only when paid features are on and a chain is configured; 503 otherwise', async () => {
     const withChain = buildApp({
       db,

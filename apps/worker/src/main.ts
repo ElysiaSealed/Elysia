@@ -73,7 +73,7 @@ const env = z
     KEEPER_PRIVATE_KEY: optionalPrivateKey,
     /** JSON [{"symbol":"NVDA","source":"0x..mainnet","target":"0x..mock"}]; kosong = feed tiruan di addresses/testnet.json (CHAIN_ID=46630). */
     KEEPER_FEEDS: z.string().optional(),
-    /** RPC tempat feed Chainlink/Uniswap warisan NEXA dibaca (Robinhood). Tanpa default: laporan Stock Token, snapshot pasar, dan mirror Chainlink nonaktif sampai diisi eksplisit. */
+    /** RPC tempat feed Chainlink/Uniswap legacy dibaca (Robinhood). Tanpa default: laporan Stock Token, snapshot pasar, dan mirror Chainlink nonaktif sampai diisi eksplisit. */
     ORACLE_RPC_URL: z.string().url().optional(),
     KEEPER_INTERVAL_SECONDS: z.coerce.number().int().min(60).default(300),
   })
@@ -284,7 +284,7 @@ if (env.KEEPER_PRIVATE_KEY && mirrors.length > 0) {
     mirrors,
   }
 }
-// NEXA Pro: bot Telegram yang sama menautkan chat pelanggan (/start <kode>) dan mengirim alert 15 menit sebelum post publik.
+// Elysia Pro: bot Telegram yang sama menautkan chat pelanggan (/start <kode>) dan mengirim alert 15 menit sebelum post publik.
 const proBot = env.TELEGRAM_BOT_TOKEN ? new TelegramApi(env.TELEGRAM_BOT_TOKEN) : null
 console.log(proBot ? 'worker: alert Pro Telegram AKTIF (tautan chat + pengiriman ke pelanggan)' : 'worker: alert Pro Telegram NONAKTIF (butuh TELEGRAM_BOT_TOKEN)')
 

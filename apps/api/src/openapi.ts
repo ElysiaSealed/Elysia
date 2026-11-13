@@ -39,10 +39,10 @@ export function buildOpenApi() {
   return {
     openapi: '3.0.3',
     info: {
-      title: 'NEXA API',
+      title: 'Elysia API',
       version: '0.1.0',
       description:
-        'API publik NEXA. Nilai mentah dan terformat tersedia berdampingan; setiap commit menyertakan link Blockscout. Waktu dalam UTC (ISO 8601).',
+        'API publik Elysia. Nilai mentah dan terformat tersedia berdampingan; setiap commit menyertakan link Blockscout. Waktu dalam UTC (ISO 8601).',
     },
     paths: {
       '/healthz': { get: { summary: 'Cek hidup', responses: { '200': { description: 'OK' } } } },
@@ -67,12 +67,12 @@ export function buildOpenApi() {
       },
       '/leaderboard': {
         get: {
-          summary: 'NEXA vs KOL: leaderboard akurasi. Hanya KOL yang bersedia dinilai; peringkat butuh minimal minScored call ternilai.',
+          summary: 'Elysia vs KOL: leaderboard akurasi. Hanya KOL yang bersedia dinilai; peringkat butuh minimal minScored call ternilai.',
           responses: { '200': ok('Peringkat akurasi', leaderboardResponseSchema) },
         },
       },
       '/burn': {
-        get: { summary: 'Burn tracker $NEXA (BurnVault)', responses: { '200': ok('Total dan riwayat burn', burnResponseSchema) } },
+        get: { summary: 'Burn tracker $ELYS (BurnVault)', responses: { '200': ok('Total dan riwayat burn', burnResponseSchema) } },
       },
       '/auth/nonce': {
         get: { summary: 'Login wallet (SIWE): nonce sekali pakai. Mati sampai PAID_FEATURES_ENABLED=true.', responses: { '200': { description: 'Nonce', content: { 'application/json': { schema: schema(nonceResponseSchema) } } }, '503': err('fitur belum aktif') } },
@@ -94,20 +94,20 @@ export function buildOpenApi() {
       },
       '/me': {
         get: {
-          summary: 'Profil sesi: status holder $NEXA dan benefit (alert lebih cepat, kredit Ask gratis).',
+          summary: 'Profil sesi: status holder $ELYS dan benefit (alert lebih cepat, kredit Ask gratis).',
           parameters: [{ name: 'authorization', in: 'header', required: true, schema: { type: 'string' } }],
           responses: { '200': { description: 'Profil', content: { 'application/json': { schema: schema(meResponseSchema) } } }, '401': err('login_required'), '503': err('fitur belum aktif') },
         },
       },
       '/pro/plan': {
         get: {
-          summary: 'NEXA Pro: harga, lama periode, penerima USDG, dan chain. Mati sampai PAID_FEATURES_ENABLED=true.',
+          summary: 'Elysia Pro: harga, lama periode, penerima USDG, dan chain. Mati sampai PAID_FEATURES_ENABLED=true.',
           responses: { '200': ok('Rencana Pro', proPlanResponseSchema), '503': err('fitur berbayar belum aktif') },
         },
       },
       '/pro/subscribe': {
         post: {
-          summary: 'Aktifkan atau perpanjang NEXA Pro dengan tx pembayaran USDG yang sudah terkonfirmasi. Pengirim tx harus sama dengan alamat sesi; membayar kelipatan harga memberi kelipatan periode.',
+          summary: 'Aktifkan atau perpanjang Elysia Pro dengan tx pembayaran USDG yang sudah terkonfirmasi. Pengirim tx harus sama dengan alamat sesi; membayar kelipatan harga memberi kelipatan periode.',
           parameters: [{ name: 'authorization', in: 'header', required: true, schema: { type: 'string' } }],
           requestBody: { required: true, content: { 'application/json': { schema: schema(proSubscribeRequestSchema) } } },
           responses: {
@@ -158,8 +158,8 @@ export function buildOpenApi() {
       },
       '/ask/plan': {
         get: {
-          summary: 'Ask NEXA: harga, penerima USDG, token, dan chain pembayaran, agar web bisa membayar langsung dari wallet. Mati sampai PAID_FEATURES_ENABLED=true.',
-          responses: { '200': ok('Rencana Ask NEXA', askPlanResponseSchema), '503': err('fitur berbayar belum aktif') },
+          summary: 'Ask Elysia: harga, penerima USDG, token, dan chain pembayaran, agar web bisa membayar langsung dari wallet. Mati sampai PAID_FEATURES_ENABLED=true.',
+          responses: { '200': ok('Rencana Ask Elysia', askPlanResponseSchema), '503': err('fitur berbayar belum aktif') },
         },
       },
       '/ask': {
@@ -184,7 +184,7 @@ export function buildOpenApi() {
       },
       '/signals': {
         get: {
-          summary: 'Signals API (berbayar): feed post publik NEXA. Butuh header x-api-key; mati sampai PAID_FEATURES_ENABLED=true.',
+          summary: 'Signals API (berbayar): feed post publik Elysia. Butuh header x-api-key; mati sampai PAID_FEATURES_ENABLED=true.',
           parameters: [
             { name: 'x-api-key', in: 'header', required: true, schema: { type: 'string' } },
             { name: 'limit', in: 'query', required: false, schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 } },

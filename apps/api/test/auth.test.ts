@@ -18,8 +18,8 @@ if (configured) try {
 }
 
 const NOW = new Date()
-const DOMAIN = 'nexa.example'
-const NEXA = '0x00000000000000000000000000000000000000ee' as const
+const DOMAIN = 'elysia.example'
+const Elysia = '0x00000000000000000000000000000000000000ee' as const
 const TOKEN = '0x00000000000000000000000000000000000000c3'
 const THRESHOLD = 1_000n * 10n ** 18n
 
@@ -31,7 +31,7 @@ const balances: Record<string, bigint> = {
 }
 const holderCfg = (over: Partial<HolderConfig> = {}): HolderConfig => ({
   client: { readContract: async ({ args }: { args: readonly unknown[] }) => balances[String(args[0]).toLowerCase()] ?? 0n } as unknown as HolderConfig['client'],
-  token: NEXA,
+  token: Elysia,
   threshold: THRESHOLD,
   decimals: 18,
   freeAsksPerMonth: 2,
@@ -44,7 +44,7 @@ const mk = (auth: Partial<AuthConfig> | null = {}, holder: HolderConfig | undefi
     paidFeaturesEnabled: true,
     now: () => NOW,
     // Ask harus terkonfigurasi agar /ask tidak 503; pembayaran USDG tidak dipakai di test ini.
-    ask: { client: {} as never, usdg: NEXA, recipient: NEXA, minAmount: 1_000_000n },
+    ask: { client: {} as never, usdg: Elysia, recipient: Elysia, minAmount: 1_000_000n },
     ...(auth === null ? {} : { auth: { domains: [DOMAIN], sessionTtlSeconds: 3600, nonceTtlSeconds: 300, holder, ...auth } }),
   })
 
@@ -60,7 +60,7 @@ async function signIn(app: App, acct = holderAcct, over: { domain?: string; nonc
     nonce,
     uri: `https://${DOMAIN}`,
     version: '1',
-    statement: 'Sign in to NEXA.',
+    statement: 'Sign in to Elysia.',
     issuedAt: over.issuedAt ?? NOW,
   })
   const signature = await acct.signMessage({ message })
@@ -92,7 +92,7 @@ describe.skipIf(!dbUp)('login wallet (SIWE) dan benefit holder', () => {
     const app = mk()
     const s = await login(app)
     expect(s.address).toBe(getAddress(holderAcct.address))
-    expect(s.token).toMatch(/^nexa_s_[0-9a-f]{64}$/)
+    expect(s.token).toMatch(/^elysia_s_[0-9a-f]{64}$/)
     const me = meResponseSchema.parse((await app.inject({ method: 'GET', url: '/me', headers: auth(s.token) })).json())
     expect(me.holder).toMatchObject({ enabled: true, isHolder: true })
     expect(me.holder.balance!.formatted).toBe('5000')
@@ -104,7 +104,7 @@ describe.skipIf(!dbUp)('login wallet (SIWE) dan benefit holder', () => {
   it('menolak: tanpa sesi, token salah, nonce dipakai ulang, nonce asing, domain lain, tanda tangan diubah, pesan basi', async () => {
     const app = mk()
     expect((await app.inject({ method: 'GET', url: '/me' })).statusCode).toBe(401)
-    expect((await app.inject({ method: 'GET', url: '/me', headers: auth('nexa_s_' + '0'.repeat(64)) })).statusCode).toBe(401)
+    expect((await app.inject({ method: 'GET', url: '/me', headers: auth('elysia_s_' + '0'.repeat(64)) })).statusCode).toBe(401)
 
     const nonce = await nonceOf(app)
     expect((await signIn(app, holderAcct, { nonce })).statusCode).toBe(200)
@@ -143,7 +143,7 @@ describe.skipIf(!dbUp)('login wallet (SIWE) dan benefit holder', () => {
 
   describe('Ask is free and ignores holder sessions', () => {
     it('answers without login; a holder session consumes no credit', async () => {
-      await db.insert(ponsTokens).values({ address: getAddress(TOKEN), curve: '0x00000000000000000000000000000000000000ee', creator: getAddress(NEXA), name: 'T', symbol: 'TST', launchedAt: new Date(NOW.getTime() - 5 * 3_600_000), redFlags: [], blockNumber: 1n })
+      await db.insert(ponsTokens).values({ address: getAddress(TOKEN), curve: '0x00000000000000000000000000000000000000ee', creator: getAddress(Elysia), name: 'T', symbol: 'TST', launchedAt: new Date(NOW.getTime() - 5 * 3_600_000), redFlags: [], blockNumber: 1n })
       const app = mk()
       const anon = await app.inject({ method: 'POST', url: '/ask', payload: { address: TOKEN } })
       expect(anon.statusCode).toBe(200)

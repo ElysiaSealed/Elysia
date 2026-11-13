@@ -205,7 +205,7 @@ describe.skipIf(!dbUp)('handleTelegramUpdate', () => {
     expect(await db.select().from(telegramLinks)).toHaveLength(0)
     await handleTelegramUpdate(db, s, msg('/start'), NOW)
     await handleTelegramUpdate(db, s, msg('halo'), NOW)
-    expect(s.sent.slice(1).every((x) => x.text.startsWith('NEXA Pro alerts'))).toBe(true)
+    expect(s.sent.slice(1).every((x) => x.text.startsWith('Elysia Pro alerts'))).toBe(true)
     const before = s.sent.length
     await handleTelegramUpdate(db, s, msg('/stop', 777, 'group'), NOW)
     await handleTelegramUpdate(db, s, { update_id: 2 }, NOW)

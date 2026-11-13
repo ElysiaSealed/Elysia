@@ -7,7 +7,7 @@ import { formatBps, formatWinRate } from './format'
 export interface BoardStats {
   handle: string
   displayName: string
-  isNexa: boolean
+  isElysia: boolean
   scored: number
   wins: number
   pending: number
@@ -33,7 +33,7 @@ export async function kolStats(db: Db): Promise<BoardStats[]> {
     return {
       handle: k.handle,
       displayName: k.displayName,
-      isNexa: false,
+      isElysia: false,
       scored: scoredCalls.length,
       wins: scoredCalls.filter((c) => c.won).length,
       pending: calls.length - scoredCalls.length,
@@ -53,7 +53,7 @@ export function rankEntries(stats: BoardStats[], minScored: number): Leaderboard
     rank,
     handle: s.handle,
     displayName: s.displayName,
-    isNexa: s.isNexa,
+    isElysia: s.isElysia,
     scored: s.scored,
     wins: s.wins,
     pending: s.pending,

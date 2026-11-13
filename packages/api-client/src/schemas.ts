@@ -102,7 +102,7 @@ export const marketResponseSchema = z.object({
 export type MarketResponse = z.infer<typeof marketResponseSchema>
 
 export const burnResponseSchema = z.object({
-  /** Jumlah $NEXA dibakar: mentah (unit terkecil) + desimal + terformat. */
+  /** Jumlah $ELYS dibakar: mentah (unit terkecil) + desimal + terformat. */
   totalBurned: z.object({ raw: z.string().regex(/^\d+$/), decimals: z.number().int(), formatted: z.string() }),
   burns: z.array(
     z.object({
@@ -116,7 +116,7 @@ export const burnResponseSchema = z.object({
 export type BurnResponse = z.infer<typeof burnResponseSchema>
 
 export const signalsResponseSchema = z.object({
-  /** Post publik NEXA yang sudah terbit, terbaru dulu. */
+  /** Post publik Elysia yang sudah terbit, terbaru dulu. */
   items: z.array(
     z.object({
       id: z.number().int().nonnegative(),
@@ -133,7 +133,7 @@ export type SignalsResponse = z.infer<typeof signalsResponseSchema>
 export const askRequestSchema = z.object({
   /** Alamat token yang dianalisis. */
   address: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
-  /** Tx pembayaran USDG ke penerima Ask NEXA. Dihilangkan bila memakai kredit gratis holder (butuh sesi login). */
+  /** Tx pembayaran USDG ke penerima Ask Elysia. Dihilangkan bila memakai kredit gratis holder (butuh sesi login). */
   txHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).optional(),
 })
 export type AskRequest = z.infer<typeof askRequestSchema>
@@ -225,8 +225,8 @@ export const leaderboardResponseSchema = z.object({
       rank: z.number().int().positive().nullable(),
       handle: z.string(),
       displayName: z.string(),
-      /** true untuk baris NEXA sendiri (dari /proof). */
-      isNexa: z.boolean(),
+      /** true untuk baris Elysia sendiri (dari /proof). */
+      isElysia: z.boolean(),
       scored: z.number().int().nonnegative(),
       wins: z.number().int().nonnegative(),
       pending: z.number().int().nonnegative(),
@@ -257,7 +257,7 @@ export type SessionResponse = z.infer<typeof sessionResponseSchema>
 export const meResponseSchema = z.object({
   address: z.string(),
   holder: z.object({
-    /** false bila benefit holder belum dikonfigurasi (token $NEXA belum ada atau HOLDER_THRESHOLD kosong). */
+    /** false bila benefit holder belum dikonfigurasi (token $ELYS belum ada atau HOLDER_THRESHOLD kosong). */
     enabled: z.boolean(),
     isHolder: z.boolean(),
     balance: z.object({ raw: z.string().regex(/^\d+$/), decimals: z.number().int(), formatted: z.string() }).nullable(),
@@ -271,7 +271,7 @@ export const meResponseSchema = z.object({
     /** Bulan UTC kredit berlaku, `YYYY-MM`. */
     month: z.string(),
   }),
-  /** Langganan NEXA Pro milik alamat ini. */
+  /** Langganan Elysia Pro milik alamat ini. */
   pro: z.object({
     active: z.boolean(),
     /** Akhir masa aktif; null bila belum pernah berlangganan. Tetap terisi setelah kedaluwarsa. */
@@ -282,7 +282,7 @@ export const meResponseSchema = z.object({
 })
 export type MeResponse = z.infer<typeof meResponseSchema>
 
-// ------------------------------------------------------------- NEXA Pro
+// ------------------------------------------------------------- Elysia Pro
 
 const unitAmount = z.object({ raw: z.string().regex(/^\d+$/), decimals: z.number().int(), formatted: z.string() })
 
@@ -301,7 +301,7 @@ export const proPlanResponseSchema = z.object({
 })
 export type ProPlanResponse = z.infer<typeof proPlanResponseSchema>
 
-/** Ask NEXA: harga, penerima, dan chain pembayaran. Bentuk sama dengan rencana Pro tanpa lama periode dan Telegram. */
+/** Ask Elysia: harga, penerima, dan chain pembayaran. Bentuk sama dengan rencana Pro tanpa lama periode dan Telegram. */
 export const askPlanResponseSchema = proPlanResponseSchema.omit({ durationDays: true, telegramBot: true })
 export type AskPlanResponse = z.infer<typeof askPlanResponseSchema>
 

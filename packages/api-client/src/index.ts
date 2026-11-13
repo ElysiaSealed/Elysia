@@ -179,7 +179,7 @@ export function createApiClient(opts: ApiClientOptions = {}) {
     if (opts.useFixtures) return
     await send('POST', '/auth/logout', null, { token, body: {} })
   }
-  /** Rencana NEXA Pro (harga, penerima, chain) untuk membangun transfer USDG. */
+  /** Rencana Elysia Pro (harga, penerima, chain) untuk membangun transfer USDG. */
   async function getAskPlan(): Promise<AskPlanResponse> {
     if (opts.useFixtures) return askPlanResponseSchema.parse(askPlanFixture)
     return send('GET', '/ask/plan', askPlanResponseSchema)

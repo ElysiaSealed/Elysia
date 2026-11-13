@@ -84,13 +84,13 @@ const mk = (o: { paid?: boolean; pro?: Partial<ProConfig> | null; now?: () => Da
     explorerUrl: 'https://explorer.example.test',
     paidFeaturesEnabled: o.paid ?? true,
     now: o.now ?? (() => NOW),
-    auth: { domains: ['nexa.example'], sessionTtlSeconds: 3600, nonceTtlSeconds: 300 },
+    auth: { domains: ['elysia.example'], sessionTtlSeconds: 3600, nonceTtlSeconds: 300 },
     ...(o.pro === null ? {} : { pro: { payment: payment(), days: 30, chainId: 4663, telegramBot: 'elysia_alerts_bot', alertPollMs: 25, heartbeatMs: 10_000, ...o.pro } }),
   })
 
 /** Sesi login langsung di DB (alur SIWE-nya sudah diuji di auth.test). */
 async function session(address: string): Promise<string> {
-  const token = `nexa_s_${randomBytes(32).toString('hex')}`
+  const token = `elysia_s_${randomBytes(32).toString('hex')}`
   await db.insert(authSessions).values({ tokenHash: createHash('sha256').update(token).digest('hex'), address, expiresAt: new Date(NOW.getTime() + 3_600_000) })
   return token
 }
@@ -118,7 +118,7 @@ afterAll(async () => {
   await client.end()
 })
 
-describe.skipIf(!dbUp)('NEXA Pro: langganan', () => {
+describe.skipIf(!dbUp)('Elysia Pro: langganan', () => {
   beforeEach(clean)
 
   it('503 selama fitur berbayar mati atau Pro tidak dikonfigurasi', async () => {
@@ -215,7 +215,7 @@ describe.skipIf(!dbUp)('NEXA Pro: langganan', () => {
   })
 })
 
-describe.skipIf(!dbUp)('NEXA Pro: tautan Telegram', () => {
+describe.skipIf(!dbUp)('Elysia Pro: tautan Telegram', () => {
   beforeEach(clean)
 
   it('hanya pelanggan aktif yang boleh membuat kode', async () => {
@@ -256,7 +256,7 @@ describe.skipIf(!dbUp)('NEXA Pro: tautan Telegram', () => {
   })
 })
 
-describe.skipIf(!dbUp)('NEXA Pro: GET /alerts/stream (SSE)', () => {
+describe.skipIf(!dbUp)('Elysia Pro: GET /alerts/stream (SSE)', () => {
   beforeEach(clean)
 
   async function serve(over: Parameters<typeof mk>[0] = {}) {

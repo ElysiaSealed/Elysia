@@ -68,7 +68,7 @@ export interface AppConfig {
   signalsRateLimitPerMinute?: number
   /** Call ternilai minimum agar masuk peringkat leaderboard (env LEADERBOARD_MIN_SCORED). */
   leaderboardMinScored?: number
-  /** Legacy NEXA payment config. POST /ask is free and no longer reads it; only GET /ask/plan does. */
+  /** Legacy payment config. POST /ask is free and no longer reads it; only GET /ask/plan does. */
   ask?: AskConfig
   /** Free Ask rate limit per IP (PENDING numbers, see ask-limit.ts). */
   askRateLimit?: AskLimits
@@ -76,7 +76,7 @@ export interface AppConfig {
   trustProxyHops?: number
   /** Login wallet (SIWE) dan benefit holder. Tanpa ini /auth/* dan /me menjawab 503. */
   auth?: AuthConfig
-  /** NEXA Pro (langganan USDG, alert stream, Telegram). Tanpa ini /pro/* dan /alerts/stream menjawab 503. */
+  /** Elysia Pro (langganan USDG, alert stream, Telegram). Tanpa ini /pro/* dan /alerts/stream menjawab 503. */
   pro?: ProConfig
   now?: () => Date
 }
@@ -249,14 +249,14 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     return body
   })
 
-  // NEXA vs KOL: leaderboard akurasi. Hanya KOL yang opted_in; baris NEXA dihitung dari /proof yang sama.
+  // Elysia vs KOL: leaderboard akurasi. Hanya KOL yang opted_in; baris Elysia dihitung dari /proof yang sama.
   app.get('/leaderboard', async (_req, reply) => {
     const rows = await publicRows(cfg.db)
     const scoredRows = rows.filter((r) => r.status === 'revealed' && alignedBps(r) !== null)
-    const nexa = {
-      handle: 'nexa',
-      displayName: 'NEXA',
-      isNexa: true,
+    const elysia = {
+      handle: 'elysia',
+      displayName: 'Elysia',
+      isElysia: true,
       scored: scoredRows.length,
       wins: scoredRows.filter((r) => r.won === true).length,
       pending: rows.filter((r) => r.status !== 'revealed').length,
@@ -266,15 +266,15 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     const body: LeaderboardResponse = leaderboardResponseSchema.parse({
       updatedAt: now().toISOString(),
       minScored,
-      entries: rankEntries([nexa, ...(await kolStats(cfg.db))], minScored),
+      entries: rankEntries([elysia, ...(await kolStats(cfg.db))], minScored),
     })
     cache(reply)
     return body
   })
 
-  // Burn tracker: event `Burned` BurnVault. $NEXA 18 desimal. Kosong sampai BurnVault ada dan ter-index.
-  const NEXA_DECIMALS = 18
-  const units = (raw: bigint) => ({ raw: raw.toString(), decimals: NEXA_DECIMALS, formatted: formatUnits(raw, NEXA_DECIMALS) })
+  // Burn tracker: event `Burned` BurnVault. $ELYS 18 desimal. Kosong sampai BurnVault ada dan ter-index.
+  const ELYS_DECIMALS = 18
+  const units = (raw: bigint) => ({ raw: raw.toString(), decimals: ELYS_DECIMALS, formatted: formatUnits(raw, ELYS_DECIMALS) })
   // Total dihitung di SQL dan hanya RECENT_LIMIT baris terbaru yang ditarik (egress tetap kecil walau burn ribuan).
   // Hasil disimpan 60 dtk di memori, jadi trafik web tidak berubah jadi query DB.
   let burnCache: { at: number; body: BurnResponse } | null = null
@@ -387,7 +387,7 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     return meResponseSchema.parse(await buildMe(cfg.db, auth!, s.address, now()))
   })
 
-  // ---- NEXA Pro ($7/bulan): langganan USDG on-chain, alert real-time (SSE) dan Telegram. Di belakang flag fitur berbayar.
+  // ---- Elysia Pro ($7/bulan): langganan USDG on-chain, alert real-time (SSE) dan Telegram. Di belakang flag fitur berbayar.
   const pro = cfg.pro
   const proOn = () => Boolean(cfg.paidFeaturesEnabled && pro)
   const price = () => ({ raw: pro!.payment.minAmount.toString(), decimals: 6, formatted: formatUnits(pro!.payment.minAmount, 6) })
@@ -511,7 +511,7 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     }
   })
 
-  // Rencana Ask NEXA: web membayar langsung dari wallet (tanpa menyalin alamat dan hash secara manual).
+  // Rencana Ask Elysia: web membayar langsung dari wallet (tanpa menyalin alamat dan hash secara manual).
   app.get('/ask/plan', async (_req, reply) => {
     if (!cfg.paidFeaturesEnabled || !cfg.ask || cfg.ask.chainId === undefined) return reply.code(503).send({ error: 'paid_features_disabled' })
     cache(reply)

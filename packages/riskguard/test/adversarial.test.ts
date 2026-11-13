@@ -62,8 +62,8 @@ describe('celah: homoglyph/karakter tak terlihat di luar peta', () => {
   it('Hangul filler di dalam "target"', () => blocked('Tar' + c(0x3164) + 'get: $150', ['PRICE_TARGET']))
   it('Mongolian vowel separator di dalam "target"', () => blocked('tar' + c(0x180e) + 'get 150', ['PRICE_TARGET']))
   it('braille blank di dalam "target"', () => blocked('tar' + c(0x2800) + 'get 150', ['PRICE_TARGET']))
-  it('Hangul filler memutus domain', () => blocked('nexa' + c(0x3164) + '.ai', ['URL']))
-  it('Armenian n di $NEXA', () => blocked('$' + c(0x578) + 'exa naik', ['NEXA_MENTION'], 'prediction'))
+  it('Hangul filler memutus domain', () => blocked('elysia' + c(0x3164) + '.ai', ['URL']))
+  it('Cyrillic s di $ELYS', () => blocked('$ely' + c(0x455) + ' naik', ['ELYS_MENTION'], 'prediction'))
 })
 
 describe('celah: target harga dengan frasa tak lazim', () => {
@@ -84,8 +84,8 @@ describe('celah: target harga dengan frasa tak lazim', () => {
 })
 
 describe('celah: URL tersamar', () => {
-  it('spasi di sekitar titik', () => blocked('cek nexa . ai', ['URL']))
-  it('titik ideografis U+3002', () => blocked('cek nexa' + c(0x3002) + 'ai', ['URL']))
+  it('spasi di sekitar titik', () => blocked('cek elysia . ai', ['URL']))
+  it('titik ideografis U+3002', () => blocked('cek elysia' + c(0x3002) + 'ai', ['URL']))
   it('TLD .tech', () => blocked('pons.tech', ['URL']))
   it('TLD .exchange', () => blocked('swap.exchange', ['URL']))
   it('TLD .vip', () => blocked('airdrop.vip', ['URL']))
@@ -93,25 +93,25 @@ describe('celah: URL tersamar', () => {
   it('TLD .trade', () => blocked('x.trade', ['URL']))
   it('alamat IP', () => blocked('203.0.113.5/claim', ['URL']))
   it('skema ipfs://', () => blocked('ipfs://bafybeigdyrzt', ['URL']))
-  it('skema tg://', () => blocked('tg://resolve?domain=nexa', ['URL']))
+  it('skema tg://', () => blocked('tg://resolve?domain=elysia', ['URL']))
   it('http dengan huruf berspasi', () => blocked('h t t p s : / / n e x a . a i', ['URL']))
 })
 
-describe('celah: $NEXA di tipe terlarang / pembicaraan harga', () => {
-  it('$NNEXA (huruf berulang)', () => blocked('$NNEXA hari ini', ['NEXA_MENTION'], 'prediction'))
-  it('$NEXAA', () => blocked('$NEXAA hari ini', ['NEXA_MENTION'], 'prediction'))
-  it('NEXA tokens (jamak)', () => blocked('NEXA tokens dibakar', ['NEXA_MENTION'], 'daily_summary'))
-  it('ticker: NEXA (titik dua)', () => blocked('ticker: NEXA', ['NEXA_MENTION'], 'daily_summary'))
-  it('tokennya NEXA', () => blocked('tokennya NEXA ramai', ['NEXA_MENTION'], 'daily_summary'))
-  it('NEXA/NVDA pool', () => blocked('NEXA/NVDA pool ramai', ['NEXA_MENTION'], 'daily_summary'))
-  it('NEXA holders', () => blocked('NEXA holders bertambah 300', ['NEXA_MENTION'], 'daily_summary'))
-  it('harga NEXA tanpa $ (aturan emas)', () => blocked('Harga NEXA naik 30% hari ini', ['NEXA_PRICE', 'NEXA_MENTION']))
-  it('NEXA price/mcap tanpa $', () => blocked('NEXA mcap 5M, price 0.5', ['NEXA_PRICE', 'NEXA_MENTION']))
-  it('technical_announcement: up 40%', () => blocked('$NEXA up 40% today', ['NEXA_PRICE'], 'technical_announcement'))
-  it('technical_announcement: melonjak', () => blocked('$NEXA melonjak hari ini', ['NEXA_PRICE'], 'technical_announcement'))
-  it('technical_announcement: rally/surge', () => blocked('$NEXA rallied and surged', ['NEXA_PRICE'], 'technical_announcement'))
-  it('burn_report: undervalued/trading at', () => blocked('Burn done. $NEXA is undervalued, trading at 0.5', ['NEXA_PRICE'], 'burn_report'))
-  it('burn_report: accumulate $NEXA', () => blocked('Burn done. Accumulate $NEXA', ['ADVICE_PHRASE'], 'burn_report'))
+describe('celah: $ELYS di tipe terlarang / pembicaraan harga', () => {
+  it('$ELLYS (huruf berulang)', () => blocked('$ELLYS hari ini', ['ELYS_MENTION'], 'prediction'))
+  it('$ELYSS (huruf berulang di akhir)', () => blocked('$ELYSS hari ini', ['ELYS_MENTION'], 'prediction'))
+  it('ELYS tokens (jamak)', () => blocked('ELYS tokens dibakar', ['ELYS_MENTION'], 'daily_summary'))
+  it('ticker: ELYS (titik dua)', () => blocked('ticker: ELYS', ['ELYS_MENTION'], 'daily_summary'))
+  it('tokennya ELYS', () => blocked('tokennya ELYS ramai', ['ELYS_MENTION'], 'daily_summary'))
+  it('ELYS/NVDA pool', () => blocked('ELYS/NVDA pool ramai', ['ELYS_MENTION'], 'daily_summary'))
+  it('ELYS holders', () => blocked('ELYS holders bertambah 300', ['ELYS_MENTION'], 'daily_summary'))
+  it('harga ELYS tanpa $ (aturan emas)', () => blocked('Harga ELYS naik 30% hari ini', ['ELYS_PRICE', 'ELYS_MENTION']))
+  it('ELYS price/mcap tanpa $', () => blocked('ELYS mcap 5M, price 0.5', ['ELYS_PRICE', 'ELYS_MENTION']))
+  it('technical_announcement: up 40%', () => blocked('$ELYS up 40% today', ['ELYS_PRICE'], 'technical_announcement'))
+  it('technical_announcement: melonjak', () => blocked('$ELYS melonjak hari ini', ['ELYS_PRICE'], 'technical_announcement'))
+  it('technical_announcement: rally/surge', () => blocked('$ELYS rallied and surged', ['ELYS_PRICE'], 'technical_announcement'))
+  it('burn_report: undervalued/trading at', () => blocked('Burn done. $ELYS is undervalued, trading at 0.5', ['ELYS_PRICE'], 'burn_report'))
+  it('burn_report: accumulate $ELYS', () => blocked('Burn done. Accumulate $ELYS', ['ADVICE_PHRASE'], 'burn_report'))
 })
 
 describe('celah: Sponsored & rekomendasi tersirat', () => {
@@ -171,5 +171,5 @@ describe('false positive: laporan data yang jelas tidak berbahaya', () => {
   it('titik tanpa spasi bertemu TLD tetap diblokir ("stabil.Info")', () => blocked('Harga ETH stabil.Info lengkap menyusul', ['URL']))
   it('kata "guaranteed" teknis', () => passes('Chainlink heartbeat: update guaranteed within 1h'))
   it('burn_report menyebut liquidity/pairing (bukan harga)', () =>
-    passes('$NEXA burned 50,000 via BurnVault. Pairing NVDA tidak berubah.', 'burn_report'))
+    passes('$ELYS burned 50,000 via BurnVault. Pairing NVDA tidak berubah.', 'burn_report'))
 })

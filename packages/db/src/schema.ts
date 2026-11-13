@@ -82,7 +82,7 @@ export const indexerState = pgTable('indexer_state', {
   updatedAt: ts('updated_at').notNull().defaultNow(),
 })
 
-/** Event `Burned` dari BurnVault. $NEXA selalu 18 desimal (token Pons). */
+/** Event `Burned` dari BurnVault. $ELYS selalu 18 desimal (token Pons). */
 export const burns = pgTable(
   'burns',
   {
@@ -248,7 +248,7 @@ export const authSessions = pgTable(
   (t) => [index('auth_sessions_address_idx').on(t.address)],
 )
 
-/** Kredit Ask NEXA gratis yang sudah dipakai holder $NEXA (per alamat per bulan UTC, `YYYY-MM`). */
+/** Kredit Ask Elysia gratis yang sudah dipakai holder $ELYS (per alamat per bulan UTC, `YYYY-MM`). */
 export const askCreditUses = pgTable(
   'ask_credit_uses',
   {
@@ -261,7 +261,7 @@ export const askCreditUses = pgTable(
   (t) => [index('ask_credit_uses_idx').on(t.address, t.month)],
 )
 
-/** Pembayaran Ask NEXA yang sudah dipakai. tx_hash unik: satu pembayaran = satu laporan (anti replay). */
+/** Pembayaran Ask Elysia yang sudah dipakai. tx_hash unik: satu pembayaran = satu laporan (anti replay). */
 export const askPayments = pgTable('ask_payments', {
   txHash: text('tx_hash').primaryKey(),
   payer: text('payer').notNull(),
@@ -294,7 +294,7 @@ export const costLog = pgTable(
   (t) => [index('cost_log_cat_at_idx').on(t.category, t.createdAt)],
 )
 
-// ------------------------------------------------------------- NEXA Pro
+// ------------------------------------------------------------- Elysia Pro
 
 /** Langganan Pro per alamat wallet (ber-checksum). Aktif selama `expires_at` di masa depan. */
 export const proSubscriptions = pgTable('pro_subscriptions', {

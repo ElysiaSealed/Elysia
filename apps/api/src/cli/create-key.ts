@@ -7,7 +7,7 @@ const label = process.argv[2]
 const url = process.env.DATABASE_URL
 if (!label || !url) throw new Error('Pakai: DATABASE_URL=... pnpm --filter @elysia/api keys:create "<label>"')
 
-const key = `nexa_${randomBytes(24).toString('hex')}`
+const key = `elysia_${randomBytes(24).toString('hex')}`
 const { db, client } = createDb(url)
 await db.insert(apiKeys).values({ keyHash: createHash('sha256').update(key).digest('hex'), label })
 await client.end()

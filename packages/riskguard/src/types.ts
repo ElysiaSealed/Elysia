@@ -8,7 +8,7 @@ export const CONTENT_TYPES = [
   'technical_announcement',
   'burn_report',
   'sponsored',
-  // ELYSIA content types (brief). Legacy NEXA types above stay until their removal is approved.
+  // ELYSIA content types (brief). Legacy types above stay until their removal is approved.
   'gate_report',
   'graduation_watch',
   'hype_daily_call',
@@ -20,8 +20,8 @@ export type ContentType = (typeof CONTENT_TYPES)[number]
 export const REASON = {
   ADVICE_PHRASE: 'ADVICE_PHRASE',
   PRICE_TARGET: 'PRICE_TARGET',
-  NEXA_MENTION: 'NEXA_MENTION',
-  NEXA_PRICE: 'NEXA_PRICE',
+  ELYS_MENTION: 'ELYS_MENTION',
+  ELYS_PRICE: 'ELYS_PRICE',
   SPONSORED_LABEL: 'SPONSORED_LABEL',
   TOKEN_TOO_NEW: 'TOKEN_TOO_NEW',
   TOKEN_AGE_UNKNOWN: 'TOKEN_AGE_UNKNOWN',

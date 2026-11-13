@@ -8,7 +8,7 @@ export const envSchema = z
     DATABASE_URL: z.string().min(1),
     /** Tanpa nilai: memakai RPC chain yang dipilih (CHAINS[CHAIN_ENV].rpc). */
     RPC_URL: z.string().url().optional(),
-    /** Default Elysium Testnet (99801). mainnet/testnet (Robinhood, warisan NEXA) hanya bila dipilih eksplisit. */
+    /** Default Elysium Testnet (99801). mainnet/testnet (Robinhood, legacy) hanya bila dipilih eksplisit. */
     CHAIN_ENV: z.enum(['elysiumTestnet', 'testnet', 'mainnet']).default('elysiumTestnet'),
     PONS_FACTORY: z.string().optional(),
     /** Blok awal bila belum ada kursor. Kosong = mulai dari ujung chain (tanpa backfill). */
@@ -25,12 +25,12 @@ export const envSchema = z
     WHALE_MIN_USD: z.coerce.number().positive().default(100_000),
     /** Alamat BurnVault; kosong = pembaca burn nonaktif (kontrak belum di-deploy). */
     BURN_VAULT_ADDRESS: addr.optional().or(z.literal('')),
-    /** Alamat token $NEXA. Diisi (dan BURN_VAULT_ADDRESS kosong) = burn dibaca dari Transfer ke alamat nol / 0x…dEaD. */
-    NEXA_TOKEN_ADDRESS: addr.optional().or(z.literal('')),
+    /** Alamat token $ELYS. Diisi (dan BURN_VAULT_ADDRESS kosong) = burn dibaca dari Transfer ke alamat nol / 0x…dEaD. */
+    ELYS_TOKEN_ADDRESS: addr.optional().or(z.literal('')),
     /** Opsional: hanya hitung burn dari alamat ini (mis. wallet yang membakar). Kosong = semua burn. */
     BURN_FROM_ADDRESS: addr.optional().or(z.literal('')),
-    /** Burn di bawah jumlah ini (unit $NEXA utuh) diabaikan: mencegah spam burn debu menggembungkan tabel. */
-    BURN_MIN_NEXA: z.coerce.bigint().nonnegative().default(1n),
+    /** Burn di bawah jumlah ini (unit $ELYS utuh) diabaikan: mencegah spam burn debu menggembungkan tabel. */
+    BURN_MIN_Elysia: z.coerce.bigint().nonnegative().default(1n),
   })
 
 /**

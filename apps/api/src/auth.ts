@@ -12,7 +12,7 @@ const erc20 = parseAbi(['function balanceOf(address) view returns (uint256)'])
 
 export interface HolderConfig {
   client: Pick<PublicClient, 'readContract'>
-  /** Token $NEXA. Belum ada sebelum launch di Pons V2: tanpa ini benefit holder nonaktif. */
+  /** Token $ELYS. Belum ada sebelum launch di Pons V2: tanpa ini benefit holder nonaktif. */
   token: Address
   /** Saldo minimum (unit terkecil) agar jadi holder. */
   threshold: bigint
@@ -21,7 +21,7 @@ export interface HolderConfig {
 }
 
 export interface AuthConfig {
-  /** Domain web yang boleh menandatangani (host, mis. nexa.example atau xyz.vercel.app). */
+  /** Domain web yang boleh menandatangani (host, mis. elysia.example atau xyz.vercel.app). */
   domains: string[]
   sessionTtlSeconds: number
   nonceTtlSeconds: number
@@ -70,7 +70,7 @@ export async function verifyLogin(db: Db, cfg: AuthConfig, req: { message: strin
     .returning({ nonce: authNonces.nonce })
   if (used.length === 0) return { ok: false, reason: 'bad_nonce' }
 
-  const token = `nexa_s_${randomBytes(32).toString('hex')}`
+  const token = `elysia_s_${randomBytes(32).toString('hex')}`
   const expiresAt = new Date(now.getTime() + cfg.sessionTtlSeconds * 1000)
   const address = getAddress(m.address)
   await db.insert(authSessions).values({ tokenHash: sha256(token), address, expiresAt })
@@ -78,7 +78,7 @@ export async function verifyLogin(db: Db, cfg: AuthConfig, req: { message: strin
 }
 
 export async function sessionFrom(db: Db, authorization: string | undefined, now: Date): Promise<{ address: string; tokenHash: string } | null> {
-  const token = /^Bearer (nexa_s_[0-9a-f]{64})$/.exec(authorization ?? '')?.[1]
+  const token = /^Bearer (elysia_s_[0-9a-f]{64})$/.exec(authorization ?? '')?.[1]
   if (!token) return null
   const tokenHash = sha256(token)
   const [row] = await db.select().from(authSessions).where(and(eq(authSessions.tokenHash, tokenHash), gt(authSessions.expiresAt, now)))

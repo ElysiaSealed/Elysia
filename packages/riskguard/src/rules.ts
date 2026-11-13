@@ -60,7 +60,7 @@ const PHRASE_SOURCES = [
   'scoop up',
   'go (?:long|short)',
   'short (?:the|it|this)',
-  'accumulate (?:now|more|this|these|it|them|rating|nexa)',
+  'accumulate (?:now|more|this|these|it|them|rating|elys)',
   'strong accumulate',
   'take profits?',
 ]
@@ -223,38 +223,38 @@ function hasOfficialClaim(base: string): boolean {
   return false
 }
 
-// ------------------------------------------------------------------------ $NEXA
+// ------------------------------------------------------------------------ $ELYS
 
 function digitLeet(base: string): string {
   return base.replace(/0/g, 'o').replace(/1/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a')
 }
 
 const TOKEN_WORDS = String.raw`(?:tokens?|tokennya|koin|koinnya|coins?|ticker|pair|pool|holders?|supply|mcap|presale|airdrop|staking)`
-const NEXA_TOKEN_RES = [
-  new RegExp(String.raw`\bnexa\s*[/:]\s*[a-z$]`),
-  new RegExp(String.raw`[a-z$]\s*/\s*nexa\b`),
-  new RegExp(String.raw`\b${TOKEN_WORDS}\W{0,3}nexa\b`),
-  new RegExp(String.raw`\bnexa\W{0,3}${TOKEN_WORDS}\b`),
+const ELYS_TOKEN_RES = [
+  new RegExp(String.raw`\belys\s*[/:]\s*[a-z$]`),
+  new RegExp(String.raw`[a-z$]\s*/\s*elys\b`),
+  new RegExp(String.raw`\b${TOKEN_WORDS}\W{0,3}elys\b`),
+  new RegExp(String.raw`\belys\W{0,3}${TOKEN_WORDS}\b`),
 ]
-const NEXA_TICKER_RE = /\$\s?n\W?e\W?x\W?a(?![a-z])/
+const ELYS_TICKER_RE = /\$\s?e\W?l\W?y\W?s(?![a-z])/
 
 const PRICE_WORDS = String.raw`(?:harga|price|prices|mcap|market\s*cap|fdv|naik|turun|pump|pumped|dump|moon|ath|valuasi|valuation|undervalued|overvalued|melonjak|meroket|anjlok|ambles|rally|rallied|rallies|surge|surged|surges|soar|soared|plunge|plunged|crash|crashed|bullish|bearish|trading\s+at|(?:up|down)\s+\d+|\d\s?x)`
-const NEXA_PRICE_WIDE_RE = new RegExp(String.raw`\b${PRICE_WORDS}\b`)
-// Tanpa "$": kata harga berdampingan dengan NEXA (maks. satu kata di antara).
-const NEXA_PRICE_NEAR_RES = [
-  new RegExp(String.raw`\b${PRICE_WORDS}\W+(?:\w+\W+)?nexa\b`),
-  new RegExp(String.raw`\bnexa\W+(?:\w+\W+)?${PRICE_WORDS}\b`),
+const ELYS_PRICE_WIDE_RE = new RegExp(String.raw`\b${PRICE_WORDS}\b`)
+// Tanpa "$": kata harga berdampingan dengan Elysia (maks. satu kata di antara).
+const ELYS_PRICE_NEAR_RES = [
+  new RegExp(String.raw`\b${PRICE_WORDS}\W+(?:\w+\W+)?elys\b`),
+  new RegExp(String.raw`\belys\W+(?:\w+\W+)?${PRICE_WORDS}\b`),
 ]
 
-export function mentionsNexaToken(base: string): boolean {
+export function mentionsElysToken(base: string): boolean {
   const v = digitLeet(base)
-  return NEXA_TICKER_RE.test(collapseRepeats(v)) || NEXA_TOKEN_RES.some((re) => re.test(v))
+  return ELYS_TICKER_RE.test(collapseRepeats(v)) || ELYS_TOKEN_RES.some((re) => re.test(v))
 }
 
-function mentionsNexaPrice(base: string): boolean {
-  // Angka tidak di-leet di sini ("40%" bukan "ao%"); leet hanya dipakai untuk mengenali nama NEXA.
-  if (NEXA_PRICE_NEAR_RES.some((re) => re.test(base))) return true
-  return mentionsNexaToken(base) && NEXA_PRICE_WIDE_RE.test(base)
+function mentionsElysPrice(base: string): boolean {
+  // Angka tidak di-leet di sini ("40%" bukan "ao%"); leet hanya dipakai untuk mengenali nama Elysia.
+  if (ELYS_PRICE_NEAR_RES.some((re) => re.test(base))) return true
+  return mentionsElysToken(base) && ELYS_PRICE_WIDE_RE.test(base)
 }
 
 // ------------------------------------------------------------------ disclaimer
@@ -267,7 +267,7 @@ const DISCLAIMER_TYPES: ReadonlySet<ContentType> = new Set(['prediction', 'risk_
 // Hanya bentuk negatif, tanpa angka dan tanpa kata sambung kontras: klaim yang diselipkan setelah
 // "tidak tahu" tidak boleh lolos lewat jalur ini.
 const UNKNOWN_REPLY_RE =
-  /^\s*(maaf[,.! ]*)?(nexa\s+)?(saya\s+)?(tidak\s+tahu|belum\s+(punya|memiliki)\s+data|data\s+(belum|tidak)\s+(lengkap|tersedia)|i\s+(do\s*n'?t|do\s+not)\s+know|not\s+enough\s+data|insufficient\s+data)/
+  /^\s*(maaf[,.! ]*)?(elysia\s+)?(saya\s+)?(tidak\s+tahu|belum\s+(punya|memiliki)\s+data|data\s+(belum|tidak)\s+(lengkap|tersedia)|i\s+(do\s*n'?t|do\s+not)\s+know|not\s+enough\s+data|insufficient\s+data)/
 const CONTRAST_RE = /\b(tapi|tetapi|namun|melainkan|but|however|though|although|meskipun|walau(?:pun)?)\b/
 
 export function isUnknownReply(base: string): boolean {
@@ -336,11 +336,11 @@ export function runRules(ctx: RuleContext): ReasonCode[] {
   if (hasUrl(base)) reasons.add(REASON.URL)
   if (hasOfficialClaim(base)) reasons.add(REASON.OFFICIAL_CLAIM)
 
-  // $NEXA: hanya di pengumuman teknis & burn; harga/ajakan tidak pernah.
-  if (mentionsNexaToken(base) && ctx.type !== 'technical_announcement' && ctx.type !== 'burn_report') {
-    reasons.add(REASON.NEXA_MENTION)
+  // $ELYS: hanya di pengumuman teknis & burn; harga/ajakan tidak pernah.
+  if (mentionsElysToken(base) && ctx.type !== 'technical_announcement' && ctx.type !== 'burn_report') {
+    reasons.add(REASON.ELYS_MENTION)
   }
-  if (mentionsNexaPrice(base)) reasons.add(REASON.NEXA_PRICE)
+  if (mentionsElysPrice(base)) reasons.add(REASON.ELYS_PRICE)
 
   if (ctx.type === 'sponsored' && !/^\s*Sponsored\b/.test(stripInvisible(ctx.text))) {
     reasons.add(REASON.SPONSORED_LABEL)

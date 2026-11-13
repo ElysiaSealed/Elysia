@@ -1,5 +1,5 @@
 // Menjalankan indexer Pons V2 di komputer lokal ke database Supabase testnet.
-// DATABASE_URL dibaca dari ~/.config/elysia/supabase-testnet.env (di luar repo; bukan folder NEXA) dan tidak pernah dicetak.
+// DATABASE_URL dibaca dari ~/.config/elysia/supabase-testnet.env (di luar repo; bukan folder Elysia) dan tidak pernah dicetak.
 // Pakai: pnpm indexer:local            (mulai dari blok terbaru)
 //        pnpm indexer:local 102200000  (ambil riwayat mulai blok itu)
 import { spawn } from 'node:child_process'

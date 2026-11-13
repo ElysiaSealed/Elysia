@@ -12,8 +12,6 @@ export const TELEGRAM_URL = process.env.NEXT_PUBLIC_TELEGRAM_URL || '#'
 
 /** $ELYSIA token is deferred (no address, no chain). Empty = ContractPill renders nothing. */
 export const ELYSIA_CA = process.env.NEXT_PUBLIC_ELYSIA_CA || ''
-export const NEXA_CA = ELYSIA_CA
 
 /** Explorer link for the token: not defined while the token is deferred. */
 export const ELYSIA_CA_URL = process.env.NEXT_PUBLIC_ELYSIA_CA_URL || ''
-export const NEXA_CA_URL = ELYSIA_CA_URL

@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "NEXA API",
+    "title": "Elysia API",
     "version": "0.1.0",
-    "description": "API publik NEXA. Nilai mentah dan terformat tersedia berdampingan; setiap commit menyertakan link Blockscout. Waktu dalam UTC (ISO 8601)."
+    "description": "API publik Elysia. Nilai mentah dan terformat tersedia berdampingan; setiap commit menyertakan link Blockscout. Waktu dalam UTC (ISO 8601)."
   },
   "paths": {
     "/healthz": {
@@ -334,7 +334,7 @@
     },
     "/predictions/{id}": {
       "get": {
-        "summary": "Satu prediksi menurut id NexaLedger. Teks dan salt baru terlihat setelah reveal.",
+        "summary": "Satu prediksi menurut id ElysiaLedger. Teks dan salt baru terlihat setelah reveal.",
         "parameters": [
           {
             "name": "id",
@@ -753,7 +753,7 @@
     },
     "/leaderboard": {
       "get": {
-        "summary": "NEXA vs KOL: leaderboard akurasi. Hanya KOL yang bersedia dinilai; peringkat butuh minimal minScored call ternilai.",
+        "summary": "Elysia vs KOL: leaderboard akurasi. Hanya KOL yang bersedia dinilai; peringkat butuh minimal minScored call ternilai.",
         "responses": {
           "200": {
             "description": "Peringkat akurasi",
@@ -795,7 +795,7 @@
                           "displayName": {
                             "type": "string"
                           },
-                          "isNexa": {
+                          "isElysia": {
                             "type": "boolean"
                           },
                           "scored": {
@@ -843,7 +843,7 @@
                           "rank",
                           "handle",
                           "displayName",
-                          "isNexa",
+                          "isElysia",
                           "scored",
                           "wins",
                           "pending",
@@ -870,7 +870,7 @@
     },
     "/burn": {
       "get": {
-        "summary": "Burn tracker $NEXA (BurnVault)",
+        "summary": "Burn tracker $ELYS (BurnVault)",
         "responses": {
           "200": {
             "description": "Total dan riwayat burn",
@@ -1164,7 +1164,7 @@
     },
     "/me": {
       "get": {
-        "summary": "Profil sesi: status holder $NEXA dan benefit (alert lebih cepat, kredit Ask gratis).",
+        "summary": "Profil sesi: status holder $ELYS dan benefit (alert lebih cepat, kredit Ask gratis).",
         "parameters": [
           {
             "name": "authorization",
@@ -1349,7 +1349,7 @@
     },
     "/pro/plan": {
       "get": {
-        "summary": "NEXA Pro: harga, lama periode, penerima USDG, dan chain. Mati sampai PAID_FEATURES_ENABLED=true.",
+        "summary": "Elysia Pro: harga, lama periode, penerima USDG, dan chain. Mati sampai PAID_FEATURES_ENABLED=true.",
         "responses": {
           "200": {
             "description": "Rencana Pro",
@@ -1466,7 +1466,7 @@
     },
     "/pro/subscribe": {
       "post": {
-        "summary": "Aktifkan atau perpanjang NEXA Pro dengan tx pembayaran USDG yang sudah terkonfirmasi. Pengirim tx harus sama dengan alamat sesi; membayar kelipatan harga memberi kelipatan periode.",
+        "summary": "Aktifkan atau perpanjang Elysia Pro dengan tx pembayaran USDG yang sudah terkonfirmasi. Pengirim tx harus sama dengan alamat sesi; membayar kelipatan harga memberi kelipatan periode.",
         "parameters": [
           {
             "name": "authorization",
@@ -1922,10 +1922,10 @@
     },
     "/ask/plan": {
       "get": {
-        "summary": "Ask NEXA: harga, penerima USDG, token, dan chain pembayaran, agar web bisa membayar langsung dari wallet. Mati sampai PAID_FEATURES_ENABLED=true.",
+        "summary": "Ask Elysia: harga, penerima USDG, token, dan chain pembayaran, agar web bisa membayar langsung dari wallet. Mati sampai PAID_FEATURES_ENABLED=true.",
         "responses": {
           "200": {
-            "description": "Rencana Ask NEXA",
+            "description": "Rencana Ask Elysia",
             "headers": {
               "Cache-Control": {
                 "schema": {
@@ -2593,7 +2593,7 @@
     },
     "/signals": {
       "get": {
-        "summary": "Signals API (berbayar): feed post publik NEXA. Butuh header x-api-key; mati sampai PAID_FEATURES_ENABLED=true.",
+        "summary": "Signals API (berbayar): feed post publik Elysia. Butuh header x-api-key; mati sampai PAID_FEATURES_ENABLED=true.",
         "parameters": [
           {
             "name": "x-api-key",

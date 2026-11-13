@@ -77,27 +77,27 @@ describe('target harga', () => {
   it('lolos: pernyataan arah tanpa angka target', () => passes('NVDA diprediksi ditutup lebih tinggi dalam 7 hari.'))
 })
 
-describe('$NEXA', () => {
-  it.each(['Kabar baik soal $NEXA', 'Token NEXA makin ramai', 'NEXA token bergerak', '$ n e x a', '$N3XA'])(
+describe('$ELYS', () => {
+  it.each(['Kabar baik soal $ELYS', 'Token ELYS makin ramai', 'ELYS token bergerak', '$ e l y s', '$3LYS'])(
     'blokir di post biasa: %s',
-    (t) => blocked(t, 'NEXA_MENTION'),
+    (t) => blocked(t, 'ELYS_MENTION'),
   )
 
-  it('lolos: NEXA sebagai nama agent', () => passes('NEXA membaca 3 launch Pons hari ini.'))
+  it('lolos: Elysia sebagai nama agent', () => passes('Elysia membaca 3 launch Pons hari ini.'))
 
   it.each<ContentType>(['technical_announcement', 'burn_report'])('boleh disebut di %s', (type) => {
-    const d = evaluate({ type, text: 'Burn #12: 1.000 $NEXA dibakar. Tx tercatat on-chain.', dataComplete: true })
+    const d = evaluate({ type, text: 'Burn #12: 1.000 $ELYS dibakar. Tx tercatat on-chain.', dataComplete: true })
     expect(d.reasons).toEqual([])
   })
 
-  it.each<ContentType>(['technical_announcement', 'burn_report'])('harga $NEXA tetap diblokir di %s', (type) => {
-    const d = evaluate({ type, text: '$NEXA harga naik setelah burn', dataComplete: true })
+  it.each<ContentType>(['technical_announcement', 'burn_report'])('harga $ELYS tetap diblokir di %s', (type) => {
+    const d = evaluate({ type, text: '$ELYS harga naik setelah burn', dataComplete: true })
     expect(d.allowed).toBe(false)
-    expect(d.reasons).toContain('NEXA_PRICE')
+    expect(d.reasons).toContain('ELYS_PRICE')
   })
 
-  it('ajakan beli $NEXA diblokir di burn_report', () => {
-    const d = evaluate({ type: 'burn_report', text: 'Beli $NEXA sebelum burn berikutnya', dataComplete: true })
+  it('ajakan beli $ELYS diblokir di burn_report', () => {
+    const d = evaluate({ type: 'burn_report', text: 'Beli $ELYS sebelum burn berikutnya', dataComplete: true })
     expect(d.reasons).toContain('ADVICE_PHRASE')
   })
 })
@@ -131,7 +131,7 @@ describe('data tidak lengkap', () => {
   it('default tanpa bukti data = tidak lengkap', () => {
     expect(evaluate({ type: 'daily_summary', text: 'NVDA naik 3%.' }).reasons).toContain('DATA_INCOMPLETE')
   })
-  it.each(['Maaf, saya tidak tahu: data belum tersedia.', 'NEXA belum punya data untuk kontrak ini.', "I don't know yet, not enough data."])(
+  it.each(['Maaf, saya tidak tahu: data belum tersedia.', 'Elysia belum punya data untuk kontrak ini.', "I don't know yet, not enough data."])(
     'jawaban "tidak tahu" lolos: %s',
     (t) => {
       const d = evaluate({ type: 'mention_reply', text: t, dataComplete: false })
@@ -146,13 +146,13 @@ describe('data tidak lengkap', () => {
 
 describe('tanpa link', () => {
   it.each([
-    'Lihat https://nexa.example.com',
+    'Lihat https://elysia.example.com',
     'cek www.example.org',
-    'detail di nexa.xyz',
-    't.me/nexa',
-    'nexa[.]ai',
-    'nexa (dot) ai',
-    'nexa dot com',
+    'detail di elysia.xyz',
+    't.me/elysia',
+    'elysia[.]ai',
+    'elysia (dot) ai',
+    'elysia dot com',
     'hxxps://evil.test',
   ])('blokir: %s', (t) => blocked(t, 'URL'))
 

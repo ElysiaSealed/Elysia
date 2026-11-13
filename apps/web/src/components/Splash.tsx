@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 
 const KEY = 'elysia_splash'
-const LEGACY_KEY = 'nexa_splash'
 
 /**
  * Splash screen loader: displayed on initial visit and reload, skipped during internal site navigation.
@@ -17,7 +16,6 @@ export function Splash() {
     if (document.documentElement.dataset.splash === 'skip') return setDone(true)
     try {
       window.sessionStorage.setItem(KEY, '1')
-      window.sessionStorage.setItem(LEGACY_KEY, '1')
     } catch {
       /* storage blocked: loader will display once per hard page load */
     }

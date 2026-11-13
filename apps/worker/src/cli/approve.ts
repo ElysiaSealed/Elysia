@@ -2,7 +2,7 @@ import { createDb } from '@elysia/db'
 import { getPost, listPending, rejectPost } from '../queue'
 import { DryTelegram, TelegramBot, approveAndAlert, type Notifier } from '../telegram'
 
-const USAGE = `CLI persetujuan post NEXA
+const USAGE = `CLI persetujuan post Elysia
   pnpm --filter @elysia/worker review list
   pnpm --filter @elysia/worker review show <id>
   pnpm --filter @elysia/worker review approve <id>

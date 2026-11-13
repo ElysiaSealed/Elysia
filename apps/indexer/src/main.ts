@@ -82,8 +82,8 @@ async function priceE8(token: string): Promise<bigint | null> {
 
 const excluded = defaultExcluded([net.pons.hook, net.uniswapV4.poolManager, net.pons.graduationExecutor, factory])
 const burnVault = env.BURN_VAULT_ADDRESS ? (env.BURN_VAULT_ADDRESS as `0x${string}`) : null
-// Tanpa BurnVault: burn dibaca langsung dari token $NEXA. Dengan BurnVault, jalur ini mati agar burn tidak terhitung dua kali.
-const nexaToken = !burnVault && env.NEXA_TOKEN_ADDRESS ? (env.NEXA_TOKEN_ADDRESS as `0x${string}`) : null
+// Tanpa BurnVault: burn dibaca langsung dari token $ELYS. Dengan BurnVault, jalur ini mati agar burn tidak terhitung dua kali.
+const elysToken = !burnVault && env.ELYS_TOKEN_ADDRESS ? (env.ELYS_TOKEN_ADDRESS as `0x${string}`) : null
 const burnFrom = env.BURN_FROM_ADDRESS ? (env.BURN_FROM_ADDRESS as `0x${string}`) : null
 const BURN_SINKS = ['0x0000000000000000000000000000000000000000', '0x000000000000000000000000000000000000dEaD'] as const
 
@@ -125,16 +125,16 @@ async function fetchTransfers(d: Db, from: bigint, to: bigint, refresh: boolean)
 }
 
 async function fetchBurns(from: bigint, to: bigint): Promise<BurnLog[]> {
-  if (nexaToken) {
+  if (elysToken) {
     const logs = await client.getLogs({
-      address: nexaToken,
+      address: elysToken,
       event: transferAbi[0],
       args: burnFrom ? { from: burnFrom, to: [...BURN_SINKS] } : { to: [...BURN_SINKS] },
       fromBlock: from,
       toBlock: to,
     })
     // pairSpent tidak bisa diketahui dari Transfer biasa -> 0.
-    const min = env.BURN_MIN_NEXA * 10n ** 18n
+    const min = env.BURN_MIN_Elysia * 10n ** 18n
     return logs.flatMap((l) =>
       l.blockNumber === null || l.logIndex === null || l.transactionHash === null || l.args.value! < min
         ? []
@@ -186,7 +186,7 @@ async function tick() {
     console.log(`indexer: blok ${next}-${to}: ${r.launches} launch, ${r.trades} trade, ${r.graduations} graduation, ${r.whales} whale, ${r.burned} burn`)
 }
 
-console.log(`indexer: ${env.CHAIN_ENV}, factory ${factory}, whale ${[...whaleTokens.values()].map((w) => w.symbol).join(',') || '-'}, burn ${burnVault ? `vault ${burnVault}` : nexaToken ? `transfer $NEXA ${nexaToken}${burnFrom ? ` dari ${burnFrom}` : ''}` : 'nonaktif'}`)
+console.log(`indexer: ${env.CHAIN_ENV}, factory ${factory}, whale ${[...whaleTokens.values()].map((w) => w.symbol).join(',') || '-'}, burn ${burnVault ? `vault ${burnVault}` : elysToken ? `transfer $ELYS ${elysToken}${burnFrom ? ` dari ${burnFrom}` : ''}` : 'nonaktif'}`)
 for (;;) {
   try {
     await tick()

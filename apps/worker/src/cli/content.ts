@@ -3,7 +3,7 @@ import { llmFromEnv } from '../llm'
 import { answerMention } from '../mention'
 import { SponsoredError, createSponsoredPost } from '../sponsored'
 
-const USAGE = `CLI konten NEXA (hasilnya selalu masuk antrian persetujuan, mode dry; tinjau dengan "review")
+const USAGE = `CLI konten Elysia (hasilnya selalu masuk antrian persetujuan, mode dry; tinjau dengan "review")
   pnpm --filter @elysia/worker content sponsored "<nama klien>" <alamat-token> "<bukti-pembayaran>"
   pnpm --filter @elysia/worker content mention <id-post-x> "<teks mention>"
 Butuh DATABASE_URL, LLM_API_KEY, LLM_BASE_URL.`

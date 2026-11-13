@@ -17,7 +17,7 @@ export interface PaymentNetworkEnv {
 }
 
 /**
- * Jaringan tempat Ask NEXA dan Pro dibayar. Default dan jalur produksi: mainnet 4663 dengan USDG resmi dari chains.ts.
+ * Jaringan tempat Ask Elysia dan Pro dibayar. Default dan jalur produksi: mainnet 4663 dengan USDG resmi dari chains.ts.
  * Testnet 46630 hanya untuk uji dan wajib memakai alamat token uji eksplisit. Di mainnet, alamat selain USDG resmi
  * ditolak saat start, supaya token tiruan tidak pernah bisa dianggap pembayaran sah.
  * Mengembalikan undefined bila USDG belum diketahui (fitur menjawab 503).

@@ -1,5 +1,5 @@
-// CLI persetujuan post NEXA terhadap database Supabase testnet.
-// DATABASE_URL dibaca dari ~/.config/elysia/supabase-testnet.env (di luar repo; bukan folder NEXA); TELEGRAM_BOT_TOKEN dan TELEGRAM_PRO_CHAT_ID
+// CLI persetujuan post Elysia terhadap database Supabase testnet.
+// DATABASE_URL dibaca dari ~/.config/elysia/supabase-testnet.env (di luar repo; bukan folder Elysia); TELEGRAM_BOT_TOKEN dan TELEGRAM_PRO_CHAT_ID
 // dari .env di ROOT (untuk alert Pro saat approve). Nilai tidak pernah dicetak.
 // Pakai:  pnpm review:testnet list | show <id> | approve <id> | reject <id>
 import { spawn } from 'node:child_process'

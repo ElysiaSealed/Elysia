@@ -10,7 +10,7 @@ import {
 } from './types'
 
 export * from './types'
-export { mentionsNexaToken, isUnknownReply } from './rules'
+export { mentionsElysToken, isUnknownReply } from './rules'
 
 const ALWAYS_REVIEW = new Set(['sponsored', 'mention_reply', 'risk_report'])
 

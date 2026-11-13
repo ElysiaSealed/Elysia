@@ -250,7 +250,7 @@ describe.skipIf(!dbUp)('API publik', () => {
   })
 
   describe('GET /signals (berbayar)', () => {
-    const KEY = 'nexa_test_key_123'
+    const KEY = 'elysia_test_key_123'
     const paid = buildApp({ db, explorerUrl: EXPLORER, paidFeaturesEnabled: true, signalsRateLimitPerMinute: 3, now: () => NOW })
     const call = (key?: string, query = '') => paid.inject({ method: 'GET', url: `/signals${query}`, headers: key ? { 'x-api-key': key } : {} })
     const addKey = (key: string, active = true) =>
@@ -316,11 +316,11 @@ describe.skipIf(!dbUp)('API publik', () => {
         })
     }
 
-    it('kosong: hanya baris NEXA, tanpa peringkat', async () => {
+    it('kosong: hanya baris Elysia, tanpa peringkat', async () => {
       const res = await app.inject({ method: 'GET', url: '/leaderboard' })
       const body = leaderboardResponseSchema.parse(res.json())
       expect(body.entries).toHaveLength(1)
-      expect(body.entries[0]).toMatchObject({ handle: 'nexa', isNexa: true, scored: 0, rank: null, winRate: null })
+      expect(body.entries[0]).toMatchObject({ handle: 'elysia', isElysia: true, scored: 0, rank: null, winRate: null })
     })
 
     it('peringkat: win rate turun; di bawah minScored tanpa rank; yang tidak opted-in tidak tampil; return searah klaim', async () => {

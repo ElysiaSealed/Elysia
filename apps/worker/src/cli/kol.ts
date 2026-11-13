@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { addCall, addKol, importKolCsv, scoreDueKolCalls } from '../kol'
 import { MAINNET_ORACLE_ASSETS, createFeedReader } from '../oracle'
 
-const USAGE = `CLI KOL (NEXA vs KOL). Hanya KOL yang bersedia dinilai.
+const USAGE = `CLI KOL (Elysia vs KOL). Hanya KOL yang bersedia dinilai.
   pnpm --filter @elysia/worker kol add-kol <handle> "<nama tampilan>"
   pnpm --filter @elysia/worker kol add-call <handle> <NVDA|ETH> <up|down> <hari> <link-post-x> "<teks call>"
   pnpm --filter @elysia/worker kol import <file.csv>   (impor massal; kolom: handle,display_name,asset,direction,days,source_url,text)

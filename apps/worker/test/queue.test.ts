@@ -69,7 +69,7 @@ describe.skipIf(!dbUp)('antrian persetujuan', () => {
         kind: 'mention_reply',
         mode: 'dry',
         now: T0,
-        input: { type: 'mention_reply', text: 'Not enough data on this contract. NEXA does not guess.', dataComplete: false },
+        input: { type: 'mention_reply', text: 'Not enough data on this contract. Elysia does not guess.', dataComplete: false },
       })
       expect(reply.status).toBe('pending_approval')
       expect((await enqueuePost(db, summary('Sekarang waktunya beli NVDA'))).status).toBe('rejected')

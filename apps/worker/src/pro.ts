@@ -57,7 +57,7 @@ export async function dispatchProAlerts(db: Db, sender: ChatSender, now: Date = 
 }
 
 const HELP =
-  'NEXA Pro alerts. To connect this chat, open the Pro page on the NEXA site, connect your wallet, and press "Connect Telegram". Send /stop to disconnect.'
+  'Elysia Pro alerts. To connect this chat, open the Pro page on the Elysia site, connect your wallet, and press "Connect Telegram". Send /stop to disconnect.'
 
 /** Menangani satu update bot. Hanya chat pribadi; `/start <kode>` menautkan, `/stop` memutus, lainnya dibalas bantuan. */
 export async function handleTelegramUpdate(db: Db, sender: ChatSender, update: TelegramUpdate, now: Date = new Date()): Promise<void> {
@@ -89,7 +89,7 @@ export async function handleTelegramUpdate(db: Db, sender: ChatSender, update: T
   }
   const [sub] = await db.select().from(proSubscriptions).where(eq(proSubscriptions.address, row.address))
   if (!sub || sub.expiresAt.getTime() <= now.getTime()) {
-    await sender.sendMessage(chatId, 'Your NEXA Pro subscription is not active, so alerts cannot be enabled.')
+    await sender.sendMessage(chatId, 'Your Elysia Pro subscription is not active, so alerts cannot be enabled.')
     return
   }
   await db.transaction(async (tx) => {
@@ -99,7 +99,7 @@ export async function handleTelegramUpdate(db: Db, sender: ChatSender, update: T
       .values({ address: row.address, chatId })
       .onConflictDoUpdate({ target: telegramLinks.address, set: { chatId, linkedAt: now } })
   })
-  await sender.sendMessage(chatId, 'Connected. You will get NEXA Pro alerts here, ahead of the public post on X. Send /stop to disconnect.')
+  await sender.sendMessage(chatId, 'Connected. You will get Elysia Pro alerts here, ahead of the public post on X. Send /stop to disconnect.')
 }
 
 /** Satu putaran long polling. Kursor disimpan setelah update diproses; update yang gagal dilewati (tidak memblokir antrean). */

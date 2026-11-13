@@ -4,9 +4,9 @@ import { PageShell } from '@/components/pages/PageShell'
 export const metadata: Metadata = { title: 'ELYSIA vs KOL · ELYSIA', alternates: { canonical: '/leaderboard' } }
 
 const PREVIEW = [
-  { rank: '#1', name: 'ELYSIA', handle: 'joining soon', nexa: true },
-  { rank: 'n/a', name: 'KOL', handle: 'joining soon', nexa: false },
-  { rank: 'n/a', name: 'KOL', handle: 'joining soon', nexa: false },
+  { rank: '#1', name: 'ELYSIA', handle: 'joining soon', elysia: true },
+  { rank: 'n/a', name: 'KOL', handle: 'joining soon', elysia: false },
+  { rank: 'n/a', name: 'KOL', handle: 'joining soon', elysia: false },
 ]
 
 export default function LeaderboardPage() {
@@ -25,7 +25,7 @@ export default function LeaderboardPage() {
         <p>We only score public, checkable calls from people who opted in. The board opens once the first KOLs are on it.</p>
         <div className="cs-list" aria-hidden="true">
           {PREVIEW.map((r, i) => (
-            <div key={i} className={`cs-row${r.nexa ? ' elysia nexa' : ''}`}>
+            <div key={i} className={`cs-row${r.elysia ? ' elysia' : ''}`}>
               <span>{r.rank}</span>
               <div>
                 <em>{r.name}</em>
