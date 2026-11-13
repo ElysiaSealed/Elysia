@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {AggregatorV3Interface} from "./interfaces/AggregatorV3Interface.sol";
+import {IPhaseProxy} from "./interfaces/IPhaseProxy.sol";
 
 /// @title ElysiaLedger
 /// @notice Commit-reveal for Elysia predictions. `commit(hash)` is recorded before posting, `reveal()` runs at maturity,
@@ -75,6 +76,7 @@ contract ElysiaLedger is Ownable2Step {
     error InvalidStartRound();
     error InvalidEndRound();
     error ZeroAddress();
+    error InvalidFeed();
     error RenounceDisabled();
 
     modifier onlyAgent() {
@@ -102,6 +104,7 @@ contract ElysiaLedger is Ownable2Step {
     }
 
     function setFeed(address asset, AggregatorV3Interface feed) external onlyOwner {
+        if (asset == address(0) || address(feed).code.length == 0) revert InvalidFeed();
         feedOf[asset] = feed;
         emit FeedSet(asset, address(feed));
     }
@@ -200,6 +203,13 @@ contract ElysiaLedger is Ownable2Step {
         if (!ok || price <= 0 || updatedAt > committedAt) revert InvalidStartRound();
         (, uint256 nextAt, bool nextOk) = _round(feed, roundId + 1);
         if (nextOk && nextAt <= committedAt) revert InvalidStartRound();
+        if (!nextOk) {
+            // Chainlink proxy round ids are (phaseId << 64) | aggregatorRound. If roundId was the last round of its
+            // phase, its successor is the first round (1) of the next phase, so check that one too.
+            uint80 nextPhaseFirst = (((roundId >> 64) + 1) << 64) | 1;
+            (, uint256 phaseAt, bool phaseOk) = _round(feed, nextPhaseFirst);
+            if (phaseOk && phaseAt <= committedAt) revert InvalidStartRound();
+        }
         return price;
     }
 
@@ -210,8 +220,27 @@ contract ElysiaLedger is Ownable2Step {
         if (uint64(roundId) > 1) {
             (, uint256 prevAt, bool prevOk) = _round(feed, roundId - 1);
             if (prevOk && prevAt >= maturity) revert InvalidEndRound();
+        } else if (uint64(roundId) == 1 && (roundId >> 64) > 1) {
+            _verifyPreviousPhase(feed, uint16(roundId >> 64) - 1, maturity);
         }
         return price;
+    }
+
+    /// The end round is the first round of a new phase, so its predecessor lives in the previous phase aggregator.
+    /// That aggregator's latest round must be before maturity. Fails closed when the proxy cannot answer.
+    function _verifyPreviousPhase(AggregatorV3Interface feed, uint16 previousPhase, uint256 maturity) internal view {
+        address aggregator;
+        try IPhaseProxy(address(feed)).phaseAggregators(previousPhase) returns (address a) {
+            aggregator = a;
+        } catch {
+            revert InvalidEndRound();
+        }
+        if (aggregator == address(0)) revert InvalidEndRound();
+        try AggregatorV3Interface(aggregator).latestRoundData() returns (uint80, int256, uint256, uint256 updatedAt, uint80) {
+            if (updatedAt >= maturity) revert InvalidEndRound();
+        } catch {
+            revert InvalidEndRound();
+        }
     }
 
     function _round(AggregatorV3Interface feed, uint80 roundId)

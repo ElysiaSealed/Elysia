@@ -9,6 +9,7 @@ import {ElysiaLedger} from "../src/ElysiaLedger.sol";
 /// Broadcasting is a mainnet transaction: only a human runs it, after explicit approval (roadmap gate R3).
 contract DeployElysiaLedger is Script {
     function run() external returns (ElysiaLedger ledger) {
+        require(block.chainid == 4663, "DeployElysiaLedger: only Robinhood Chain mainnet (4663)");
         address agent = vm.envAddress("AGENT_ADDRESS");
         vm.startBroadcast();
         ledger = new ElysiaLedger(msg.sender, agent);

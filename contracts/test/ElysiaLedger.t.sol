@@ -304,4 +304,15 @@ contract ElysiaLedgerTest is Test {
         assertEq(p.won, expected);
         assertEq(ledger.winCount(), expected ? 1 : 0);
     }
+
+    function test_setFeed_rejectsZeroAssetAndNonContractFeed() public {
+        vm.startPrank(owner);
+        vm.expectRevert(ElysiaLedger.InvalidFeed.selector);
+        ledger.setFeed(address(0), AggregatorV3Interface(address(feed)));
+        vm.expectRevert(ElysiaLedger.InvalidFeed.selector);
+        ledger.setFeed(asset, AggregatorV3Interface(address(0)));
+        vm.expectRevert(ElysiaLedger.InvalidFeed.selector);
+        ledger.setFeed(asset, AggregatorV3Interface(makeAddr("eoa")));
+        vm.stopPrank();
+    }
 }

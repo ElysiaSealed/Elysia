@@ -677,6 +677,11 @@ export const elysiaLedgerAbi = [
   },
   {
     "type": "error",
+    "name": "InvalidFeed",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidHorizon",
     "inputs": []
   },

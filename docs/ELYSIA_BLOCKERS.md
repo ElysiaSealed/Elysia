@@ -12,7 +12,7 @@ Pemilik: **Manusia** = dikerjakan manusia (Claude tidak membuat wallet, akun, at
 | RB-04 | Bot Telegram baru dan kunci LLM baru; kredensial X untuk mode `live` | Dibuat manusia dan diisi di dashboard, bukan di repo | Manusia | Belum dikonfirmasi |
 | RB-05 | Saldo ETH di Robinhood Chain untuk Deployer dan Agent | Manusia mendanai; verifikasi dengan `cast balance` (baca-saja) | Manusia | Belum dikonfirmasi |
 | RB-06 | CA burn, ABI atau signature event burn, dan blok awal dari PM | PM memberi; sesuaikan `apps/indexer/src/abi.ts` dan `burns.ts`, isi `BURN_CONTRACT_ADDRESS` | PM, Claude | Terbuka |
-| RB-07 | Tinjauan `ElysiaLedger` terhadap feed Chainlink (aturan `roundId ± 1`, phase, heartbeat, jam pasar) | Uji simulasi fork baca-saja dan review sebelum deploy | Claude, Head Dev | Terbuka |
+| RB-07 | Tinjauan `ElysiaLedger`: perbaikan phase dan `setFeed` selesai (36 test); keputusan desain tersisa: batas waktu reveal, owner dan feed, batas umur harga, batas teks, domain hash (lihat `ELYSIA_SMART_CONTRACT_PLAN.md` §3b) | Head Dev memutuskan; Claude menerapkan; uji fork baca-saja dan audit | Head Dev, Claude | Terbuka |
 | RB-08 | Deploy `ElysiaLedger` ke mainnet | Manusia menjalankan; persetujuan eksplisit; lihat `ELYSIA_SMART_CONTRACT_PLAN.md` §6 | Pemilik | Terbuka |
 | RB-09 | Pembayaran USDG terverifikasi ujung ke ujung dan tinjauan hukum | Uji jumlah kecil dengan persetujuan; baru `PAID_FEATURES_ENABLED=true` | Pemilik, Head Dev | Terbuka |
 | RB-10 | Teks disclaimer publik ("Not affiliated with Robinhood", apakah menyebut Pons) | Keputusan Head Dev | Head Dev | Terbuka |

@@ -31,6 +31,26 @@ Keeper tidak ada: feed adalah feed Chainlink langsung, tidak ada mock yang harus
 - Feed Stock Token mengikuti jam pasar: perlu diputuskan bagaimana prediksi di luar jam pasar diperlakukan.
 - Nama feed NVDA adalah `RHNVDA / USD`, bukan `NVDA / USD`.
 
+## 3b. Hasil tinjauan (2026-11-13)
+Pemeriksaan baca-saja ke mainnet: kedua feed adalah proxy Chainlink; id ronde = `(phaseId << 64) | aggregatorRound` (phase 1, ronde sekitar 1911); jarak antar ronde teramati hingga sekitar 5500 detik (NVDA) dan 3200 detik (ETH); proxy mengekspos `phaseAggregators(uint16)`. Tinjauan `contract-reviewer` (read-only) dan tindak lanjutnya:
+
+| # | Temuan | Status |
+|---|---|---|
+| 1 | Ronde akhir = ronde 1 phase baru tidak memeriksa ronde terakhir phase sebelumnya (agent bisa memilih harga akhir) | **Diperbaiki**: `_verifyPreviousPhase` lewat `phaseAggregators`, fail-closed; 4 test baru |
+| (1b) | Ronde awal = ronde terakhir sebuah phase tidak memeriksa ronde pertama phase berikutnya | **Diperbaiki**: pemeriksaan batas phase di `_verifyStart`; 2 test |
+| 7 | `setFeed` tanpa validasi | **Diperbaiki sebagian**: tolak aset nol, feed nol, dan feed tanpa kode (`InvalidFeed`). Pemeriksaan `decimals` dan `description` dilakukan di skrip konfigurasi, bukan di kontrak |
+| 11 | Skrip deploy tanpa guard chain | **Diperbaiki**: `require(block.chainid == 4663)` |
+| 2 | Reveal opsional tanpa batas waktu: prediksi kalah bisa tidak di-reveal sehingga win rate terlihat lebih baik | **Keputusan Head Dev**: batas waktu reveal dan penghitungan `expired` sebagai kalah, atau metrik resmi `winCount / commitCount` |
+| 3 | Owner EOA tunggal bisa mengganti feed dan agent, retroaktif untuk prediksi yang sudah di-commit | **Keputusan Head Dev**: feed satu kali tulis atau timelock, owner multisig, tolak alamat sama antar peran |
+| 4 | Tanpa batas umur harga awal dan keterlambatan harga akhir; event tidak memuat `updatedAt` | **Keputusan**: nilai batas (menunggu heartbeat dan jam pasar), tambah `updatedAt` ke event |
+| 5 | `try/catch` menelan semua revert sebagai "ronde tidak ada" | Dicatat; perlu uji fork baca-saja terhadap feed asli |
+| 6 | Panjang `text` tak terbatas | **Keputusan**: batas (usulan 1024 byte) |
+| 8 | Hash tanpa chain ID dan alamat kontrak | **Keputusan** sebelum deploy: tidak dapat diubah sesudahnya; mengubah skema berarti memperbarui kontrak, util TS, dan vektor |
+| 9 | Batas waktu inklusif, pembulatan return ke nol, `evm_version = cancun` belum diverifikasi di chain target | Dicatat; verifikasi opcode di fork sebelum deploy |
+| 10 | Tidak ada pause atau upgrade | Disengaja; audit eksternal sangat disarankan |
+
+Kontrak **belum siap deploy**: temuan 2, 3, 4, 6, dan 8 butuh keputusan dan kemungkinan perubahan kontrak. Perubahan itu tidak dapat diperbaiki setelah deploy mainnet.
+
 ## 4. Keamanan dan desain
 - Reentrancy: tidak ada transfer nilai.
 - Satu agent; rotasi lewat owner. Owner EOA tunggal (Deployer) adalah titik terpusat: pertimbangkan multisig sebelum mainnet.
