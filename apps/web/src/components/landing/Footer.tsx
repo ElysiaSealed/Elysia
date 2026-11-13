@@ -9,6 +9,8 @@ export function Footer({ base = '' }: { base?: string }) {
         <div className="frow">
           <div className="fbrand">
             <a href="/" className="logo" aria-label="ELYSIA home">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="" width={28} height={28} />
               <span>ELYSIA</span>
             </a>
             {' '}

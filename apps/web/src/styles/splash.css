@@ -3,7 +3,7 @@
  * Exit is purely CSS-driven (animation-fill + visibility hidden), ensuring the overlay never traps the user even if JS fails.
  * Displayed on first load and hard refresh; skipped on internal route transitions or when the user requests reduced motion
  * (html[data-splash="skip"], set by inline script in <head>).
- * Note: Following the logo policy, the logo area remains empty when no official ELYSIA logo asset exists.
+ * The official ELYSIA logo (public/logo.png) is revealed with a left-to-right wipe.
  */
 .nx-splash{position:fixed;inset:0;z-index:9999;background:var(--bg,#0A0A0A);display:grid;place-items:center;cursor:pointer;
   animation:nx-exit .6s cubic-bezier(.4,0,.2,1) 2.85s both}
@@ -21,7 +21,7 @@
 .nx-mark{position:absolute;inset:0;
   animation:nx-mark-in .5s cubic-bezier(.2,.7,.2,1) 1.3s both,nx-mark-out .6s cubic-bezier(.4,0,.2,1) 2.85s forwards}
 .nx-halo{position:absolute;inset:0;animation:nx-pulse .8s ease-in-out 2.1s both}
-.nx-glow{position:absolute;inset:0;
+.nx-logo{position:absolute;inset:0;width:100%;height:100%;border-radius:18%;
   -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 38%,transparent 62%);
           mask-image:linear-gradient(90deg,#000 0%,#000 38%,transparent 62%);
   -webkit-mask-size:260% 100%;mask-size:260% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;

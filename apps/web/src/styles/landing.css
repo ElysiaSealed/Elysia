@@ -61,6 +61,7 @@ em.s{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-
 .nav-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;background:#121212;border:1px solid var(--line);border-radius:999px;padding:6px 6px 6px 18px}
 .logo{display:inline-flex;align-items:center;gap:10px;min-height:44px;font-weight:600;font-size:17px;letter-spacing:.06em}
 .logo svg{width:28px;height:28px;flex:none}
+.logo img{width:28px;height:28px;flex:none;border-radius:6px}
 .links{display:flex;gap:2px;background:#0D0D0D;border:1px solid var(--line);border-radius:999px;padding:4px}
 .links a{font-size:13px;padding:8px 14px;border-radius:999px;color:var(--ink-2);transition:color .2s,background .2s}
 .links a:hover{color:var(--ink);background:#1B1B1B}

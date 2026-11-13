@@ -7,7 +7,7 @@ export const X_HANDLE = process.env.NEXT_PUBLIC_X_HANDLE || ''
 /** Empty handle (when explicitly cleared) points "Follow on X" links to "#". */
 export const X_URL = X_HANDLE ? `https://x.com/${X_HANDLE}` : '#'
 
-/** ELYSIA Telegram link. Channel is PENDING (not created): no default, "#" until set via env. */
+/** ELYSIA public Telegram channel (https://t.me/ElysiaAlert), set via env. "#" until set. */
 export const TELEGRAM_URL = process.env.NEXT_PUBLIC_TELEGRAM_URL || '#'
 
 /** $ELYSIA token is deferred (no address, no chain). Empty = ContractPill renders nothing. */

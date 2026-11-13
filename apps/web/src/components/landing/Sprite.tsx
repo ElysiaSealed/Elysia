@@ -1,8 +1,6 @@
 export function Sprite() {
   return (
     <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
-      {/* The logo symbol remains empty until an official ELYSIA logo asset is provided */}
-      <symbol id="nx-mark" viewBox="0 0 64 64" />
       <symbol id="nx-wallet" viewBox="0 0 24 24">
         <g fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           <path d="M19.5 8V6.5A1.5 1.5 0 0 0 18 5H6a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h12a1.5 1.5 0 0 0 1.5-1.5V16" />

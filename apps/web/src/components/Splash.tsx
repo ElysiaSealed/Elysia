@@ -37,7 +37,8 @@ export function Splash() {
         <div className="nx-ring" />
         <div className="nx-mark">
           <div className="nx-halo">
-            <div className="nx-glow" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="nx-logo" src="/logo.png" alt="" width={256} height={256} />
           </div>
         </div>
       </div>

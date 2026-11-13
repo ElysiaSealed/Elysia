@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: '/' },
-  // Favicons/logos are intentionally omitted until an official ELYSIA branding asset is added.
+  // Favicon: app/icon.png and app/apple-icon.png (official ELYSIA logo), picked up by the Next.js file convention.
   openGraph: {
     type: 'website',
     siteName: 'ELYSIA',
