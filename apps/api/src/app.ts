@@ -272,7 +272,7 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     return body
   })
 
-  // Burn tracker: event `Burned` BurnVault. $ELYS 18 desimal. Kosong sampai BurnVault ada dan ter-index.
+  // Burn tracker: `Burned` events of the PM burn contract. $ELYS 18 desimal. Empty until the burn contract is configured and indexed.
   const ELYS_DECIMALS = 18
   const units = (raw: bigint) => ({ raw: raw.toString(), decimals: ELYS_DECIMALS, formatted: formatUnits(raw, ELYS_DECIMALS) })
   // Total dihitung di SQL dan hanya RECENT_LIMIT baris terbaru yang ditarik (egress tetap kecil walau burn ribuan).
@@ -280,13 +280,13 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
   let burnCache: { at: number; body: BurnResponse } | null = null
   app.get('/burn', async (_req, reply) => {
     if (!burnCache || Date.now() - burnCache.at > 60_000) {
-      const [agg] = await cfg.db.select({ total: sql<string>`coalesce(sum(${burns.nexaBurned}), 0)::text` }).from(burns)
-      const rows = await cfg.db.select({ at: burns.at, nexaBurned: burns.nexaBurned, txHash: burns.txHash }).from(burns).orderBy(desc(burns.at)).limit(RECENT_LIMIT)
+      const [agg] = await cfg.db.select({ total: sql<string>`coalesce(sum(${burns.elysBurned}), 0)::text` }).from(burns)
+      const rows = await cfg.db.select({ at: burns.at, elysBurned: burns.elysBurned, txHash: burns.txHash }).from(burns).orderBy(desc(burns.at)).limit(RECENT_LIMIT)
       burnCache = {
         at: Date.now(),
         body: burnResponseSchema.parse({
           totalBurned: units(BigInt((agg?.total ?? '0').split('.')[0]!)),
-          burns: rows.map((r) => ({ at: r.at.toISOString(), amount: units(BigInt(r.nexaBurned)), txHash: r.txHash, txUrl: tx(r.txHash) })),
+          burns: rows.map((r) => ({ at: r.at.toISOString(), amount: units(BigInt(r.elysBurned)), txHash: r.txHash, txUrl: tx(r.txHash) })),
         }),
       }
     }

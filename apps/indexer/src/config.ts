@@ -23,14 +23,14 @@ export const envSchema = z
     /** Transfer whale: JSON [{"address":"0x..","symbol":"NVDA","decimals":18,"feed":"0x.."}]; kosong = NVDA mainnet. */
     WHALE_TOKENS: z.string().optional(),
     WHALE_MIN_USD: z.coerce.number().positive().default(100_000),
-    /** Alamat BurnVault; kosong = pembaca burn nonaktif (kontrak belum di-deploy). */
-    BURN_VAULT_ADDRESS: addr.optional().or(z.literal('')),
-    /** Alamat token $ELYS. Diisi (dan BURN_VAULT_ADDRESS kosong) = burn dibaca dari Transfer ke alamat nol / 0x…dEaD. */
+    /** Burn contract address (provided by PM); empty = burn reader disabled. */
+    BURN_CONTRACT_ADDRESS: addr.optional().or(z.literal('')),
+    /** Alamat token $ELYS. Diisi (dan BURN_CONTRACT_ADDRESS kosong) = burn dibaca dari Transfer ke alamat nol / 0x…dEaD. */
     ELYS_TOKEN_ADDRESS: addr.optional().or(z.literal('')),
     /** Opsional: hanya hitung burn dari alamat ini (mis. wallet yang membakar). Kosong = semua burn. */
     BURN_FROM_ADDRESS: addr.optional().or(z.literal('')),
     /** Burn di bawah jumlah ini (unit $ELYS utuh) diabaikan: mencegah spam burn debu menggembungkan tabel. */
-    BURN_MIN_Elysia: z.coerce.bigint().nonnegative().default(1n),
+    BURN_MIN_ELYS: z.coerce.bigint().nonnegative().default(1n),
   })
 
 /**

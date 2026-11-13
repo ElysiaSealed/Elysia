@@ -85,6 +85,13 @@
       "when": 1794151201776,
       "tag": "0011_bitter_killmonger",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794547966162,
+      "tag": "0012_rename_burn_column",
+      "breakpoints": true
     }
   ]
 }

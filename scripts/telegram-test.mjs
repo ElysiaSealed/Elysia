@@ -22,7 +22,7 @@ if (!/^\d+:[\w-]{30,}$/.test(token)) console.warn('Peringatan: bentuk token tida
 const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
   method: 'POST',
   headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ chat_id: chat, text: 'NEXA: tes koneksi bot. Pesan ini bisa diabaikan.' }),
+  body: JSON.stringify({ chat_id: chat, text: 'Elysia: bot connection test. You can ignore this message.' }),
 })
 const body = await res.json().catch(() => ({}))
 if (body.ok) console.log(`Berhasil: pesan terkirim ke ${chat}.`)

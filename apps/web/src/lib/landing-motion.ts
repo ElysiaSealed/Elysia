@@ -141,7 +141,7 @@ export function initMotion(NX_DATA) {
     });
   }
 
-  // BurnVault: rotating dial, glowing slot, rising embers
+  // burn: rotating dial, glowing slot, rising embers
   const ec=document.getElementById('embers'), ex=ec.getContext('2d'); let eOn=false;
   new IntersectionObserver(es=>eOn=es[0].isIntersecting).observe(ec);
   const spr=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(235,255,225,1)');r.addColorStop(.25,'rgba(140,255,97,.7)');r.addColorStop(1,'rgba(140,255,97,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return c})();

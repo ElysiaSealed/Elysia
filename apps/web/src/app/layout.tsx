@@ -45,7 +45,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{var d=document.documentElement,n=performance.getEntriesByType('navigation')[0],r=n&&n.type==='reload';if(matchMedia('(prefers-reduced-motion: reduce)').matches||(!r&&(sessionStorage.getItem('elysia_splash')||sessionStorage.getItem('nexa_splash'))))d.dataset.splash='skip'}catch(e){}",
+              "try{var d=document.documentElement,n=performance.getEntriesByType('navigation')[0],r=n&&n.type==='reload';if(matchMedia('(prefers-reduced-motion: reduce)').matches||(!r&&(sessionStorage.getItem('elysia_splash'))))d.dataset.splash='skip'}catch(e){}",
           }}
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

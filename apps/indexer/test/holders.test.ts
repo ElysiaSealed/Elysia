@@ -128,15 +128,15 @@ describe.skipIf(!dbUp)('applyTransfers', () => {
     })
   })
 
-  describe('BurnVault Burned', () => {
-    const log = (n: number) => ({ args: { caller: ALICE, pairSpent: 5n * E18, nexaBurned: 1_000n * E18 }, blockNumber: 10n, logIndex: n, transactionHash: `0x${'ab'.repeat(32)}` })
+  describe('Burned event', () => {
+    const log = (n: number) => ({ args: { caller: ALICE, pairSpent: 5n * E18, elysBurned: 1_000n * E18 }, blockNumber: 10n, logIndex: n, transactionHash: `0x${'ab'.repeat(32)}` })
     it('mengisi tabel burns (dibaca /burn), idempoten', async () => {
       const bt = async () => new Date('2026-10-31T00:00:00Z')
       expect(await processBurns(db, [log(0), log(1)], bt)).toBe(2)
       expect(await processBurns(db, [log(0)], bt)).toBe(0)
       const rows = await db.select().from(burns)
       expect(rows).toHaveLength(2)
-      expect(rows[0]).toMatchObject({ nexaBurned: (1_000n * E18).toString(), pairSpent: (5n * E18).toString() })
+      expect(rows[0]).toMatchObject({ elysBurned: (1_000n * E18).toString(), pairSpent: (5n * E18).toString() })
     })
   })
 })

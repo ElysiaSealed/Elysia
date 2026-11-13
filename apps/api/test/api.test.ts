@@ -238,8 +238,8 @@ describe.skipIf(!dbUp)('API publik', () => {
 
     it('menjumlahkan semua burn, terbaru dulu, dengan link Blockscout', async () => {
       await db.insert(burns).values([
-        { id: `${h(1)}-0`, txHash: h(1), nexaBurned: '1500000000000000000', pairSpent: '10', at: day(2), blockNumber: 10n },
-        { id: `${h(2)}-3`, txHash: h(2), nexaBurned: '2500000000000000000000', pairSpent: '20', at: day(1), blockNumber: 20n },
+        { id: `${h(1)}-0`, txHash: h(1), elysBurned: '1500000000000000000', pairSpent: '10', at: day(2), blockNumber: 10n },
+        { id: `${h(2)}-3`, txHash: h(2), elysBurned: '2500000000000000000000', pairSpent: '20', at: day(1), blockNumber: 20n },
       ])
       const body = burnResponseSchema.parse((await getFresh('/burn')).json())
       expect(body.totalBurned).toEqual({ raw: '2501500000000000000000', decimals: 18, formatted: '2501.5' })

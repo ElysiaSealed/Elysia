@@ -82,13 +82,13 @@ export const indexerState = pgTable('indexer_state', {
   updatedAt: ts('updated_at').notNull().defaultNow(),
 })
 
-/** Event `Burned` dari BurnVault. $ELYS selalu 18 desimal (token Pons). */
+/** `Burned` event of the burn contract provided by PM. $ELYS selalu 18 desimal (token Pons). */
 export const burns = pgTable(
   'burns',
   {
     id: text('id').primaryKey(), // `${txHash}-${logIndex}`
     txHash: text('tx_hash').notNull(),
-    nexaBurned: amount('nexa_burned').notNull(),
+    elysBurned: amount('elys_burned').notNull(),
     pairSpent: amount('pair_spent').notNull(),
     at: ts('at').notNull(),
     blockNumber: bigint('block_number', { mode: 'bigint' }).notNull(),

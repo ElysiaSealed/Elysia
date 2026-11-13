@@ -24,5 +24,5 @@ export const erc20Abi = parseAbi([
 
 export const transferAbi = parseAbi(['event Transfer(address indexed from, address indexed to, uint256 value)'])
 
-/** Event Burned dari BurnVault (contracts/src/BurnVault.sol). */
-export const burnedAbi = parseAbi(['event Burned(address indexed caller, uint256 pairSpent, uint256 nexaBurned)'])
+/** Burned event of the burn contract provided by PM. The signature is PENDING until the contract address and ABI are given; adjust it then. */
+export const burnedAbi = parseAbi(['event Burned(address indexed caller, uint256 pairSpent, uint256 elysBurned)'])

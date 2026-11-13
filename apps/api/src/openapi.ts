@@ -72,7 +72,7 @@ export function buildOpenApi() {
         },
       },
       '/burn': {
-        get: { summary: 'Burn tracker $ELYS (BurnVault)', responses: { '200': ok('Total dan riwayat burn', burnResponseSchema) } },
+        get: { summary: 'Burn tracker $ELYS (burn contract history)', responses: { '200': ok('Total dan riwayat burn', burnResponseSchema) } },
       },
       '/auth/nonce': {
         get: { summary: 'Login wallet (SIWE): nonce sekali pakai. Mati sampai PAID_FEATURES_ENABLED=true.', responses: { '200': { description: 'Nonce', content: { 'application/json': { schema: schema(nonceResponseSchema) } } }, '503': err('fitur belum aktif') } },
