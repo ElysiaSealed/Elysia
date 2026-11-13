@@ -29,7 +29,8 @@ if (!ORIGIN_RE.test(configured) || remoteUrl !== configured) fail('origin does n
 const updates = readFileSync(0, 'utf8').split('\n').filter(Boolean)
 for (const line of updates) {
   const [localRef, localSha, remoteRef, remoteSha] = line.split(' ')
-  if (localRef !== 'refs/heads/main' || remoteRef !== 'refs/heads/main') fail(`only "main" can be pushed to origin/main (got ${localRef} -> ${remoteRef}).`)
+  const allowedPair = (localRef === 'refs/heads/main' && remoteRef === 'refs/heads/main') || (localRef === 'refs/heads/dev-rh' && remoteRef === 'refs/heads/dev-rh')
+  if (!allowedPair) fail(`only "main -> main" and "dev-rh -> dev-rh" can be pushed (got ${localRef} -> ${remoteRef}).`)
   if (ZERO.test(localSha)) fail('deleting a remote branch is not allowed.')
   // 2. No force pushes: the remote tip must be an ancestor of what is pushed.
   if (!ZERO.test(remoteSha)) {

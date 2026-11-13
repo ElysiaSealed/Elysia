@@ -18,6 +18,7 @@
     "test:non-db": "node scripts/run-tests.mjs",
     "test:db": "node scripts/run-tests.mjs --db",
     "push": "git push origin main",
+    "push:dev-rh": "git push origin dev-rh",
     "prepare": "node -e \"try{require('child_process').execSync('git config --local core.hooksPath .githooks',{stdio:'ignore'})}catch{}\""
   },
   "devDependencies": {
