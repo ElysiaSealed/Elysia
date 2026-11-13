@@ -23,6 +23,8 @@ export const predictionSchema = z.object({
       assetSymbol: z.string(),
       direction: z.enum(['up', 'down']),
       won: z.boolean(),
+      /** true = harga basi (mis. pasar tutup): tercatat tetapi tidak dinilai. */
+      voided: z.boolean(),
       returnBps: z.number().int(),
       returnFormatted: z.string(),
       revealTxHash: hex,

@@ -90,7 +90,7 @@ export interface AppConfig {
 /** Only the public columns: the encrypted preimage is never selected by the API. */
 type PredictionRow = Pick<
   typeof predictions.$inferSelect,
-  'ledgerId' | 'hash' | 'status' | 'commitTxHash' | 'committedAt' | 'maturesAt' | 'revealedText' | 'revealedAsset' | 'revealedDirection' | 'revealTxHash' | 'won' | 'returnBps'
+  'ledgerId' | 'hash' | 'status' | 'commitTxHash' | 'committedAt' | 'maturesAt' | 'revealedText' | 'revealedAsset' | 'revealedDirection' | 'revealTxHash' | 'won' | 'returnBps' | 'voided'
 >
 const DAY_MS = 86_400_000
 const RECENT_LIMIT = 10
@@ -136,6 +136,7 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
               assetSymbol: symbols[row.revealedAsset.toLowerCase()] ?? shortAddress(row.revealedAsset),
               direction: row.revealedDirection === 1 ? ('up' as const) : ('down' as const),
               won: row.won,
+              voided: row.voided,
               returnBps: aligned,
               returnFormatted: formatBps(aligned),
               revealTxHash: row.revealTxHash,
@@ -178,12 +179,14 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     revealTxHash: predictions.revealTxHash,
     won: predictions.won,
     returnBps: predictions.returnBps,
+    voided: predictions.voided,
   }
 
   /** Scoreboard numbers and the few full rows /proof shows, from three small queries. Shared by /proof and /leaderboard. */
   const loadProofData = () =>
     slowCache.get('proof-data', async () => {
-      const scoredCond = sql`${predictions.status} = 'revealed' and ${predictions.returnBps} is not null and ${predictions.revealedDirection} is not null`
+      // Void (harga basi) predictions are revealed but never scored: they stay out of scored, wins and the average return.
+      const scoredCond = sql`${predictions.status} = 'revealed' and ${predictions.returnBps} is not null and ${predictions.revealedDirection} is not null and ${predictions.voided} is false`
       const [agg] = await cfg.db
         .select({
           scored: sql<string>`count(*) filter (where ${scoredCond})`,

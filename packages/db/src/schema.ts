@@ -163,6 +163,8 @@ export const predictions = pgTable(
     endRoundId: amount('end_round_id'),
     won: boolean('won'),
     returnBps: integer('return_bps'),
+    // true = harga awal atau akhir terlalu basi (pasar tutup); direveal tetapi tidak dinilai menang/kalah.
+    voided: boolean('voided').notNull().default(false),
     createdAt: ts('created_at').notNull().defaultNow(),
   },
   (t) => [uniqueIndex('predictions_hash_uq').on(t.hash), index('predictions_status_idx').on(t.status)],

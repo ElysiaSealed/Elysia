@@ -19,7 +19,7 @@ export default async function PredictionPage({ params }: { params: Promise<{ id:
     <PageShell
       label={`Commit #${p.id}`}
       title={r ? 'Revealed' : 'Sealed until'}
-      dim={r ? (r.won ? 'and it won.' : 'and it lost.') : fmtUtc(p.maturesAt)}
+      dim={r ? (r.voided ? 'and it was not scored.' : r.won ? 'and it won.' : 'and it lost.') : fmtUtc(p.maturesAt)}
       intro={
         r
           ? 'The prediction was hashed and committed before it was posted. Its contents were opened at maturity and scored by the oracle.'
@@ -74,7 +74,7 @@ export default async function PredictionPage({ params }: { params: Promise<{ id:
             </div>
             <div>
               <span className="k">Result</span>
-              <span className="v">{r.won ? 'Won' : 'Lost'}</span>
+              <span className="v">{r.voided ? 'Void (price data too old, not scored)' : r.won ? 'Won' : 'Lost'}</span>
             </div>
             <div>
               <span className="k">Return (in the call’s direction)</span>

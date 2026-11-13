@@ -154,6 +154,9 @@
                                 "won": {
                                   "type": "boolean"
                                 },
+                                "voided": {
+                                  "type": "boolean"
+                                },
                                 "returnBps": {
                                   "type": "integer"
                                 },
@@ -174,6 +177,7 @@
                                 "assetSymbol",
                                 "direction",
                                 "won",
+                                "voided",
                                 "returnBps",
                                 "returnFormatted",
                                 "revealTxHash",
@@ -265,6 +269,9 @@
                               "won": {
                                 "type": "boolean"
                               },
+                              "voided": {
+                                "type": "boolean"
+                              },
                               "returnBps": {
                                 "type": "integer"
                               },
@@ -285,6 +292,7 @@
                               "assetSymbol",
                               "direction",
                               "won",
+                              "voided",
                               "returnBps",
                               "returnFormatted",
                               "revealTxHash",
@@ -418,6 +426,9 @@
                         "won": {
                           "type": "boolean"
                         },
+                        "voided": {
+                          "type": "boolean"
+                        },
                         "returnBps": {
                           "type": "integer"
                         },
@@ -438,6 +449,7 @@
                         "assetSymbol",
                         "direction",
                         "won",
+                        "voided",
                         "returnBps",
                         "returnFormatted",
                         "revealTxHash",

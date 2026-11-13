@@ -13,11 +13,18 @@ import {IPhaseProxy} from "./interfaces/IPhaseProxy.sol";
 ///      bahwa round awal adalah round terakhir sebelum commit dan round akhir adalah round pertama sesudah jatuh tempo,
 ///      sehingga agent tidak bisa memilih round yang menguntungkan.
 ///      Catatan: `roundId + 1` / `roundId - 1` hanya valid dalam satu phase aggregator Chainlink.
+///      Harga yang terlalu basi (round awal lebih tua dari MAX_START_AGE sebelum commit, atau round akhir lebih lambat
+///      dari MAX_END_LAG setelah jatuh tempo, mis. pasar saham tutup) tidak membuat reveal gagal: prediksi tercatat
+///      sebagai VOID, tidak dihitung menang atau kalah, dan tidak masuk `winCount` maupun `sumReturnBps`.
 contract ElysiaLedger is Ownable2Step {
     uint8 public constant UP = 1;
     uint8 public constant DOWN = 2;
     uint32 public constant MIN_HORIZON = 1 hours;
     uint32 public constant MAX_HORIZON = 365 days;
+    /// Umur maksimum round awal terhadap waktu commit (keputusan Head Dev).
+    uint32 public constant MAX_START_AGE = 1 hours;
+    /// Jeda maksimum round akhir setelah jatuh tempo (keputusan Head Dev).
+    uint32 public constant MAX_END_LAG = 2 hours;
 
     struct Prediction {
         bytes32 hash;
@@ -31,6 +38,7 @@ contract ElysiaLedger is Ownable2Step {
         int256 startPrice;
         int256 endPrice;
         int256 returnBps;
+        bool voided; // true: harga basi, tidak dinilai
     }
 
     address public agent;
@@ -38,6 +46,7 @@ contract ElysiaLedger is Ownable2Step {
     uint256 public commitCount;
     uint256 public revealCount;
     uint256 public winCount;
+    uint256 public voidCount; // prediksi yang direveal tetapi tidak dinilai; dinilai = revealCount - voidCount
     int256 public sumReturnBps; // searah klaim: prediksi turun yang benar bernilai positif
 
     mapping(uint256 => Prediction) private _predictions;
@@ -57,7 +66,8 @@ contract ElysiaLedger is Ownable2Step {
         int256 startPrice,
         int256 endPrice,
         int256 returnBps,
-        bool won
+        bool won,
+        bool voided
     );
     event AgentSet(address indexed agent);
     event FeedSet(address indexed asset, address indexed feed);
@@ -153,12 +163,15 @@ contract ElysiaLedger is Ownable2Step {
         AggregatorV3Interface feed = feedOf[asset];
         if (address(feed) == address(0)) revert NoFeed();
 
-        int256 startPrice = _verifyStart(feed, startRoundId, p.committedAt);
-        int256 endPrice = _verifyEnd(feed, endRoundId, maturity);
+        (int256 startPrice, uint256 startAt) = _verifyStart(feed, startRoundId, p.committedAt);
+        (int256 endPrice, uint256 endAt) = _verifyEnd(feed, endRoundId, maturity);
+
+        // startAt <= committedAt dan endAt >= maturity sudah dijamin oleh verifikasi round, jadi tidak ada underflow.
+        bool voided = uint256(p.committedAt) - startAt > MAX_START_AGE || endAt - maturity > MAX_END_LAG;
 
         int256 ret = ((endPrice - startPrice) * 10_000) / startPrice;
         int256 minMove = int256(uint256(p.minMoveBps));
-        bool won = direction == UP ? (ret > 0 && ret >= minMove) : (ret < 0 && -ret >= minMove);
+        bool won = !voided && (direction == UP ? (ret > 0 && ret >= minMove) : (ret < 0 && -ret >= minMove));
 
         p.revealed = true;
         p.won = won;
@@ -168,12 +181,19 @@ contract ElysiaLedger is Ownable2Step {
         p.startPrice = startPrice;
         p.endPrice = endPrice;
         p.returnBps = ret;
+        p.voided = voided;
 
         revealCount++;
-        if (won) winCount++;
-        sumReturnBps += direction == UP ? ret : -ret;
+        if (voided) {
+            voidCount++;
+        } else {
+            if (won) winCount++;
+            sumReturnBps += direction == UP ? ret : -ret;
+        }
 
-        emit Revealed(id, text, asset, direction, horizon, salt, startRoundId, endRoundId, startPrice, endPrice, ret, won);
+        emit Revealed(
+            id, text, asset, direction, horizon, salt, startRoundId, endRoundId, startPrice, endPrice, ret, won, voided
+        );
     }
 
     // ------------------------------------------------------------------ views
@@ -197,7 +217,7 @@ contract ElysiaLedger is Ownable2Step {
     function _verifyStart(AggregatorV3Interface feed, uint80 roundId, uint64 committedAt)
         internal
         view
-        returns (int256)
+        returns (int256, uint256)
     {
         (int256 price, uint256 updatedAt, bool ok) = _round(feed, roundId);
         if (!ok || price <= 0 || updatedAt > committedAt) revert InvalidStartRound();
@@ -210,11 +230,15 @@ contract ElysiaLedger is Ownable2Step {
             (, uint256 phaseAt, bool phaseOk) = _round(feed, nextPhaseFirst);
             if (phaseOk && phaseAt <= committedAt) revert InvalidStartRound();
         }
-        return price;
+        return (price, updatedAt);
     }
 
     /// Round akhir harus: ada, diperbarui >= jatuh tempo, dan round sebelumnya (jika ada) sebelum jatuh tempo.
-    function _verifyEnd(AggregatorV3Interface feed, uint80 roundId, uint256 maturity) internal view returns (int256) {
+    function _verifyEnd(AggregatorV3Interface feed, uint80 roundId, uint256 maturity)
+        internal
+        view
+        returns (int256, uint256)
+    {
         (int256 price, uint256 updatedAt, bool ok) = _round(feed, roundId);
         if (!ok || price <= 0 || updatedAt < maturity) revert InvalidEndRound();
         if (uint64(roundId) > 1) {
@@ -223,7 +247,7 @@ contract ElysiaLedger is Ownable2Step {
         } else if (uint64(roundId) == 1 && (roundId >> 64) > 1) {
             _verifyPreviousPhase(feed, uint16(roundId >> 64) - 1, maturity);
         }
-        return price;
+        return (price, updatedAt);
     }
 
     /// The end round is the first round of a new phase, so its predecessor lives in the previous phase aggregator.

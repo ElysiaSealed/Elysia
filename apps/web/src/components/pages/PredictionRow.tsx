@@ -22,7 +22,7 @@ export function PredictionRow({ p }: { p: Prediction }) {
         <span className="k">Return</span>
         <span className="mono-v">{r ? r.returnFormatted : 'n/a'}</span>
       </div>
-      <span className={`pg-pill ${r ? (r.won ? 'win' : 'loss') : ''}`}>{r ? (r.won ? 'Won' : 'Lost') : 'Pending'}</span>
+      <span className={`pg-pill ${r ? (r.voided ? 'void' : r.won ? 'win' : 'loss') : ''}`}>{r ? (r.voided ? 'Void' : r.won ? 'Won' : 'Lost') : 'Pending'}</span>
     </a>
   )
 }

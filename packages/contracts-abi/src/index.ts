@@ -31,7 +31,33 @@ export const elysiaLedgerAbi = [
   },
   {
     "type": "function",
+    "name": "MAX_END_LAG",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "MAX_HORIZON",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_START_AGE",
     "inputs": [],
     "outputs": [
       {
@@ -248,6 +274,11 @@ export const elysiaLedgerAbi = [
             "name": "returnBps",
             "type": "int256",
             "internalType": "int256"
+          },
+          {
+            "name": "voided",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
@@ -452,6 +483,19 @@ export const elysiaLedgerAbi = [
   },
   {
     "type": "function",
+    "name": "voidCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "winCount",
     "inputs": [],
     "outputs": [
@@ -643,6 +687,12 @@ export const elysiaLedgerAbi = [
       },
       {
         "name": "won",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "name": "voided",
         "type": "bool",
         "indexed": false,
         "internalType": "bool"

@@ -264,6 +264,7 @@ export async function revealMatured(deps: CycleDeps): Promise<number[]> {
         endRoundId: res.endRoundId.toString(),
         won: res.won,
         returnBps: Number(res.returnBps),
+        voided: res.voided,
       })
       .where(eq(predictions.id, pred.id))
     revealed.push(pred.id)

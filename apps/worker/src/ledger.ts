@@ -33,6 +33,8 @@ export interface RevealResult extends RoundPick {
   txHash: Hex
   won: boolean
   returnBps: bigint
+  /** Harga basi: tercatat tetapi tidak dinilai. */
+  voided: boolean
 }
 
 const MAX_ROUND_SCAN = 10_000
@@ -129,6 +131,7 @@ export function createLedgerClient(cfg: LedgerConfig) {
         txHash,
         won: ev.args.won,
         returnBps: ev.args.returnBps,
+        voided: ev.args.voided,
         startRoundId: p.startRoundId,
         endRoundId: p.endRoundId,
       }

@@ -315,4 +315,62 @@ contract ElysiaLedgerTest is Test {
         ledger.setFeed(asset, AggregatorV3Interface(makeAddr("eoa")));
         vm.stopPrank();
     }
+
+    // ------------------------------------------------------------- void (harga basi)
+
+    /// Siklus dengan umur round awal dan jeda round akhir yang bisa diatur.
+    function _staleCycle(uint256 startAge, uint256 endLag)
+        internal
+        returns (uint256 id, uint80 startRound, uint80 endRound)
+    {
+        startRound = feed.push(100e8, block.timestamp - startAge);
+        vm.prank(agent);
+        id = ledger.commit(_hash(1));
+        uint256 maturity = block.timestamp + HORIZON;
+        vm.warp(maturity + endLag + 1);
+        endRound = feed.push(110e8, maturity + endLag);
+    }
+
+    function test_reveal_boundaryStartAndEndAreScored() public {
+        (uint256 id, uint80 s, uint80 e) = _staleCycle(ledger.MAX_START_AGE(), ledger.MAX_END_LAG());
+        _reveal(id, 1, s, e);
+        ElysiaLedger.Prediction memory p = ledger.getPrediction(id);
+        assertFalse(p.voided);
+        assertTrue(p.won);
+        assertEq(ledger.winCount(), 1);
+        assertEq(ledger.voidCount(), 0);
+    }
+
+    function test_reveal_staleStartIsVoid() public {
+        (uint256 id, uint80 s, uint80 e) = _staleCycle(ledger.MAX_START_AGE() + 1, 0);
+        _reveal(id, 1, s, e);
+        ElysiaLedger.Prediction memory p = ledger.getPrediction(id);
+        assertTrue(p.revealed);
+        assertTrue(p.voided);
+        assertFalse(p.won);
+        assertEq(ledger.revealCount(), 1);
+        assertEq(ledger.voidCount(), 1);
+        assertEq(ledger.winCount(), 0);
+        assertEq(ledger.sumReturnBps(), 0);
+    }
+
+    function test_reveal_lateEndIsVoid() public {
+        (uint256 id, uint80 s, uint80 e) = _staleCycle(10, ledger.MAX_END_LAG() + 1);
+        _reveal(id, 1, s, e);
+        ElysiaLedger.Prediction memory p = ledger.getPrediction(id);
+        assertTrue(p.voided);
+        assertFalse(p.won);
+        assertEq(ledger.voidCount(), 1);
+        assertEq(ledger.winCount(), 0);
+        assertEq(ledger.sumReturnBps(), 0);
+    }
+
+    function test_reveal_voidEmitsFlagAndCannotBeRevealedTwice() public {
+        (uint256 id, uint80 s, uint80 e) = _staleCycle(ledger.MAX_START_AGE() + 1, 0);
+        vm.expectEmit(true, true, false, false);
+        emit ElysiaLedger.Revealed(id, TEXT, asset, 1, HORIZON, SALT, s, e, 0, 0, 0, false, true);
+        _reveal(id, 1, s, e);
+        vm.expectRevert(ElysiaLedger.AlreadyRevealed.selector);
+        _reveal(id, 1, s, e);
+    }
 }

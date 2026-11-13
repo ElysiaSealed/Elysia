@@ -1,0 +1,1 @@
+ALTER TABLE "predictions" ADD COLUMN "voided" boolean DEFAULT false NOT NULL;
