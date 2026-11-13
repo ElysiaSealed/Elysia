@@ -1,80 +1,57 @@
-# ELYSIA — Rencana Smart Contract (`ElysiaLedger`)
+# ELYSIA — Rencana Smart Contract (`ElysiaLedger`, Robinhood Chain mainnet)
 
-Status: DRAFT planning (2026-11-11). Tidak ada kontrak dibuat atau di-deploy. Target tunggal: **Elysium Testnet, chain ID 99801**. Tanpa kontrak fee, `BurnVault`, logic Pons V2, token, atau chain lain.
+Status: rencana akhir untuk `dev-rh` (2026-11-13). Kontrak sudah ada di `contracts/src/ElysiaLedger.sol` (25 test lulus) tetapi **belum di-deploy**. Target tunggal: Robinhood Chain mainnet, chain ID 4663. Tanpa BurnVault, splitter fee, token, atau chain lain di dalam kontrak ini. Kontrak token $ELYS adalah pekerjaan terpisah (Phase F).
 
-## 1. Evaluasi `NexaLedger` (dibaca penuh, `contracts/src/NexaLedger.sol`)
-| Aspek | Perilaku saat ini | Penilaian untuk ELYSIA |
+## 1. Kontrak saat ini
+| Aspek | Perilaku | Catatan |
 |---|---|---|
-| Hash | `keccak256(abi.encode(string text, address asset, uint8 direction, uint32 horizon, bytes32 salt))` | KANDIDAT, **PENDING** persetujuan Head Dev (brief: logika commit-reveal sama; kesesuaian untuk Gate Report belum diverifikasi, lihat §2). Vektor test bersama TS/Solidity tersedia |
-| Akses | `Ownable2Step`; `agent` tunggal untuk `commit`/`reveal`; `renounceOwnership` dinonaktifkan; `setAgent`, `setFeed`, `setMinMoveBps` hanya owner | KEEP. Owner EOA deployer ELYSIA untuk testnet |
-| `commit(hash)` | menyimpan hash, `committedAt`, snapshot `minMoveBps`; `hashUsed` mencegah duplikat | KEEP |
-| `reveal(...)` | cek hash, arah, horizon, jatuh tempo, lalu verifikasi round awal/akhir lewat `getRoundData` | ADAPT (lihat §3) |
-| Skor | return bps dari harga round; menang jika arah benar dan ≥ `minMoveBps` (default 0 = arah saja) | KEEP; definisi "menang" final masih keputusan terbuka |
-| Statistik | `commitCount`, `revealCount`, `winCount`, `sumReturnBps` | ADAPT: tercampur bila Gate Report ikut dicatat (§2) |
-| Event | `Committed`, `Revealed` (memuat teks, round id, harga) | KEEP + tambahan untuk laporan |
-| Teks bahasa | NatSpec berbahasa Indonesia | Ganti ke Inggris (konvensi kode) |
-| Horizon | `MIN_HORIZON = 1 hours`, `MAX = 365 days` | Cocok untuk uji 1 jam dan harian 7 hari |
+| Hash | `keccak256(abi.encode(string text, address asset, uint8 direction, uint32 horizon, bytes32 salt))` | Vektor test bersama TS dan Solidity di `packages/shared/test-vectors/commit-reveal.json` |
+| Akses | `Ownable2Step`; satu `agent` untuk `commit` dan `reveal`; `renounceOwnership` dinonaktifkan; `setAgent`, `setFeed`, `setMinMoveBps` hanya owner | Owner = Deployer |
+| `commit(hash)` | Menyimpan hash, `committedAt`, snapshot `minMoveBps`; `hashUsed` mencegah duplikat | `onlyAgent` |
+| `reveal(...)` | Cek hash, arah, horizon, jatuh tempo; verifikasi ronde awal dan akhir lewat `getRoundData` | `onlyAgent` |
+| Skor | Return dalam bps dari harga ronde; menang bila arah benar dan ≥ `minMoveBps` (default 0 = arah saja) | Definisi "menang" masih PENDING |
+| Statistik | `commitCount`, `revealCount`, `winCount`, `sumReturnBps` | |
+| Event | `Committed`, `Revealed` (teks, ronde, harga), `AgentSet`, `FeedSet`, `MinMoveBpsSet` | |
+| Horizon | `MIN_HORIZON = 1 hours`, `MAX_HORIZON = 365 days` | |
+| Dana | Tidak menerima ETH, tanpa `receive` atau `payable`, tanpa jalur pembayaran | |
 
-Rekomendasi: **ADAPT menjadi kontrak baru `ElysiaLedger`** (file baru, bukan rename in-place), mewarisi desain NexaLedger tetapi diubah sadar, bukan hanya diganti nama. Alasan: (a) Gate Report butuh jenis catatan baru; (b) model oracle perlu dipikirkan ulang; (c) kontrak harus bebas jejak NEXA. Jika Head Dev memilih "rename saja", risiko §2 dan §3 tetap ada.
+## 2. Peran
+| Wallet | Izin on-chain |
+|---|---|
+| Deployer | Deploy; owner: `setAgent`, `setFeed`, `setMinMoveBps` |
+| Agent | Hanya `commit` dan `reveal` |
+| Treasury | Tidak punya izin di kontrak; hanya menerima USDG di luar kontrak |
 
-## 2. Gate Report on-chain (keputusan Head Dev #1)
-Brief: hash laporan **harus di-commit on-chain sebelum publikasi**. `NexaLedger.commit(hash)` bersifat generik, tetapi laporan tidak punya `reveal` berskor; memakainya langsung akan membuat `commitCount` jauh melebihi `revealCount` dan merusak win rate. Opsi:
-- **A (rekomendasi):** satu kontrak `ElysiaLedger` dengan dua jalur: `commitPrediction(hash)` (alur NexaLedger, berskor) dan `commitReport(hash)` (atestasi saja, event `ReportCommitted`, counter terpisah, tanpa skor). Satu alamat, satu agent, satu set test.
-- B: dua kontrak (ledger prediksi + `ElysiaReportLedger`); lebih terpisah tetapi dua deploy dan dua audit (ELYSIUM-PLAN NEXA menyebut varian ini sebagai `NexaRiskLedger`, wajib audit).
-- C: laporan tetap off-chain di fase awal (melanggar brief; hanya bila Head Dev menurunkan prioritas).
-Skema hash laporan harus didefinisikan: hash dari JSON kanonik laporan + salt (hindari memuat teks panjang on-chain). Reveal laporan (membuka isi) tidak wajib bila isi sudah publik setelah diposting; tentukan apakah event berisi `reportHash` + `uri/ref` saja.
+Keeper tidak ada: feed adalah feed Chainlink langsung, tidak ada mock yang harus diisi. Penolakan alamat sama antar peran di konstruktor dan setter masih PENDING (rekomendasi desain).
 
-## 3. Oracle HYPE dan mock feed
-Fakta terverifikasi:
-- `MockAggregator.push(answer, updatedAt)` **tidak dibatasi akses** dan `updatedAt` bebas ditentukan pemanggil. Siapa pun dapat menambah round dan memengaruhi skor. Di Robinhood hanya aman karena testnet.
-- Keeper (`apps/worker/src/keeper.ts`) menyalin harga dari API publik Hyperliquid dengan wallet sendiri (`KEEPER_PRIVATE_KEY`): titik tunggal kepercayaan dan ketersediaan; round hanya muncul saat heartbeat habis (6 jam) atau deviasi ≥ 0,5% (default `DEFAULT_KEEPER_CONFIG`). Reveal gagal bila tidak ada round setelah jatuh tempo.
-- Verifikasi round NexaLedger (`_verifyStart`/`_verifyEnd`) memakai `roundId ± 1`, yang hanya valid dalam satu phase Chainlink dan mengasumsikan riwayat ronde.
+## 3. Oracle Chainlink: hal yang harus ditinjau sebelum deploy
+- Feed mainnet yang dipakai: `RHNVDA / USD` `0x379EC4f7C378F34a1B47E4F3cbeBCbAC3E8E9F15` dan `ETH / USD` `0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9` (8 desimal, diverifikasi baca-saja). Aset NVDA Stock Token `0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC` dan WETH `0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73`; `setFeed(asset, feed)` memetakan aset ke feed.
+- `_verifyStart` dan `_verifyEnd` memakai `roundId ± 1`. Pada feed proxy Chainlink, id ronde berisi `phaseId` di bit atas, sehingga lompatan antar phase atau ronde yang tidak berurutan membuat verifikasi gagal atau salah. Wajib diuji terhadap feed asli (simulasi fork baca-saja) dan ditinjau.
+- Heartbeat dan deviasi feed menentukan kapan ronde setelah jatuh tempo muncul; reveal gagal bila belum ada ronde setelah `maturity`. Umur data feed teramati sekitar 12 menit (NVDA) dan 33 menit (ETH) saat diperiksa; heartbeat sebenarnya belum diketahui.
+- Feed Stock Token mengikuti jam pasar: perlu diputuskan bagaimana prediksi di luar jam pasar diperlakukan.
+- Nama feed NVDA adalah `RHNVDA / USD`, bukan `NVDA / USD`.
 
-Rencana testnet: mock feed HYPE/USD (8 desimal) dengan **`push` dibatasi `onlyKeeper`** dan batasan `updatedAt ≤ block.timestamp` serta monotonik; keeper terpisah dari agent dan deployer; semua ditandai sebagai "uji mesin", bukan bukti akurasi. Hasil skor testnet tidak dipakai dalam klaim performa publik.
+## 4. Keamanan dan desain
+- Reentrancy: tidak ada transfer nilai.
+- Satu agent; rotasi lewat owner. Owner EOA tunggal (Deployer) adalah titik terpusat: pertimbangkan multisig sebelum mainnet.
+- Batas panjang `text` pada `reveal` perlu ditetapkan untuk gas dan ukuran event.
+- Review wajib sebelum deploy: `forge test` penuh, fuzz tambahan untuk verifikasi ronde, agent `contract-reviewer`, dan review manusia. Audit eksternal sangat disarankan karena mainnet tidak dapat dibatalkan.
+- Tidak ada fee, treasury, atau burn di kontrak.
 
-Risiko mainnet (tidak diasumsikan tersedia): precompile HyperCore memberi harga sekarang, bukan riwayat ronde. Karena **HYPE Daily Call mengumumkan asetnya** (tidak perlu disembunyikan), desain mainnet bisa membaca harga saat commit (snapshot on-chain) dan saat reveal, menggantikan verifikasi `getRoundData`. Ini perubahan kontrak besar; direncanakan sebagai fase terpisah setelah precompile terverifikasi (Phase 5), bukan sekarang. Opsi di Phase 5: adaptor feed berbasis precompile yang menyimpan snapshot; atau kontrak v2.
+## 5. Test
+Unit dan fuzz untuk commit, reveal, akses, duplikat hash, jatuh tempo, dan verifikasi ronde (`contracts/test/ElysiaLedger.t.sol`); test pengganti dengan `MockAggregator` hanya untuk menguji perilaku ronde. Tambahkan test dengan ronde bertipe phase Chainlink dan batas panjang teks. `forge snapshot` diperbarui; ABI diekspor lewat `scripts/export-abi.mjs`.
 
-## 4. Peran dan alamat (keputusan final Head Dev, 2026-11-12)
-ELYSIA gratis; tidak ada pembayaran, fee, atau Treasury. Kontrak tidak menerima dana, tidak menyimpan saldo, dan tidak punya jalur pembayaran.
-- `elysium-testnet.json` saat ini berisi deployer, agent, dan treasury **identik dengan NEXA** dan `keeper` tak diketahui pemiliknya. **Tidak boleh dipakai** (brief: deployer baru; Head Dev: tanpa wallet NEXA).
-- **Tepat tiga wallet baru, tiga private key berbeda:**
+## 6. Deployment (rencana; belum dieksekusi)
+Prasyarat: wallet Deployer dan Agent diverifikasi (`pnpm check:wallets`, `cast chain-id` = 4663 lewat RPC resmi), saldo ETH cukup untuk gas, keystore bernama `elysia-deployer`, persetujuan R2 dan R3 di roadmap.
+Urutan: simulasi `forge script script/DeployElysiaLedger.s.sol` tanpa `--broadcast` → deploy oleh manusia (password keystore diketik manusia) → verifikasi di Blockscout → `setAgent` → `setFeed` untuk NVDA dan WETH → satu commit dan reveal dengan horizon terpendek → isi `ELYSIA_LEDGER_ADDRESS` dan catat alamat di `packages/contracts-abi/addresses/mainnet.json` (hanya alamat Elysia).
+Skrip `DeployElysiaLedger.s.sol` masih menyebut RPC testnet di komentarnya: perbarui sebelum dipakai.
 
-| Wallet | Izin on-chain | Catatan |
-|---|---|---|
-| Deployer | Deploy; `owner` (`Ownable2Step`): `setAgent`, `setKeeper`, `setFeed`, `setMinMoveBps` | Tidak dipakai untuk commit/reveal atau push feed |
-| Agent | Hanya `commit`, `reveal`, dan atestasi laporan (`onlyAgent`) | Bukan owner |
-| Keeper | Hanya `push` pada mock feed (`onlyKeeper`) | Bukan owner, bukan agent |
+## 7. Kontrak token $ELYS dan burn
+Kontrak token baru dan rencana peluncuran adalah keputusan terpisah (Phase F, gate R6). Riwayat burn dibaca dari CA yang diberikan PM; tidak ada kontrak burn buatan ELYSIA.
 
-- Konstruktor/setter sebaiknya menolak alamat yang sama untuk dua peran (rekomendasi desain, perlu persetujuan) agar pemisahan peran ditegakkan on-chain, bukan hanya konvensi.
-- Tidak ada Treasury, penerima fee, atau `TREASURY_ADDRESS` di kontrak, script, atau config. Pembuatan wallet dan pengisian faucet HYPE dilakukan manusia; Claude tidak membuat wallet dan tidak memegang private key (belum ada wallet yang dibuat pada tahap planning).
-- Asumsi lama "ledger harus transaksi pertama deployer agar alamat sama `0xEF1f…`" (NEXA) **tidak berlaku** untuk ELYSIA dan tidak boleh diikuti.
-
-## 5. Keamanan dan desain
-- Reentrancy: tidak ada transfer nilai; risiko rendah.
-- Tiga peran, tiga kunci terpisah (deployer/agent/keeper); rotasi agent dan keeper lewat owner (`setAgent`, `setKeeper`); owner = EOA deployer di testnet (rekomendasi, dicatat sebagai risiko terpusat).
-- Kontrak tidak menerima ETH/HYPE (tanpa `receive`/`payable`) dan tidak memiliki fungsi pembayaran, sesuai model gratis.
-- Manipulasi `updatedAt` mock → batasi `push` (lihat §3).
-- Batas panjang `text` pada `reveal` (calldata/event) perlu ditetapkan untuk biaya gas.
-- Audit eksternal belum diwajibkan untuk testnet; wajib sebelum mainnet.
-- Rasio fee 30/20 dan semua logic fee **tidak dibawa**.
-
-## 6. Test
-- Unit + fuzz untuk commit/reveal, akses, duplikat hash, jatuh tempo, verifikasi round (adaptasi `NexaLedger.t.sol`, 24 test NEXA sebagai baseline).
-- Test baru: jalur `commitReport`, counter terpisah, `push` mock terbatas, keeper tak berwenang ditolak.
-- Vektor hash bersama `packages/shared/test-vectors/commit-reveal.json` tetap dipakai oleh `forge test` dan Vitest; tambah vektor laporan.
-- `forge snapshot` dan ekspor ABI ke `packages/contracts-abi`.
-
-## 7. Deployment dan verifikasi (rencana; belum dieksekusi)
-Prasyarat: tiga wallet baru (deployer, agent, keeper) terverifikasi (`cast chain-id` = 99801, alamat keystore, saldo HYPE > 0), keystore dengan nama ELYSIA. Urutan: deploy mock feed → deploy `ElysiaLedger` → `setFeed(HYPE, feed)` → verifikasi Blockscout → satu commit dan reveal HYPE (horizon 1 jam). Command yang butuh password keystore dijalankan manusia. Dry run (`forge script` tanpa `--broadcast`) lebih dulu. Verifikasi memakai Blockscout Elysium (`https://elysium.kinetiq.xyz/api/`, dari ELYSIUM-PLAN NEXA; verifikasi ulang ke docs resmi). Faucet dan RPC dari `chains.ts` (sumber: docs Elysium, 2026-11-09).
-
-## 8. Ketergantungan mainnet (tidak diasumsikan)
-Precompile HyperCore (brief: aktif sekitar 4 minggu setelah mainnet), alamat launchpad mainnet, RPC/explorer mainnet, audit, tiga wallet mainnet baru (bukan wallet testnet). Semuanya Phase 5 dan butuh persetujuan.
-
-## 9. Keputusan yang diminta
-1. Jalur Gate Report (A/B/C di §2).
-2. Rename-adapt vs kontrak baru (rekomendasi: kontrak baru berbasis NexaLedger).
-3. Definisi "menang" (`minMoveBps`).
-4. Penggunaan EOA owner tunggal di testnet.
-5. Apakah kontrak menolak alamat sama antar peran (deployer/agent/keeper).
-
-Final (Head Dev, 2026-11-12): layanan gratis; tiga wallet; tanpa Treasury, fee, BurnVault, FeeSplitter, atau burn.
+## 8. Keputusan yang diminta
+1. Definisi "menang" (`minMoveBps`).
+2. Penolakan alamat sama antar peran dan pemakaian multisig untuk owner.
+3. Perlakuan prediksi di luar jam pasar untuk Stock Token.
+4. Batas panjang `text`.
+5. Audit eksternal sebelum atau sesudah deploy.

@@ -1,77 +1,76 @@
-# ELYSIA — Arsitektur Target
+# ELYSIA — Arsitektur Target (Robinhood Chain)
 
-Status: DRAFT planning (2026-11-11). Belum ada implementasi. Sumber: `docs/ELYSIA_BRIEF.md` (9 Nov 2026), arahan Head Dev, audit repository (Graphify + verifikasi source).
+Status: rencana akhir untuk branch `dev-rh` (2026-11-13). Dasar: arahan developer, kode di repo, dan verifikasi baca-saja ke RPC mainnet.
 
 ## 1. Batasan yang mengikat
-- Satu-satunya chain: **Elysium Testnet, Chain ID 99801**. Tanpa Solana, tanpa chain lain, tanpa bridge, tanpa multichain, tanpa Robinhood Chain.
-- Token ELYSIA, tokenomics, kontrak fee, `BurnVault`, mekanisme burn, logic Pons V2: di luar scope (ditunda).
-- **Keputusan final Head Dev (2026-11-12): ELYSIA adalah layanan gratis.** Tidak ada paket Pro, subscription, pembayaran, kredit, USDG, Ask berbayar, Signals berbayar, maupun konten sponsor sebagai fitur ELYSIA. Tidak ada Treasury Wallet.
-- **Tepat tiga wallet baru, independen dari NEXA, dengan tiga private key berbeda:** (1) Deployer: deploy dan administrasi kontrak (owner); (2) Agent: `commit`/`reveal` dan atestasi sesuai izin kontrak; (3) Keeper: tugas keeper dan operasional oracle sesuai izin kontrak. Wallet belum dibuat dan tidak ada private key yang dimasukkan pada tahap planning.
-- Tidak ada deployment selama planning. Wallet, repo, infrastruktur, bot, dan kredensial semuanya baru dan terpisah dari NEXA.
-- Konten publik berbahasa Inggris; disclaimer wajib: "Not affiliated with Kinetiq or Elysium."
+- Satu chain: **Robinhood Chain mainnet, chain ID 4663**. Tanpa chain lain, bridge, atau multichain.
+- Kontrak ditulis baru (`ElysiaLedger`, kelak token $ELYS); tidak ada alamat lama yang dipakai. Tidak ada BurnVault dan tidak ada splitter fee kreator.
+- Tiga wallet: Deployer (deploy dan admin), Agent (commit dan reveal), Treasury (penerima USDG). Private key berbeda; tidak ada Keeper di mainnet.
+- Mainnet: tidak ada deploy atau transaksi tanpa persetujuan eksplisit per tindakan.
+- Konten publik berbahasa Inggris; disclaimer "Not affiliated with Robinhood".
 
-## 2. Kondisi repository saat ini (hasil audit)
-Repository adalah salinan NEXA: monorepo pnpm + Turborepo, 162 file kode dalam scope Graphify (1.450 node, 3.210 edge, 74 community; 16 file Solidity ikut). Tidak ada `.git` dan tidak ada `.github` di salinan ini (riwayat dan remote tidak dapat diaudit; CI tidak ada, hanya `.githooks/`).
-
-| Area | Isi saat ini (terverifikasi) |
-|---|---|
-| `contracts/` | `NexaLedger`, `BurnVault`, `FeeSplitter` (+ `CreatorFeeSplitter`, `ProtocolFeeSplitter`), mock, 5 script deploy |
-| `apps/worker` | siklus prediksi, antrian + RiskGuard, keeper harga mock, LLM adapter (API kompatibel OpenAI), X, Telegram, laporan |
-| `apps/api` | Fastify; 20 route (proof, rug-radar, burn, ask, pro, signals, auth, leaderboard, market, dll.) |
-| `apps/indexer` | indexer TS sendiri untuk Pons V2 (bukan Envio), burn, holder |
-| `apps/web` | Next.js dengan branding NEXA (40 kemunculan "nexa" di `src` dan `public`) |
-| `packages/*` | `shared` (chains, commit-reveal, scoring), `riskguard`, `db` (Drizzle), `api-client`, `contracts-abi` |
-
-## 3. Arsitektur target (ringkas)
+## 2. Komponen
 
 ```mermaid
 flowchart LR
-  subgraph Elysium Testnet 99801
+  subgraph Robinhood Chain 4663
     L[ElysiaLedger]
-    F[Mock feed HYPE/USD]
+    CL[Chainlink feeds NVDA/ETH]
+    PONS[Pons V2 + Uniswap v4]
+    USDG[USDG]
+    BURN[Burn contract dari PM]
   end
-  IDX[Indexer launchpad Elysium] --> DB[(Postgres)]
-  HL[Hyperliquid public API] --> KP[Keeper harga]
-  KP --> F
-  DB --> W[Worker: Gate Report / Daily Call]
+  PONS --> IDX[Indexer]
+  BURN --> IDX
+  IDX --> DB[(Postgres - Supabase free)]
+  CL --> W[Worker]
+  DB --> W
   W --> LLM[LLM adapter]
   LLM --> RG[RiskGuard - kode]
   RG --> C[Commit hash]
   C --> L
-  C --> Q[Antrian persetujuan manual]
+  C --> Q[Antrian persetujuan manusia]
   Q --> X[X dry/live]
-  Q --> TG[Telegram bot ELYSIA]
-  DB --> API[API: /proof /gate-report /graduations]
-  API --> WEB[Web ELYSIA - menunggu desain]
-  L -. event .-> IDX
+  Q --> TG[Telegram bot]
+  DB --> API[API Fastify]
+  USDG -. pembayaran .-> API
+  API --> WEB[Web Next.js]
+  L -. event .-> W
 ```
 
-Aliran Gate Report (brief bagian Purpose + 9.1): Token Discovery → Data Collection → Risk Analysis → RiskGuard → Hash Generation → On-chain Commit (tx terkonfirmasi) → Report Publication → Historical Record. Urutan ini sama dengan aturan pipeline NEXA (AI → RiskGuard → commit → antrian → post) sehingga struktur `queue.ts` dan `cycle.ts` bisa dipakai ulang.
-
-## 4. Komponen
-| Komponen | Target | Catatan |
+| Komponen | Isi | Catatan |
 |---|---|---|
-| Smart contract | `ElysiaLedger` di 99801 | Lihat `ELYSIA_SMART_CONTRACT_PLAN.md`. Keputusan Head Dev diperlukan (§Keputusan 1) |
-| Indexer | Launchpad Elysium (Pump.fun, Ascend, Montra) | **Alamat launchpad belum dikonfirmasi** (TODO di `chains.ts`). Blok ~130 ms: `getLogs` batch besar. Deteksi bundling = banyak wallet membeli di blok yang sama |
-| Worker | Gate Report, Graduation Watch, HYPE Daily Call, Weekly recap | Pakai ulang kerangka NEXA; prompt persona baru |
-| LLM adapter | Pakai ulang `llm.ts` | Penyedia/kunci baru; validasi zod + retry sudah ada |
-| RiskGuard | Pakai ulang, tambah aturan | Lihat `ELYSIA_MIGRATION_PLAN.md` §RiskGuard |
-| API | `/proof`, `/gate-report`, `/graduations` | Hanya tiga endpoint publik dari brief + `/healthz`. Gratis; endpoint NEXA berbayar (`/ask`, `/pro/*`, `/signals*`, `/alerts/stream`, `/auth/*`, `/me`) tidak dibawa |
-| Web | Fork, desain baru | Aset/desain/logo **pending**; jangan pakai aset NEXA |
-| Telegram | Bot baru, kredensial baru | Arsitektur `telegram.ts` jadi referensi. Notifikasi gratis untuk semua pengikut; tanpa penautan wallet/langganan (`pro.ts`, tabel `telegram_links` berbasis alamat pelanggan tidak dibawa) |
-| X | Akun "Automated", `dry` dulu, balasan manual | Tanpa auto-reply |
+| Kontrak | `ElysiaLedger` | commit/reveal prediksi; membaca feed Chainlink langsung. Lihat `ELYSIA_SMART_CONTRACT_PLAN.md` |
+| Indexer (`apps/indexer`) | Pons V2 (launch, trade, graduation), holder, whale, burn | Burn dibaca dari `BURN_CONTRACT_ADDRESS` (CA PM); event menunggu ABI |
+| Worker (`apps/worker`) | Prediction of the Day, laporan harian dan Pons, pulse, mention, Telegram, X | LLM Xiaomi MiMo (kompatibel OpenAI); tanpa kunci memakai mock |
+| RiskGuard (`packages/riskguard`) | Aturan konten berbasis kode, fail-closed | Memblokir buy/sell, price target, klaim afiliasi Robinhood/Pons, sebutan $ELYS |
+| API (`apps/api`) | proof, prediksi, rug-radar, market, leaderboard, burn, ask, pricing; berbayar: auth (SIWE), pro, alerts, signals | Berbayar mati sampai `PAID_FEATURES_ENABLED=true` |
+| Web (`apps/web`) | Landing, Proof, Prediction of the Day, Rug radar, Ask, Burn, Leaderboard, Pro, Signals, Sponsored | Tampilan dan palet warna tidak diubah |
+| DB (`packages/db`) | Drizzle; migrasi 0000–0012 | Project Supabase baru |
+
+## 3. Pipeline dan integritas bukti
+AI → RiskGuard → commit terkonfirmasi → antrian persetujuan manusia → post. Hash `keccak256(abi.encode(string,address,uint8,uint32,bytes32))` di-commit sebelum publikasi; salt dan preimage terenkripsi (`PREIMAGE_KEY`) dan tidak pernah di log; tx hash disimpan. Mode X `dry` sampai izin eksplisit untuk `live`; balasan manual.
+
+## 4. Fitur berbayar
+- Harga di env dan disajikan `GET /pricing` (cache 15 detik); web membaca endpoint itu.
+- Pro: pembayaran USDG ke Treasury, diverifikasi on-chain terhadap harga yang sama; sesi login wallet (SIWE); alert stream dan Telegram.
+- Signals API: kunci API (`x-api-key`) diterbitkan setelah pembayaran lewat kontak, batas laju per kunci.
+- Sponsored: dijual lewat kontak; label wajib, tanpa rekomendasi, tinjauan manusia.
+- USDG kemungkinan proxy (kode pendek): admin kontrak berada di pihak ketiga.
 
 ## 5. Batas keamanan
-1. Tiga wallet baru dengan peran sempit dan key berbeda: Deployer (owner kontrak), Agent (hanya `commit`/`reveal`/atestasi), Keeper (hanya operasi feed). Tidak ada Treasury, tidak ada penerima fee, tidak ada aliran dana masuk. Agent dan keeper bukan owner dan tidak menerima dana selain gas HYPE dari faucet.
-2. Salt/preimage terenkripsi (`PREIMAGE_KEY`), tidak pernah di log (pola sudah ada di `crypto.ts`/`keys.ts`).
-3. RiskGuard berbasis kode, bukan AI; semua post lewat RiskGuard; data hanya dari indexer dan oracle.
-4. Tidak ada koneksi ke Railway/Supabase/Vercel/Telegram/X milik NEXA. Lihat checklist infrastruktur.
-5. Public API hanya baca dan gratis; tanpa auth wallet (SIWE), tanpa API key berbayar, tanpa verifikasi pembayaran. Rate limit tetap diperlukan untuk melindungi biaya dan egress, bukan sebagai paket.
+1. Peran sempit: Agent hanya `commit`/`reveal`; owner kontrak = Deployer.
+2. Private key tidak ke repo, `.env` repo, log, atau chat. Key Agent diisi manusia di dashboard.
+3. RiskGuard berbasis kode; data hanya dari indexer dan oracle; data tidak lengkap berarti "tidak tahu".
+4. Tidak ada resource, wallet, atau kredensial proyek sumber.
+5. API publik hanya baca kecuali endpoint berbayar; batas laju menjaga biaya dan egress.
 
-## 6. Risiko arsitektur utama
-- **Oracle HYPE:** `MockAggregator.push(answer, updatedAt)` terbuka untuk siapa pun dan `updatedAt` bebas (terverifikasi di `contracts/test/mocks/MockAggregator.sol`). Keeper menyalin harga dari API Hyperliquid. Skor testnet hanya "layak uji mesin", bukan bukti akurasi. Mainnet: precompile HyperCore belum boleh diasumsikan; model `getRoundData` NexaLedger mungkin tidak cocok dengan precompile (tidak ada riwayat ronde). Lihat dokumen kontrak.
-- **Indexer launchpad:** sumber data bergantung pada alamat/ABI yang belum diverifikasi.
-- **Bentrok nama "Elysia":** brief menandainya sebagai risiko utama; di luar lingkup teknis.
+## 6. Risiko utama
+- **Oracle Chainlink:** `ElysiaLedger` memverifikasi ronde awal dan akhir dengan `roundId ± 1`; di feed proxy Chainlink, id ronde memuat phase sehingga aturan itu hanya valid dalam satu phase. Heartbeat feed menentukan kapan ronde setelah jatuh tempo tersedia. Perlu ditinjau sebelum deploy (Phase C).
+- **Mainnet:** kesalahan konfigurasi aset atau feed tidak dapat dibatalkan tanpa transaksi baru.
+- **Supabase free:** batas egress dan ukuran; lihat `ELYSIA_DATABASE_OPTIMIZATION.md`.
+- **Pihak ketiga:** USDG proxy, Pons V2 dapat berubah.
+- **Hukum:** fitur berbayar dan token perlu tinjauan sebelum dibuka.
 
 ## 7. Verifikasi
-Temuan di atas diverifikasi terhadap file: `contracts/src/NexaLedger.sol`, `contracts/test/mocks/MockAggregator.sol`, `apps/worker/src/keeper.ts`, `packages/shared/src/chains.ts`, `packages/contracts-abi/addresses/*.json`, `packages/db/src/schema.ts`. Edge/community Graphify tidak diperlakukan sebagai fakta tanpa pemeriksaan ini.
+Dicek terhadap `contracts/src/ElysiaLedger.sol`, `packages/shared/src/chains.ts`, `apps/api/src/app.ts` dan `server.ts`, `apps/worker/src/main.ts`, `packages/db/src/schema.ts`, serta pemeriksaan baca-saja ke `https://rpc.mainnet.chain.robinhood.com`.
