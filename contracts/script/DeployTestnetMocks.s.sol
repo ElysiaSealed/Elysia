@@ -18,6 +18,8 @@ contract DeployTestnetMocks is Script {
     }
 
     function run() external {
+        // Mock feeds accept pushes from anyone: this script must never touch a mainnet ledger.
+        require(block.chainid != 4663, "DeployTestnetMocks: never run on mainnet");
         ElysiaLedger ledger = ElysiaLedger(vm.envAddress("ELYSIA_LEDGER"));
         int256 nvdaPrice = int256(vm.envOr("MOCK_NVDA_E8", uint256(20_528_000_000)));
         int256 ethPrice = int256(vm.envOr("MOCK_ETH_E8", uint256(223_656_000_000)));
