@@ -115,6 +115,27 @@ export const burnResponseSchema = z.object({
 })
 export type BurnResponse = z.infer<typeof burnResponseSchema>
 
+/** Public pricing overview. Prices are USDG micros (6 decimals) and are edited server-side through env vars. */
+export const pricingItemSchema = z.object({
+  id: z.enum(['pro', 'ask', 'signals', 'sponsored']),
+  name: z.string(),
+  /** true when the price is 0. */
+  free: z.boolean(),
+  price: z.object({ raw: z.string().regex(/^\d+$/), decimals: z.number().int(), formatted: z.string() }),
+  /** What one price buys: a subscription period, one analysis or one report. */
+  unit: z.enum(['period', 'analysis', 'report']),
+  /** Length of one period in days (subscriptions only). */
+  periodDays: z.number().int().positive().nullable(),
+})
+export const pricingResponseSchema = z.object({
+  currency: z.literal('USDG'),
+  /** Mirrors PAID_FEATURES_ENABLED: false means buying is not open yet. */
+  paymentsOpen: z.boolean(),
+  items: z.array(pricingItemSchema),
+})
+export type PricingItem = z.infer<typeof pricingItemSchema>
+export type PricingResponse = z.infer<typeof pricingResponseSchema>
+
 export const signalsResponseSchema = z.object({
   /** Post publik Elysia yang sudah terbit, terbaru dulu. */
   items: z.array(

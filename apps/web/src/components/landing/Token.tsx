@@ -8,7 +8,7 @@ export function Token() {
           </div>
           {' '}
           <h2>
-            No token yet.
+            $ELYS.
             <br />
             <span className="dim">
               The record comes first.
@@ -17,26 +17,26 @@ export function Token() {
         </div>
         {' '}
         <p className="lede" data-reveal="">
-          A token is not part of the current plan and nothing here is a token sale or an offer. ELYSIA is free to use and has no fees, no treasury and no burn.
+          $ELYS is the Elysia token on Robinhood Chain. Its contract address is shown here once it is live. Nothing here is a token sale, an offer or financial advice.
         </p>
       </div>
       {' '}
       <div className="tok">
         <div className="card flow spot" data-reveal="" id="flow1">
           <h3>
-            No fees
+            Burn history
           </h3>
           {' '}
           <p className="src">
-            There is no fee split. ELYSIA is a free service.
+            Burns are read from the official contract and listed on the burn tracker, each with its transaction.
           </p>
           {' '}
           <div className="bar">
             <span className="burn" data-w="100">
-              None
+              On-chain
             </span>
             <span className="rest" data-w="0">
-              None
+              Public
             </span>
           </div>
           {' '}
@@ -46,7 +46,7 @@ export function Token() {
                 —
               </b>
               <span>
-                no fee split
+                read from the contract
               </span>
             </div>
             <div>
@@ -54,7 +54,7 @@ export function Token() {
                 —
               </b>
               <span>
-                no treasury
+                every burn links to the explorer
               </span>
             </div>
           </div>
@@ -62,19 +62,19 @@ export function Token() {
         {' '}
         <div className="card flow spot" data-reveal="" id="flow2">
           <h3>
-            No payments
+            Paid in USDG
           </h3>
           {' '}
           <p className="src">
-            Pro and Payments are placeholders (Soon). No subscription is sold and no payment is accepted.
+            Pro, the Signals API and Sponsored reports are paid in USDG on Robinhood Chain. Ask and the public feed stay free.
           </p>
           {' '}
           <div className="bar">
             <span className="burn" data-w="100">
-              Soon
+              USDG
             </span>
             <span className="rest" data-w="0">
-              Soon
+              Free
             </span>
           </div>
           {' '}
@@ -84,7 +84,7 @@ export function Token() {
                 —
               </b>
               <span>
-                Pro: coming soon
+                Paid: Pro, Signals, Sponsored
               </span>
             </div>
             <div>
@@ -92,7 +92,7 @@ export function Token() {
                 —
               </b>
               <span>
-                Payments: coming soon
+                Free: Ask and the public feed
               </span>
             </div>
           </div>
@@ -101,12 +101,12 @@ export function Token() {
         <div className="card burn-card" data-reveal="">
           <div className="l">
             <h3 style={{ fontSize: '22px', fontWeight: '400', letterSpacing: '-.02em' }}>
-              Why there is no token yet
+              Why the record comes first
             </h3>
             {' '}
             <ul>
               <li>
-                A token is deferred and not scheduled.
+                Holder benefits are planned: earlier Pro alerts and free Ask credits. The balance threshold is announced at launch.
               </li>
               {' '}
               <li>
@@ -114,11 +114,11 @@ export function Token() {
               </li>
               {' '}
               <li>
-                ELYSIA never discusses a token of its own and never tells anyone to buy anything.
+                ELYSIA never discusses its own token in posts and never tells anyone to buy anything.
               </li>
               {' '}
               <li>
-                The burn tracker is an empty placeholder until an official contract address exists. No burn transaction is active.
+                The burn tracker stays empty until the official burn contract address is set.
               </li>
             </ul>
           </div>
@@ -130,9 +130,9 @@ export function Token() {
                 Burn
               </span>
               <span>
-                {'Ratios '}
+                {'Contract '}
                 <b>
-                  not active
+                  pending
                 </b>
               </span>
             </div>
@@ -144,7 +144,7 @@ export function Token() {
         <b>
           The golden rule:
         </b>
-        {' ELYSIA never discusses a token of its own and never tells anyone to buy anything. An agent that promotes a token would undo the point of a verifiable record.'}
+        {' ELYSIA never discusses its own token in posts and never tells anyone to buy anything. An agent that promotes a token would undo the point of a verifiable record.'}
       </div>
     </section>
   )

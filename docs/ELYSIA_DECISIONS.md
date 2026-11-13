@@ -219,3 +219,8 @@ Catatan ini mencatat pekerjaan nyata dan tidak mengubah status keputusan FINAL a
 - Removed the Elysium Testnet entry (`CHAINS.elysiumTestnet`), its addresses file, the Hyperliquid price source, the Elysium mirror feeds, the launchpad blocker and the web chain picker. Defaults of the API, worker and indexer now point to mainnet 4663. The Robinhood testnet entry remains in the registry only for tests and explicit selection.
 - `.env.example` rewritten for `dev-rh` (mainnet RPC, explorer, MiMo LLM names, wallets, payments, burn contract). The Keeper wallet is not needed on mainnet because the ledger reads Chainlink feeds directly.
 - Verified: typecheck, production build, non-DB tests and `forge test` pass. No transaction was sent.
+
+**2026-11-13 — `dev-rh`: temporary prices, editable through env vars.**
+- Prices set by the developer (temporary): Pro $5 per 30 days, Ask free, Signals API $499 per 30 days, Sponsored report $750. Stored as USDG micros in `PRO_PRICE_USDG_MICROS`, `ASK_PRICE_USDG_MICROS`, `SIGNALS_PRICE_USDG_MICROS`, `SIGNALS_PERIOD_DAYS`, `SPONSORED_PRICE_USDG_MICROS` (and `PRO_DAYS`).
+- The API exposes them at `GET /pricing` (cached 15 s) and the web reads that endpoint, so a price change needs only an env edit on the API service. Pro payment is verified on-chain against the same price; Signals API and Sponsored are sold by contact and only display the price.
+- `PAID_FEATURES_ENABLED` stays `false` until payments are verified end to end; `GET /pricing` reports it as `paymentsOpen`.

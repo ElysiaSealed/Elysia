@@ -21,17 +21,21 @@ const env = z
     /** Ask Elysia: penerima pembayaran USDG (default TREASURY_ADDRESS) dan harga minimum (unit terkecil, 1000000 = $1). */
     ASK_PAYMENT_RECIPIENT: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
     TREASURY_ADDRESS: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
-    ASK_PRICE_USDG_MICROS: z.coerce.bigint().default(1_000_000n),
+    ASK_PRICE_USDG_MICROS: z.coerce.bigint().nonnegative().default(0n),
     /** Legacy payment RPC. No default (was Robinhood); payment stays off unless PAYMENT_CHAIN_ID is set explicitly. */
     ASK_RPC_URL: z.string().url().optional(),
     /** Jaringan pembayaran. Default mainnet (USDG resmi). 46630 hanya untuk uji dengan PAYMENT_USDG_ADDRESS = token uji. */
     PAYMENT_CHAIN_ID: z.coerce.number().int().optional(),
     PAYMENT_USDG_ADDRESS: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().or(z.literal('')),
     PAYMENT_RPC_URL: z.string().url().optional().or(z.literal('')),
-    /** Elysia Pro: penerima (default = penerima Ask Elysia), harga per periode (unit terkecil, 7000000 = $7), lama periode (hari). */
+    /** Elysia Pro: penerima (default = penerima Ask Elysia), harga per periode (unit terkecil, 5000000 = $5), lama periode (hari). */
     PRO_PAYMENT_RECIPIENT: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
-    PRO_PRICE_USDG_MICROS: z.coerce.bigint().positive().default(7_000_000n),
+    PRO_PRICE_USDG_MICROS: z.coerce.bigint().positive().default(5_000_000n),
     PRO_DAYS: z.coerce.number().int().min(1).default(30),
+    /** Signals API and Sponsored report prices (USDG micros, 1000000 = $1). Sold by contact; shown by GET /pricing. Temporary values, edit freely. */
+    SIGNALS_PRICE_USDG_MICROS: z.coerce.bigint().nonnegative().default(499_000_000n),
+    SIGNALS_PERIOD_DAYS: z.coerce.number().int().min(1).default(30),
+    SPONSORED_PRICE_USDG_MICROS: z.coerce.bigint().nonnegative().default(750_000_000n),
     /** Username bot Telegram (tanpa @) untuk tautan alert Pro; kosong = tautan Telegram nonaktif. */
     TELEGRAM_BOT_USERNAME: z.string().regex(/^[A-Za-z0-9_]{5,32}$/).optional().or(z.literal('')),
     /** Benefit holder $ELYS: token (ada setelah launch di Pons V2) dan ambang saldo (unit terkecil, 18 desimal). Kosong = nonaktif. */
@@ -121,6 +125,12 @@ const app = buildApp({
   webOrigin: env.WEB_ORIGIN,
   leaderboardMinScored: env.LEADERBOARD_MIN_SCORED,
   paidFeaturesEnabled: env.PAID_FEATURES_ENABLED === 'true',
+  pricing: {
+    pro: { priceMicros: env.PRO_PRICE_USDG_MICROS, days: env.PRO_DAYS },
+    ask: { priceMicros: env.ASK_PRICE_USDG_MICROS },
+    signals: { priceMicros: env.SIGNALS_PRICE_USDG_MICROS, days: env.SIGNALS_PERIOD_DAYS },
+    sponsored: { priceMicros: env.SPONSORED_PRICE_USDG_MICROS },
+  },
   askRateLimit: { perMinute: env.ASK_RATE_PER_MINUTE, perDay: env.ASK_RATE_PER_DAY },
   trustProxyHops: env.TRUST_PROXY_HOPS,
   ask,

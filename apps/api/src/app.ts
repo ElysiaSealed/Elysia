@@ -39,6 +39,7 @@ import { buildMe, createNonce, endSession, monthKey, sessionFrom, verifyLogin, t
 import { kolStats, rankEntries } from './leaderboard'
 import { buildMarket } from './market'
 import { CHAINS, chainSlug } from '@elysia/shared'
+import { buildPricingResponse, DEFAULT_PRICING, type PricingConfig } from './pricing'
 import { DEFAULT_ASK_LIMITS, createAskLimiter, type AskLimits } from './ask-limit'
 import { buildRiskReport, verifyUsdgPayment, type AskConfig } from './ask'
 import { formatBps, formatUnits, formatWinRate, shortAddress } from './format'
@@ -78,6 +79,8 @@ export interface AppConfig {
   auth?: AuthConfig
   /** Elysia Pro (langganan USDG, alert stream, Telegram). Tanpa ini /pro/* dan /alerts/stream menjawab 503. */
   pro?: ProConfig
+  /** Public prices shown by GET /pricing (env-driven). Defaults to DEFAULT_PRICING. */
+  pricing?: PricingConfig
   now?: () => Date
 }
 
@@ -270,6 +273,12 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     })
     cache(reply)
     return body
+  })
+
+  // Public pricing overview (editable through env vars; the web reads it so prices change without a redeploy).
+  app.get('/pricing', async (_req, reply) => {
+    cache(reply)
+    return buildPricingResponse(cfg.pricing ?? DEFAULT_PRICING, Boolean(cfg.paidFeaturesEnabled))
   })
 
   // Burn tracker: `Burned` events of the PM burn contract. $ELYS 18 desimal. Empty until the burn contract is configured and indexed.

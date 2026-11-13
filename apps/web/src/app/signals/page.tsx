@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { PageShell } from '@/components/pages/PageShell'
 import { X_HANDLE, X_URL } from '@/lib/site'
+import { findItem, getPricing, priceLabel, unitLabel } from '@/lib/pricing'
 
 export const metadata: Metadata = { title: 'Signals API · ELYSIA', alternates: { canonical: '/signals' } }
 
@@ -30,10 +31,13 @@ const WHALES_EXAMPLE = `{
   ]
 }`
 
-export default function SignalsPage() {
+export const revalidate = 60
+
+export default async function SignalsPage() {
+  const signals = findItem(await getPricing(), 'signals')
   return (
     <PageShell
-      label="Signals API · $499 per month"
+      label={`Signals API · ${priceLabel(signals)} ${unitLabel(signals)}`}
       title="ELYSIA's feed,"
       dim="as JSON."
       intro="A JSON feed for bots, dashboards and communities: every public ELYSIA post with its on-chain commit id, plus large Stock Token transfers seen by the indexer. Authenticated with an API key and rate limited."

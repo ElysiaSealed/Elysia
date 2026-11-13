@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   burnResponseSchema,
+  pricingResponseSchema,
   createApiClient,
   fixtures,
   predictionResponseSchema,
@@ -26,6 +27,7 @@ describe('fixture cocok dengan skema response', () => {
   it('ask-plan', () => expect(() => askPlanResponseSchema.parse(fixtures.askPlan)).not.toThrow())
   it('market', () => expect(() => marketResponseSchema.parse(fixtures.market)).not.toThrow())
   it('burn', () => expect(() => burnResponseSchema.parse(fixtures.burn)).not.toThrow())
+  it('pricing', () => expect(() => pricingResponseSchema.parse(fixtures.pricing)).not.toThrow())
   it('leaderboard', () => expect(() => leaderboardResponseSchema.parse(fixtures.leaderboard)).not.toThrow())
   it('login wallet dan me', () => {
     expect(() => nonceResponseSchema.parse(fixtures.nonce)).not.toThrow()

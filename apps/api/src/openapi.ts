@@ -15,6 +15,7 @@ import {
   sessionResponseSchema,
   verifyRequestSchema,
   burnResponseSchema,
+  pricingResponseSchema,
   leaderboardResponseSchema,
   predictionResponseSchema,
   proofResponseSchema,
@@ -70,6 +71,9 @@ export function buildOpenApi() {
           summary: 'Elysia vs KOL: leaderboard akurasi. Hanya KOL yang bersedia dinilai; peringkat butuh minimal minScored call ternilai.',
           responses: { '200': ok('Peringkat akurasi', leaderboardResponseSchema) },
         },
+      },
+      '/pricing': {
+        get: { summary: 'Public prices (USDG): Pro, Ask, Signals API and Sponsored report. Edited through env vars.', responses: { '200': ok('Pricing overview', pricingResponseSchema) } },
       },
       '/burn': {
         get: { summary: 'Burn tracker $ELYS (burn contract history)', responses: { '200': ok('Total dan riwayat burn', burnResponseSchema) } },

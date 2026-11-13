@@ -1,0 +1,10 @@
+{
+  "currency": "USDG",
+  "paymentsOpen": false,
+  "items": [
+    { "id": "pro", "name": "Pro", "free": false, "price": { "raw": "5000000", "decimals": 6, "formatted": "5" }, "unit": "period", "periodDays": 30 },
+    { "id": "ask", "name": "Ask", "free": true, "price": { "raw": "0", "decimals": 6, "formatted": "0" }, "unit": "analysis", "periodDays": null },
+    { "id": "signals", "name": "Signals API", "free": false, "price": { "raw": "499000000", "decimals": 6, "formatted": "499" }, "unit": "period", "periodDays": 30 },
+    { "id": "sponsored", "name": "Sponsored report", "free": false, "price": { "raw": "750000000", "decimals": 6, "formatted": "750" }, "unit": "report", "periodDays": null }
+  ]
+}

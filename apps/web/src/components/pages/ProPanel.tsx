@@ -193,11 +193,11 @@ export function ProPanel({ apiUrl }: { apiUrl: string | undefined }) {
         <div className="pg-kv">
           <div>
             <span className="k">Price</span>
-            <span className="v">{plan ? `$${plan.price.formatted} in USDG` : '$7 in USDG'}</span>
+            <span className="v">{plan ? `$${plan.price.formatted} in USDG` : 'Shown when Pro opens'}</span>
           </div>
           <div>
             <span className="k">Period</span>
-            <span className="v">{plan ? `${plan.durationDays} days per payment` : '30 days per payment'}</span>
+            <span className="v">{plan ? `${plan.durationDays} days per payment` : 'Shown when Pro opens'}</span>
           </div>
           <div>
             <span className="k">Network</span>
@@ -236,7 +236,7 @@ export function ProPanel({ apiUrl }: { apiUrl: string | undefined }) {
             ) : null}
             <div className="pg-actions">
               <button className="btn btn-org" type="button" disabled={busy !== null || !plan} onClick={() => void pay()}>
-                {busy === 'pay' ? 'Waiting for the wallet…' : `${me.pro.active ? 'Renew' : 'Pay'} ${plan ? plan.price.formatted : '19'} USDG`}
+                {busy === 'pay' ? 'Waiting for the wallet…' : `${me.pro.active ? 'Renew' : 'Pay'} ${plan ? plan.price.formatted : '…'} USDG`}
                 <span className="ar">→</span>
               </button>
             </div>

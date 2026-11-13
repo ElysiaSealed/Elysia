@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { PageShell } from '@/components/pages/PageShell'
 import { X_HANDLE, X_URL } from '@/lib/site'
+import { findItem, getPricing, priceLabel, unitLabel } from '@/lib/pricing'
 
 export const metadata: Metadata = { title: 'Sponsored research · ELYSIA', alternates: { canonical: '/sponsored' } }
 
@@ -13,13 +14,16 @@ const RULES = [
   'A person reviews every sponsored post before it goes out.',
 ]
 
-export default function SponsoredPage() {
+export const revalidate = 60
+
+export default async function SponsoredPage() {
+  const sponsored = findItem(await getPricing(), 'sponsored')
   return (
     <PageShell
-      label="Sponsored research · Soon"
+      label={`Sponsored research · ${priceLabel(sponsored)} ${unitLabel(sponsored)}`}
       title="Sponsored research,"
       dim="clearly labeled."
-      intro="Sponsored reports are not open yet, and no payment is accepted. When they open, each report is labeled Sponsored, carries no recommendation, and shows the same red flags ELYSIA would show for any other token."
+      intro="Each report is labeled Sponsored, carries no recommendation, and shows the same red flags ELYSIA would show for any other token. Paid in USDG, arranged by contact."
     >
       <div className="card pg-card">
         <span className="label" style={{ marginBottom: 0 }}>

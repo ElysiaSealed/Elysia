@@ -868,9 +868,118 @@
         }
       }
     },
+    "/pricing": {
+      "get": {
+        "summary": "Public prices (USDG): Pro, Ask, Signals API and Sponsored report. Edited through env vars.",
+        "responses": {
+          "200": {
+            "description": "Pricing overview",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "public, max-age=15"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "USDG"
+                      ]
+                    },
+                    "paymentsOpen": {
+                      "type": "boolean"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "enum": [
+                              "pro",
+                              "ask",
+                              "signals",
+                              "sponsored"
+                            ]
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "free": {
+                            "type": "boolean"
+                          },
+                          "price": {
+                            "type": "object",
+                            "properties": {
+                              "raw": {
+                                "type": "string",
+                                "pattern": "^\\d+$"
+                              },
+                              "decimals": {
+                                "type": "integer"
+                              },
+                              "formatted": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "raw",
+                              "decimals",
+                              "formatted"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "period",
+                              "analysis",
+                              "report"
+                            ]
+                          },
+                          "periodDays": {
+                            "type": "integer",
+                            "exclusiveMinimum": true,
+                            "minimum": 0,
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "free",
+                          "price",
+                          "unit",
+                          "periodDays"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "currency",
+                    "paymentsOpen",
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/burn": {
       "get": {
-        "summary": "Burn tracker $ELYS (BurnVault)",
+        "summary": "Burn tracker $ELYS (burn contract history)",
         "responses": {
           "200": {
             "description": "Total dan riwayat burn",

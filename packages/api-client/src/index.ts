@@ -7,6 +7,7 @@ import telegramLinkFixture from '../../../docs/api/fixtures/telegram-link.json'
 import askPlanFixture from '../../../docs/api/fixtures/ask-plan.json'
 import askFixture from '../../../docs/api/fixtures/ask.json'
 import burnFixture from '../../../docs/api/fixtures/burn.json'
+import pricingFixture from '../../../docs/api/fixtures/pricing.json'
 import meFixture from '../../../docs/api/fixtures/me.json'
 import nonceFixture from '../../../docs/api/fixtures/nonce.json'
 import sessionFixture from '../../../docs/api/fixtures/session.json'
@@ -32,6 +33,8 @@ import {
   askPlanResponseSchema,
   type AskPlanResponse,
   burnResponseSchema,
+  pricingResponseSchema,
+  type PricingResponse,
   meResponseSchema,
   nonceResponseSchema,
   sessionResponseSchema,
@@ -67,6 +70,7 @@ export const fixtures = {
   rugRadar: rugRadarFixture,
   market: marketFixture,
   burn: burnFixture,
+  pricing: pricingFixture,
   signals: signalsFixture,
   ask: askFixture,
   askPlan: askPlanFixture,
@@ -247,6 +251,7 @@ export function createApiClient(opts: ApiClientOptions = {}) {
     getMarket: (): Promise<MarketResponse> => get('/market', marketResponseSchema, marketFixture),
     getLeaderboard: (): Promise<LeaderboardResponse> => get('/leaderboard', leaderboardResponseSchema, leaderboardFixture),
     getBurn: (): Promise<BurnResponse> => get('/burn', burnResponseSchema, burnFixture),
+    getPricing: (): Promise<PricingResponse> => get('/pricing', pricingResponseSchema, pricingFixture),
     getSignals: (): Promise<SignalsResponse> => get('/signals', signalsResponseSchema, signalsFixture),
     getSignalsWhales: (): Promise<SignalsWhalesResponse> => get('/signals/whales', signalsWhalesResponseSchema, signalsWhalesFixture),
   }

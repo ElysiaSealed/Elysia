@@ -75,7 +75,7 @@ export function Roadmap() {
               More tools
             </h3>
             <p>
-              Ask ELYSIA and the Signals feed stay free. Pro is a placeholder: Soon.
+              Ask ELYSIA stays free. Pro, the Signals API and Sponsored reports are paid in USDG.
             </p>
           </div>
         </div>

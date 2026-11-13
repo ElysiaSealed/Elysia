@@ -30,7 +30,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Plans',
     items: [
-      { label: 'ELYSIA Pro · Soon', href: '/pro' },
+      { label: 'ELYSIA Pro', href: '/pro' },
       { label: 'Sponsored report', href: '/sponsored' },
       { label: 'Pricing overview', hash: '#pricing' },
     ],
