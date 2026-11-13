@@ -19,7 +19,7 @@ Pemilik: **Manusia** = dikerjakan manusia (Claude tidak membuat wallet, akun, at
 | RB-11 | Harga final dan pihak yang menerbitkan kunci Signals API | Harga sementara di env; keputusan final | Pemilik | Terbuka |
 | RB-12 | Token $ELYS: kontrak, CA, dan rencana peluncuran | Keputusan terpisah (gate R6) | Head Dev, PM | Terbuka |
 | RB-13 | Nama final, handle, domain, logo dan aset brand | Putuskan; jangan membuat placeholder | Pemilik | Terbuka |
-| RB-14 | Test DB lokal belum dijalankan (butuh Postgres lokal `elysia_test` dan `TEST_DATABASE_URL`) | Manusia menyiapkan DB lokal; Claude menjalankan `pnpm test:db` | Manusia | Terbuka |
+| RB-14 | Test DB lokal | Selesai 2026-11-13: Postgres 16 lokal (docker compose), migrasi 0000–0012 bersih, `pnpm test:db` lulus. Panduan: `ELYSIA_SETUP_GUIDE.md` | Claude | Selesai |
 | RB-15 | Isolasi akses ke rahasia proyek sumber di mesin kerja: aturan `Read` tidak menghalangi akses lewat Bash atau PowerShell | Pisahkan lingkungan kerja (profil OS, VM, atau WSL) atau sandbox yang terverifikasi | Pemilik | Terbuka |
 
 ## Catatan
