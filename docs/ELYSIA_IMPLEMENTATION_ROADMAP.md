@@ -1,74 +1,67 @@
-# ELYSIA — Roadmap Implementasi
+# ELYSIA — Roadmap Implementasi (Robinhood Chain)
 
-Status: DRAFT planning (2026-11-11). Estimasi waktu **tidak diberikan**: belum ada dasar validasi; brief menyebut "minggu 1–3" untuk fase awal sebagai perkiraan awal belum tervalidasi. Kompleksitas: R (rendah), S (sedang), T (tinggi).
+Status: rencana akhir untuk branch `dev-rh` (2026-11-13). Arah: ELYSIA berjalan di **Robinhood Chain mainnet (chain ID 4663)**, langsung tanpa tahap testnet. Estimasi waktu **tidak diberikan**: belum ada dasar validasi. Kompleksitas: R (rendah), S (sedang), T (tinggi).
+
+Roadmap Elysium Testnet sebelumnya tidak lagi berlaku untuk `dev-rh`. Fitur dan halaman khusus Elysium sudah disingkirkan dari branch ini; riwayatnya tetap ada di `main`.
+
+## Produk
+- AI analyst di Robinhood Chain: membaca peluncuran Pons V2 dan Stock Token, meng-commit setiap prediksi on-chain sebelum dipublikasikan, lalu mempublikasikannya setelah persetujuan manusia.
+- Gratis: feed publik, Prediction of the Day, Proof of Intelligence, Rug radar, Ask, Burn tracker (riwayat dari CA yang diberikan PM).
+- Berbayar (USDG): Pro (alert lebih awal), Signals API, Sponsored report. Harga sementara dan dapat diedit lewat env: Pro $5 per 30 hari, Ask gratis, Signals API $499 per 30 hari, Sponsored $750 per laporan.
+- Token **$ELYS** dengan kontrak baru. Alamat menyusul; halaman Burn membaca CA dari PM. Tidak ada BurnVault dan tidak ada splitter fee kreator.
 
 ## Approval gates (wajib, urutan)
 | Gate | Isi | Pemberi |
 |---|---|---|
-| G0 | Nama final/handle (bentrok "Elysia" di brief), scope, penghapusan modul NEXA | Pemilik + Head Dev |
-| G1 | Wallet deployer/agent/keeper baru, repo private baru | Pemilik |
-| G2 | Keputusan kontrak (jalur Gate Report, definisi menang) | Head Dev |
-| G3 | Deploy testnet 99801 (perintah dijalankan manusia) | Pemilik |
-| G4 | X `live` | Pemilik |
-| G5 | Hasil evaluasi mainnet readiness (precompile, audit). Persetujuan baru diperlukan sebelum pekerjaan mainnet apa pun | Head Dev |
+| R0 | Arahan `dev-rh` (Robinhood mainnet, fitur berbayar, token $ELYS) dikonfirmasi tertulis sebagai keputusan FINAL, termasuk teks disclaimer | Head Dev |
+| R1 | Wallet mainnet siap dan didanai ETH (Deployer, Agent, Treasury). Resource baru: Supabase, Railway, Vercel, bot Telegram, kunci LLM, kredensial X | Pemilik |
+| R2 | Review kontrak `ElysiaLedger` selesai (test penuh, `contract-reviewer`, review manusia) | Head Dev |
+| R3 | Deploy `ElysiaLedger` ke mainnet 4663 (perintah dijalankan manusia, persetujuan eksplisit per deploy) | Pemilik |
+| R4 | Pembayaran USDG terverifikasi ujung ke ujung dengan jumlah kecil; tinjauan hukum; `PAID_FEATURES_ENABLED=true` | Pemilik + Head Dev |
+| R5 | X mode `live` | Pemilik |
+| R6 | Token $ELYS: kontrak, CA, dan rencana peluncuran disetujui; CA burn dari PM diterima | Head Dev + PM |
 
-Tidak ada gate token: token Solana ditunda dan **tidak ada di roadmap aktif** (lihat "Hal di luar roadmap aktif").
+Mainnet berarti kontrak tidak dapat dibatalkan dan transaksi memakai dana nyata. Tidak ada broadcast apa pun tanpa persetujuan eksplisit.
 
-## Phase 0 — Audit dan pemisahan proyek
-Tujuan: repo independen tanpa jejak NEXA. 
-Tugas: (1) selesaikan audit (dokumen ini) [R]; (2) arsipkan dokumen operasional NEXA [R]; (3) repo private baru dari snapshot bersih [R, G1]; (4) pemindaian secret + batas independensi [R]; (5) `CLAUDE.md` ELYSIA, adaptasi skill/agent, ketatkan `settings.json` [S, G0]. 
-Dependency: G0, G1. Prioritas: tertinggi. 
-Acceptance: tidak ada alamat/kunci/akun/nama NEXA di runtime; CLI login diverifikasi ke akun yang benar; `pnpm test`/`forge test` hijau di baseline. 
-Risiko: salah login CLI ke infra NEXA.
+## Phase A — Fondasi `dev-rh` (SELESAI)
+Branch `dev-rh` dan aturan push khusus; `ElysiaLedger` menggantikan ledger lama (kontrak, ABI, worker, API); rename merek dan token ke Elysia dan $ELYS; default chain ke mainnet 4663 dan penyingkiran kode Elysium; penyingkiran BurnVault dan fee splitter, burn dibaca dari CA PM, migrasi 0012; teks web, persona worker, dan RiskGuard untuk Robinhood; harga yang dapat diedit lewat `GET /pricing`; `.env.example` baru.
+Bukti: `forge test` 25 lulus, typecheck bersih, build produksi berhasil, test non-DB lulus; test DB belum dijalankan.
 
-## Phase 1 — Foundation
-Tujuan: kerangka single-chain. 
-Tugas: rename package + env [S]; sederhanakan `chains.ts` ke 99801 [S]; baseline schema DB [S]; hapus modul DEFER/REMOVE yang disetujui [S]; persona/prompt ELYSIA (EN) [S]; RiskGuard adaptasi + test allow/block EN [S]; arsitektur bot Telegram baru [S]; desain web: pending aset [—]. 
-Dependency: Phase 0. 
-Acceptance: build + test hijau; RiskGuard memblokir buy/sell, price target, klaim "official", token < 1 jam; mewajibkan disclaimer. 
-Testing: `riskguard-rule` (EN), vektor hash. Risiko: kopling NexaLedger di api-client/web.
+## Phase B — Penyelesaian pembersihan
+Tugas: dokumen `docs/ELYSIA_*.md` lain, skill, agent, dan `README.md` disesuaikan dengan Robinhood [S]; `settings.json` (aturan deny dan ask) ditinjau untuk fase mainnet [S]; skrip `check-wallets.mjs` disesuaikan (Keeper tidak dibutuhkan di mainnet) [R]; test DB lokal dijalankan dengan `TEST_DATABASE_URL` ke `elysia_test` [R]; pindai secret dan jejak proyek sumber di seluruh repo [R]; CI (typecheck, vitest, forge test) [S].
+Acceptance: tidak ada alamat, kunci, akun, atau nama proyek sumber di runtime maupun dokumen; test DB dilaporkan jalan; CI hijau.
 
-## Phase 2 — Elysium Testnet (kontrak)
-Tugas: `ElysiaLedger` + mock feed terbatas [T, G2]; test unit+fuzz [S]; script deploy 99801 + dry run [S]; ekspor ABI [R]; konfigurasi chain/explorer [R]. 
-Dependency: G1, G2. 
-Acceptance: `forge test` hijau; dry run sukses; (G3) deploy dan verifikasi Blockscout oleh manusia; link explorer tersedia. 
-Risiko: oracle mock terbuka; kunci keeper.
+## Phase C — Kontrak dan deploy mainnet (R2, R3)
+Tugas: tinjau `ElysiaLedger` (peran Deployer/Agent, `setFeed` hanya owner, ronde oracle, `minMoveBps`) [T]; perbarui skrip deploy untuk mainnet dan hapus skrip mock testnet yang tidak dipakai [S]; simulasi `forge script` tanpa broadcast dengan konfirmasi [S]; deploy oleh manusia, verifikasi di Blockscout [R]; `setFeed` untuk NVDA dan WETH ke feed Chainlink yang sudah diverifikasi [S]; isi `ELYSIA_LEDGER_ADDRESS` dan ekspor ABI [R].
+Dependency: R1, R2. Acceptance: `forge test` hijau; alamat dan transaksi deploy tercatat; satu prediksi commit, reveal, dan skor berhasil dengan jumlah gas kecil.
+Risiko: feed Chainlink memiliki heartbeat sehingga reveal tertunda; kesalahan alamat aset tidak dapat dikoreksi tanpa transaksi lagi.
 
-## Phase 3 — Gate Report dry run (off-chain)
-Tugas: konfirmasi alamat/ABI launchpad Elysium (Pump.fun, Ascend, Montra) [INVESTIGATE→S]; indexer launchpad + deteksi bundling [T]; data collection + analisis risiko [T]; pipeline LLM→RiskGuard→hash [S]; antrian persetujuan manual + CLI [KEEP]; X mode `dry` [R]; historis laporan di DB [S]. 
-Dependency: Phase 1, alamat launchpad (blocker). 
-Acceptance: **5 sample Gate Report lolos RiskGuard dry run**; usia token ≥ 1 jam ditegakkan; tidak ada buy/sell/price target; tidak ada URL. 
-Risiko: sumber data tidak lengkap → laporan "tidak tahu" (aturan brief).
+## Phase D — Data dan pipeline
+Tugas: indexer Pons V2 (factory, hook, graduation executor) dengan blok awal dan backfill terbatas [S]; Rug radar, pasar Stock Token, selisih DEX vs oracle [S]; worker Prediction of the Day dan laporan harian [S]; pipeline AI → RiskGuard → commit terkonfirmasi → antrian persetujuan manusia [KEEP]; bot Telegram [S]; X tetap `dry`.
+Dependency: R1; commit memerlukan R3. Acceptance: laporan contoh lolos RiskGuard dry run; tidak ada buy/sell, price target, klaim afiliasi, atau sebutan $ELYS; data tidak lengkap menjadi "tidak tahu".
+Risiko: batas egress dan ukuran Supabase free; sumber data tidak lengkap.
 
-## Phase 4 — Integrasi testnet
-Tugas: HYPE Daily Call: commit → reveal → skor [S]; commit hash Gate Report [S]; keeper HYPE (Hyperliquid) [S]; API `/proof`, `/gate-report`, `/graduations` + OpenAPI + fixture + api-client [S]; Graduation Watch [S]; Telegram dry [S]; web terhubung (setelah desain) [T]; verifikasi event on-chain [R]; verifikasi konfigurasi independen [R]. 
-Dependency: Phase 2 (G3), Phase 3. 
-Acceptance (kriteria testnet brief): lihat §Kriteria. 
-Risiko: heartbeat keeper membuat reveal tertunda; batas Free Plan.
+## Phase E — Pembayaran dan fitur berbayar (R4)
+Tugas: uji pembayaran Pro dengan USDG di mainnet (jumlah kecil, dengan persetujuan) [S]; alur kunci Signals API setelah pembayaran [S]; alur Sponsored (kontak, label, tinjauan manusia) [S]; benefit holder $ELYS setelah token ada [S]; tinjauan hukum dan disclaimer [Head Dev].
+Acceptance: satu pembayaran Pro terverifikasi dan teraktivasi; alert Telegram dan stream jalan; `PAID_FEATURES_ENABLED=true` hanya setelah R4.
+Risiko: USDG tampaknya kontrak proxy (kode pendek): admin kontrak berada di pihak ketiga.
 
-## Phase 5 — Mainnet readiness (hanya evaluasi, perlu persetujuan baru)
-Catatan: target kontrak saat ini hanya Elysium Testnet 99801. Phase 5 hanya evaluasi dokumen/riset, bukan pekerjaan kontrak mainnet.
-Tugas: evaluasi precompile HyperCore (tidak diasumsikan tersedia) [INVESTIGATE]; desain ulang sumber harga (snapshot on-chain) [T]; review keamanan/audit [T]; kesiapan operasional; X live (G4) hanya dengan izin. 
-Acceptance: dokumen readiness; keputusan G5. Tidak ada deploy mainnet pada roadmap ini.
+## Phase F — Burn dan token $ELYS (R6)
+Tugas: terima CA burn dan ABI/event dari PM, sesuaikan `apps/indexer/src/abi.ts` dan tabel `burns` [S]; backfill dan uji halaman Burn [R]; kontrak $ELYS baru dan rencana peluncuran [T, keputusan terpisah].
+Acceptance: halaman Burn menampilkan riwayat dari CA PM dengan tautan explorer; tidak ada transaksi burn dari ELYSIA.
 
-## Phase 6 — Dikeluarkan dari roadmap aktif
-Token Solana ditunda dan menunggu persetujuan baru. Phase ini **tidak dijadwalkan** dan tidak punya task, dependency, atau acceptance criteria. Lihat "Hal di luar roadmap aktif".
-
-## Kriteria penerimaan testnet (diturunkan dari brief + permintaan)
-1. `ElysiaLedger` ter-deploy ke 99801. 2. Terverifikasi di explorer. 3. Satu HYPE prediction ter-commit. 4. Ter-reveal. 5. Ter-skor. 6. Lima Gate Report lolos RiskGuard dry run. 7. Tidak ada secret NEXA. 8. Tidak ada dependensi ke infra production NEXA. 9. Tautan explorer (ledger, tx deploy, commit, reveal). 10. Hasil uji terdokumentasi.
-Pekerjaan penyokong: wallet baru (G1) + faucet HYPE, mock feed + keeper aktif (reveal butuh round setelah jatuh tempo), RPC testnet stabil, Postgres baru, kunci LLM baru, test hijau, pemindaian secret.
+## Phase G — Peluncuran publik (R5)
+Tugas: domain dan handle final; logo dan aset merek (belum ada, jangan membuat placeholder); X `live` bertahap dengan batas `X_LIVE_POST_CAP`; pemantauan biaya (`cost_log`) dan kuota Supabase; cadangan data bukti.
+Acceptance: akun X berlabel Automated; post hanya lewat persetujuan manusia; laporan biaya dan kuota.
 
 ## Urutan implementasi
-G0 → Phase 0 → Phase 1 → (Phase 2 ‖ Phase 3 jika launchpad diketahui) → G3 → Phase 4 → laporan testnet → Phase 5 (evaluasi, perlu persetujuan baru).
+R0 → Phase A (selesai) → Phase B → R1 → Phase C (R2, R3) → Phase D → R4 → Phase E → Phase F (R6) → R5 → Phase G.
 
-## Hal di luar roadmap aktif (hanya catatan masa depan)
-- Token Solana, tokenomics, dan integrasi token apa pun: ditunda, menunggu persetujuan baru. Tidak ada jadwal.
-- Pertimbangan masa depan (bukan prasyarat jadwal): brief menyarankan token dipertimbangkan setelah ±30 hari Gate Report ter-skor dan opini hukum. Periode 30 hari ini hanya catatan, bukan tenggat implementasi.
-- Chain lain, bridge, multichain: tidak ada. Target kontrak: Elysium Testnet, Chain ID 99801.
-- Fitur berbayar (Pro, Ask, Signals, sponsor): tidak ada; ELYSIA gratis.
-
-## Konflik dan keputusan terbuka
-- Brief menyebut token di Solana dan tahap mainnet; Head Dev dan arahan terbaru: tanpa chain lain → token **ditunda**, mainnet hanya evaluasi (Phase 5).
-- `docs/ELYSIUM-PLAN.md` (NEXA on Elysium) menyatakan satu codebase multi-chain dan menjaga Robinhood; bertentangan dengan fork independen brief ELYSIA dan Head Dev. Diperlakukan referensi historis.
-- Brief menyebut "Lima Gate Report contoh"; sumber datanya (testnet launchpad vs data nyata) belum jelas.
-- Dev lokal membutuhkan Anvil (chain 31337) untuk test; perlu konfirmasi bahwa ini bukan "menambah chain".
+## Keputusan terbuka
+- Konfirmasi tertulis Head Dev untuk arah `dev-rh`; baris PENDING 2026-11-13 di `ELYSIA_DECISIONS.md` bertentangan dengan keputusan FINAL lama (khusus Elysium).
+- Teks disclaimer publik: saat ini "Not affiliated with Robinhood"; apakah perlu menyebut Pons.
+- Harga final (nilai sementara sudah diatur lewat env) dan pihak yang menerbitkan kunci Signals API.
+- Tinjauan hukum untuk fitur berbayar dan token $ELYS.
+- Format event burn dan CA dari PM; detail peluncuran $ELYS.
+- Aturan umur token dan aturan URL di post (masih PENDING).
+- Nama final, domain, logo, region Supabase.
