@@ -7,12 +7,12 @@ import '@/styles/splash.css'
 import { Splash } from '@/components/Splash'
 import { SITE_URL, X_HANDLE } from '@/lib/site'
 
-const TITLE = 'ELYSIA: Gatekeeper of Elysium'
+const TITLE = 'ELYSIA: AI analyst on Robinhood Chain'
 const DESCRIPTION =
-  'ELYSIA is an AI agent that judges token launches on Elysium and commits each assessment on-chain before it is published. Not affiliated with Kinetiq or Elysium.'
+  'ELYSIA is an AI agent that reads Pons V2 launches and Stock Tokens on Robinhood Chain and commits each call on-chain before it is published. Not affiliated with Robinhood.'
 const OG_TITLE = 'ELYSIA: sealed before it speaks'
 const OG_DESCRIPTION =
-  'An AI agent that commits each assessment on-chain before publishing it. Not affiliated with Kinetiq or Elysium.'
+  'An AI agent that commits each assessment on-chain before publishing it. Not affiliated with Robinhood.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

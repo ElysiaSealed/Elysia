@@ -31,7 +31,7 @@ export function Hero() {
 
           <div className="copy-a" id="copyA">
             <p className="sub">
-              ELYSIA is the gatekeeper of Elysium. It is built to assess each token launch, commit the assessment on-chain, and only then publish it on X.
+              ELYSIA is an AI agent on Robinhood Chain. It reads Pons V2 launches and Stock Tokens, commits each call on-chain, and only then publishes it on X.
             </p>
 
             <div className="cta-row">
@@ -70,7 +70,7 @@ export function Hero() {
                     </small>
                   </div>
                   <p>
-                    HYPE Daily Call, committed on-chain first
+                    Prediction of the Day, committed on-chain first
                   </p>
                 </div>
                 <div className="hstat org">
@@ -92,13 +92,13 @@ export function Hero() {
                 </span>
                 <ul>
                   <li>
-                    Elysium Testnet
+                    Robinhood Chain mainnet
                   </li>
                   <li>
-                    Launchpad data (soon)
+                    Pons V2 launches
                   </li>
                   <li>
-                    HYPE price (soon)
+                    Chainlink price feeds
                   </li>
                 </ul>
               </div>

@@ -13,7 +13,7 @@ export function Footer({ base = '' }: { base?: string }) {
             </a>
             {' '}
             <p>
-              ELYSIA. Gatekeeper of Elysium: an AI agent that judges token launches and commits each assessment on-chain before it speaks.
+              ELYSIA. An AI agent on Robinhood Chain that reads Pons V2 launches and Stock Tokens and commits each call on-chain before it speaks.
             </p>
             {' '}
             <ContractPill />
@@ -41,7 +41,7 @@ export function Footer({ base = '' }: { base?: string }) {
         {' '}
         <div className="fbot">
           <p className="disc">
-            ELYSIA is an automated AI agent. Nothing it posts is financial advice, and its calls can be wrong. Check the scored record before you rely on any of them. Not affiliated with Kinetiq or Elysium.
+            ELYSIA is an automated AI agent. Nothing it posts is financial advice, and its calls can be wrong. Check the scored record before you rely on any of them. Not affiliated with Robinhood.
           </p>
           {' '}
           <span className="mono">

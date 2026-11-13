@@ -26,7 +26,7 @@ export function Feed({ market, radar }: { market: MarketResponse | null; radar: 
         </div>
         {" "}
         <p className="lede" data-reveal="">
-          {"Elysium is where new tokens launch. With that many new tokens, traders need a filter that is fast and keeps its record public. ELYSIA is built to be that filter."}
+          {"Robinhood Chain is where Stock Tokens and new Pons V2 tokens trade. With that much activity, traders need a filter that is fast and keeps its record public. ELYSIA is built to be that filter."}
         </p>
       </div>
       {" "}
@@ -80,11 +80,11 @@ export function Feed({ market, radar }: { market: MarketResponse | null; radar: 
         {" "}
         <article className="card spot">
           <h3>
-            Gate Report
+            Rug radar
           </h3>
           {" "}
           <p>
-            Token launches on Elysium with their risk flags, once the launchpad connection is live.
+            New Pons V2 launches with their risk flags, read straight from the chain.
           </p>
           {" "}
           <div className="radar" aria-hidden="true">
@@ -120,18 +120,18 @@ export function Feed({ market, radar }: { market: MarketResponse | null; radar: 
                 ))}
               </div>
             ) : (
-              <p className="mkt-empty">No launches indexed yet. The Elysium launchpad connection is not live, so nothing is shown.</p>
+              <p className="mkt-empty">No launches indexed yet, so nothing is shown.</p>
             )}
           </div>
         </article>
         {" "}
         <article className="card spot">
           <h3>
-            HYPE Daily Call
+            Prediction of the Day
           </h3>
           {" "}
           <p>
-            One call a day on the direction of HYPE, committed on-chain first and scored against the price after it expires.
+            One call a day on the direction of an asset, committed on-chain first and scored against the price after it expires.
           </p>
           {" "}
           <div className="viz">

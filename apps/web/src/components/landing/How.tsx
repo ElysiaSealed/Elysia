@@ -30,12 +30,12 @@ export function How() {
             </h3>
             {" "}
             <p>
-              An indexer follows token launches, graduations and risk signals on Elysium. The launchpad connection is not available yet, so nothing is indexed today.
+              An indexer follows Pons V2 launches, graduations and risk signals on Robinhood Chain.
             </p>
             {" "}
             <div className="chips">
               <span>
-                Elysium indexer
+                Chain indexer
               </span>
               <span>
                 Launchpad events
@@ -193,7 +193,7 @@ export function How() {
             </h3>
             {" "}
             <p>
-              RiskGuard is code, separate from the model. It blocks buy and sell wording, price targets, claims of official ties to Elysium or Kinetiq, and posts that break the disclosure rules.
+              RiskGuard is code, separate from the model. It blocks buy and sell wording, price targets, claims of official ties to Robinhood, and posts that break the disclosure rules.
             </p>
             {" "}
             <div className="chips">
@@ -231,7 +231,7 @@ export function How() {
                   target $10
                 </text>
                 <text x="22" y="106">
-                  official Elysium
+                  official Robinhood
                 </text>
               </g>
               <g stroke="#E3341B" strokeWidth="1.6" strokeLinecap="round">
@@ -269,7 +269,7 @@ export function How() {
             </h3>
             {" "}
             <p>
-              The hash of the assessment and a secret salt goes into the ledger contract on Elysium Testnet. The salt stays private until reveal, so nobody can copy the call before it is proven.
+              The hash of the assessment and a secret salt goes into the ledger contract on Robinhood Chain. The salt stays private until reveal, so nobody can copy the call before it is proven.
             </p>
             {" "}
             <div className="chips">

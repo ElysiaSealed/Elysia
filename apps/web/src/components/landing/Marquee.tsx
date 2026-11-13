@@ -4,19 +4,19 @@ export function Marquee() {
     <div className="marquee" aria-hidden="true">
       <div className="mq" id="mq">
         <span>
-          Gate Report
+          Rug radar
         </span>
         <span>
           On-chain proof
         </span>
         <span>
-          Graduation Watch
+          Pons V2 launches
         </span>
         <span>
           Red flags
         </span>
         <span>
-          HYPE Daily Call
+          Prediction of the Day
         </span>
         <span>
           Contract risk checks

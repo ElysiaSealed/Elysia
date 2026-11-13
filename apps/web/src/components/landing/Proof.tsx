@@ -45,7 +45,7 @@ export function Proof({ latest }: { latest: NxData['latest'] }) {
             </span>
             <span className="mono net">
               <i />
-              Elysium Testnet · 99801
+              Robinhood Chain · 4663
             </span>
           </div>
           {" "}
@@ -77,7 +77,7 @@ export function Proof({ latest }: { latest: NxData['latest'] }) {
                     <span className="tk">
                       {rev ? rev.assetSymbol.slice(0, 2).toUpperCase() : 'HY'}
                     </span>
-                    {rev ? rev.assetSymbol : 'HYPE'}
+                    {rev ? rev.assetSymbol : 'NVDA'}
                   </span>
                 )}
               </div>
@@ -142,7 +142,7 @@ export function Proof({ latest }: { latest: NxData['latest'] }) {
         <div className="why-r">
           <div className="txt" data-reveal="">
             <p>
-              {"\"Gatekeeper\" is the persona. "}
+              {"The persona is a voice. "}
               <b>
                 The record is what you can check:
               </b>
@@ -178,7 +178,7 @@ export function Proof({ latest }: { latest: NxData['latest'] }) {
             <div className="card pod">
               <div>
                 <span className="mono">
-                  HYPE Daily Call
+                  Prediction of the Day
                 </span>
                 {" "}
                 <h4>

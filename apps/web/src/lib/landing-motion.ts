@@ -81,7 +81,7 @@ export function initMotion(NX_DATA) {
 
   // rules carousel
   const rules=[
-    ['Disclosure','The X account will be labelled Automated, and the bio will say: AI agent. Not affiliated with Kinetiq or Elysium.'],
+    ['Disclosure','The X account will be labelled Automated, and the bio will say: AI agent. Not affiliated with Robinhood.'],
     ['No trade calls','No "buy", no "sell", no "guaranteed to go up", and no price target for any token.'],
     ['No self-promotion','ELYSIA never discusses a token of its own.'],
     ['Sponsored label','Sponsored content opens with the word Sponsored.'],

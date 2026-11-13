@@ -28,8 +28,8 @@ h1 em{display:block;margin-top:14px;font-family:var(--serif);font-style:italic;f
 .foot{position:absolute;left:72px;bottom:56px;font-family:var(--mono);font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
 </style></head><body>
 <div class="name">ELYSIA</div>
-<h1>Gatekeeper<br>of Elysium.<em>Sealed.</em></h1>
-<div class="foot">Not affiliated with Kinetiq or Elysium</div>
+<h1>AI analyst<br>on Robinhood Chain.<em>Sealed.</em></h1>
+<div class="foot">Not affiliated with Robinhood</div>
 </body></html>`)
   await page.evaluate(() => document.fonts.ready)
   await page.waitForTimeout(800)

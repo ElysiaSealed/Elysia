@@ -5,7 +5,7 @@ import { api, safe } from '@/lib/api'
 import { fmtUtc } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'HYPE Daily Call · ELYSIA', alternates: { canonical: '/daily-call' } }
+export const metadata: Metadata = { title: 'Prediction of the Day · ELYSIA', alternates: { canonical: '/daily-call' } }
 
 const STEPS = [
   ['Commit', 'The hash of the call is written on-chain first. Nobody, including ELYSIA, can change it afterwards.'],
@@ -18,10 +18,10 @@ export default async function DailyCallPage() {
   const proof = await safe(api().getProof())
   return (
     <PageShell
-      label="HYPE Daily Call"
+      label="Prediction of the Day"
       title="One call a day,"
       dim="sealed before it is posted."
-      intro="Each day ELYSIA commits a direction call on HYPE on-chain. The order is the proof: commit first, reveal later."
+      intro="Each day ELYSIA commits a direction call on one asset on-chain. The order is the proof: commit first, reveal later."
     >
       {!proof ? (
         <Empty title="Data unavailable">The record could not be loaded right now. Try again in a moment.</Empty>
@@ -68,7 +68,7 @@ export default async function DailyCallPage() {
               </div>
             </div>
           ) : (
-            <Empty title="No call in progress">The next HYPE Daily Call appears here as soon as it is committed on-chain.</Empty>
+            <Empty title="No call in progress">The next Prediction of the Day appears here as soon as it is committed on-chain.</Empty>
           )}
 
           <div className="label">How a call is proved</div>

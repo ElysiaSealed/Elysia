@@ -8,11 +8,6 @@ export const CONTENT_TYPES = [
   'technical_announcement',
   'burn_report',
   'sponsored',
-  // ELYSIA content types (brief). Legacy types above stay until their removal is approved.
-  'gate_report',
-  'graduation_watch',
-  'hype_daily_call',
-  'weekly_recap',
 ] as const
 export type ContentType = (typeof CONTENT_TYPES)[number]
 

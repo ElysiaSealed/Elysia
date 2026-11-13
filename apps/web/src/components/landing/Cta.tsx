@@ -14,7 +14,7 @@ export function Cta() {
         </h2>
         {' '}
         <p>
-          ELYSIA is building a public record: each assessment is committed on-chain before it is published, and no token is on sale. Follow along and check each one on the Elysium explorer once it is live.
+          ELYSIA is building a public record: each assessment is committed on-chain before it is published, and no token is on sale. Follow along and check each one on the Robinhood Chain explorer.
         </p>
         {' '}
         <a href={X_URL} target="_blank" rel="noopener" className="btn btn-org magnet">

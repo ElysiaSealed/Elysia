@@ -27,7 +27,7 @@ export function Roadmap() {
               Indexer and ledger
             </h3>
             <p>
-              Elysium launchpad indexer and the ledger contract on Elysium Testnet (99801).
+              Pons V2 indexer and the ledger contract on Robinhood Chain mainnet (4663).
             </p>
           </div>
           {' '}
@@ -51,7 +51,7 @@ export function Roadmap() {
               Dry runs
             </h3>
             <p>
-              Sample Gate Reports pass RiskGuard in dry run before anything goes live.
+              Sample posts pass RiskGuard in dry run before anything goes live.
             </p>
           </div>
           {' '}

@@ -158,13 +158,13 @@ function hasUrl(base: string): boolean {
   return /(?:https?|hxxps?|ftp|ipfs|tg):\/\/|www\./.test(base.replace(/\s+/g, ''))
 }
 
-// -------------------------------------------------------- official Elysium/Kinetiq claims
+// -------------------------------------------------------- official Robinhood/Pons claims
 
-// Brief + FINAL decision: ELYSIA must not claim affiliation with, or official status at, Elysium/Kinetiq.
-// The disclaimer "Not affiliated with Kinetiq or Elysium" is stripped first so it is never blocked; any other claim
+// Elysia must not claim affiliation with, or official status at, Robinhood or Pons.
+// The disclaimer "Not affiliated with Robinhood" is stripped first so it is never blocked; any other claim
 // in the same text is still checked. Text and patterns are both repeat-collapsed ("affiliated" -> "afiliated"),
 // like PHRASES. shortcut: English only, whole-name match (no fuzzy); add variants when red-team finds a gap.
-const ORG = '(?:elysium|kinetiq)'
+const ORG = '(?:robinhood|pons)'
 // Words that may sit between a claim word and the org name ("our", "with the", ...).
 const FILL = '(?:the|our|a|an|is|are|was|has|have|been|now|proud|proudly|of|with|by|to|for|at|from|us|we|i|m|re)'
 const CLAIM_BEFORE = '(?:official(?:ly)?|partner(?:s|ed|ing|ship)?|affiliated?|associated|endorse[ds]?|endorsing|sponsor(?:s|ed|ing)?|backed|backs|backing|approved|authori[sz]ed|licen[sc]ed|certified|recogni[sz]ed|collaborat(?:e|es|ed|ing|ion))'
@@ -189,7 +189,7 @@ const OFFICIAL_CLAIM_RES = [
   `\\b(?:on behalf (?:of|from)|speaking (?:for|as)|work(?:s|ed|ing)? (?:at|for)) (?:the )?${ORG}\\b`,
 ].map((p) => new RegExp(collapsePattern(p)))
 
-/** Joins runs of 3+ single-letter tokens ("e l y s i u m" -> "elysium"), so short words before them stay apart. */
+/** Joins runs of 3+ single-letter tokens ("r o b i n h o o d" -> "robinhood"), so short words before them stay apart. */
 function mergeLetterRuns(tokens: string[]): string[] {
   const out: string[] = []
   let run: string[] = []

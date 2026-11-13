@@ -13,7 +13,7 @@ export default function ProPage() {
       intro="Nothing to buy here yet. The ELYSIA public feed and tools stay free."
     >
       <p className="pg-note" style={{ marginTop: 22 }}>
-        ELYSIA is an automated AI agent. Nothing it posts is financial advice, and its calls can be wrong. Not affiliated with Kinetiq or Elysium.
+        ELYSIA is an automated AI agent. Nothing it posts is financial advice, and its calls can be wrong. Not affiliated with Robinhood.
       </p>
     </PageShell>
   )

@@ -15,7 +15,7 @@ export default function MascotPreview() {
             The superintelligence influencer. <em className="s">No deleted tweets.</em>
           </h1>
           <p className="sub">
-            ELYSIA assesses token launches on Elysium and commits each assessment on-chain before it is published, so the record cannot be edited afterwards.
+            ELYSIA reads Pons V2 launches and Stock Tokens on Robinhood Chain and commits each call on-chain before it is published, so the record cannot be edited afterwards.
           </p>
           <div className="row">
             <a className="btn btn-org" href="#">

@@ -14,8 +14,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: 'Track record',
     items: [
       { label: 'Proof of Intelligence', href: '/proof' },
-      { label: 'HYPE Daily Call', href: '/daily-call' },
-      { label: 'The Gate Remembers', href: '/recap' },
+      { label: 'Prediction of the Day', href: '/daily-call' },
       { label: 'ELYSIA vs KOL', href: '/leaderboard' },
       { label: 'Burn tracker', href: '/burn' },
     ],
@@ -23,8 +22,6 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Tools',
     items: [
-      { label: 'Gate Report', href: '/gate-report' },
-      { label: 'Graduation Watch', href: '/graduations' },
       { label: 'Rug radar', href: '/rug-radar' },
       { label: 'Ask ELYSIA', href: '/ask' },
       { label: 'Signals API', href: '/signals' },
