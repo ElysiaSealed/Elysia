@@ -14,6 +14,7 @@ import { createLedgerClient } from './ledger'
 import { dispatchProAlerts, pollTelegram } from './pro'
 import { TelegramApi, TelegramBot } from './telegram'
 import { OpenAiCompatibleLlm, pricingFromEnv } from './llm'
+import { checkDatabaseSize, DEFAULT_RETENTION, pruneOldData } from './retention'
 import { MAINNET_ORACLE_ASSETS, createFeedHistory, createFeedReader } from './oracle'
 import { createDexClient, makeDexSource } from './dex'
 import { recordMarketSnapshots, type MarketDeps } from './market'
@@ -45,6 +46,13 @@ const env = z
     /** all = semua post menunggu persetujuan manusia (30 hari pertama, brief); risky = hanya yang berisiko (sponsored, balasan, laporan risiko, yang diblokir). */
     APPROVAL_MODE: z.enum(['all', 'risky']).default('all'),
     LOOP_SECONDS: z.coerce.number().int().min(10).default(60),
+    /** Supabase free plan housekeeping: retention of derived data (days) and database size thresholds (MB). */
+    RETAIN_TRADES_DAYS: z.coerce.number().int().min(1).default(DEFAULT_RETENTION.tradesDays),
+    RETAIN_WHALES_DAYS: z.coerce.number().int().min(1).default(DEFAULT_RETENTION.whalesDays),
+    RETAIN_SNAPSHOTS_DAYS: z.coerce.number().int().min(2).default(DEFAULT_RETENTION.snapshotsDays),
+    RETAIN_ALERTS_DAYS: z.coerce.number().int().min(1).default(DEFAULT_RETENTION.alertsDays),
+    DB_SIZE_WARN_MB: z.coerce.number().int().positive().default(350),
+    DB_SIZE_LIMIT_MB: z.coerce.number().int().positive().default(420),
     /** Pulse: satu post dari peristiwa nyata (graduation/launch Pons, harga Stock Token) paling cepat tiap PULSE_INTERVAL_MINUTES. Default mati; jenis antrian "pulse" harus ada di X_POST_KINDS agar terbit ke X. */
     PULSE_ENABLED: z.enum(['true', 'false']).default('false'),
     PULSE_INTERVAL_MINUTES: z.coerce.number().int().min(1).default(30),
@@ -276,7 +284,29 @@ console.log(
     : 'worker: commit/reveal NONAKTIF (butuh AGENT_PRIVATE_KEY, ELYSIA_LEDGER_ADDRESS, PREIMAGE_KEY)',
 )
 
+let lastHousekeepingAt = 0
+const HOUSEKEEPING_MS = 86_400_000
+
+/** Once a day: prune old derived rows and report the database size against the free plan limit. */
+async function housekeeping(): Promise<void> {
+  const removed = await pruneOldData(db, {
+    tradesDays: env.RETAIN_TRADES_DAYS,
+    whalesDays: env.RETAIN_WHALES_DAYS,
+    snapshotsDays: env.RETAIN_SNAPSHOTS_DAYS,
+    alertsDays: env.RETAIN_ALERTS_DAYS,
+  })
+  const total = Object.values(removed).reduce((a, n) => a + n, 0)
+  const size = await checkDatabaseSize(db, env.DB_SIZE_WARN_MB, env.DB_SIZE_LIMIT_MB)
+  const line = `worker: housekeeping: ${total} old rows removed, database ${size.mb.toFixed(0)} MB`
+  if (size.level === 'ok') console.log(line)
+  else console.error(`${line} (${size.level.toUpperCase()}: free plan limit is 500 MB, indexer pauses at ${env.DB_SIZE_LIMIT_MB} MB)`)
+}
+
 async function tick(): Promise<void> {
+  if (Date.now() - lastHousekeepingAt >= HOUSEKEEPING_MS) {
+    lastHousekeepingAt = Date.now()
+    await housekeeping().catch((e) => console.error('worker: housekeeping failed:', e instanceof Error ? e.message : String(e)))
+  }
   if (keeper && Date.now() - lastKeeperAt >= env.KEEPER_INTERVAL_SECONDS * 1000) {
     lastKeeperAt = Date.now()
     const res = await mirrorPrices(keeper)

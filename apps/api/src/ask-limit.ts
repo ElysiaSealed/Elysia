@@ -2,6 +2,8 @@
 export interface AskLimits {
   perMinute: number
   perDay: number
+  /** Optional cap on all Ask requests per UTC day, whoever sends them (database egress budget). */
+  globalPerDay?: number
 }
 
 // PENDING: temporary numbers, to be evaluated (ELYSIA_DECISIONS.md). Not an approved policy.
@@ -22,11 +24,18 @@ export type AskLimitResult = { ok: true } | { ok: false; retryAfterSeconds: numb
 
 export function createAskLimiter(limits: AskLimits, now: () => number) {
   const hits = new Map<string, Entry>()
+  let globalDay = -1
+  let globalCount = 0
   return {
     /** Counts the request only when it is allowed, so a rejected client cannot extend its own block. */
     check(key: string): AskLimitResult {
       const t = now()
       const day = Math.floor(t / DAY_MS)
+      if (globalDay !== day) {
+        globalDay = day
+        globalCount = 0
+      }
+      if (limits.globalPerDay !== undefined && globalCount >= limits.globalPerDay) return { ok: false, retryAfterSeconds: Math.max(1, Math.ceil(((day + 1) * DAY_MS - t) / 1000)) }
       let e = hits.get(key)
       if (!e || e.day !== day) e = { minuteStart: t, minuteCount: 0, day, dayCount: 0 }
       if (t - e.minuteStart >= MINUTE_MS) {
@@ -37,6 +46,7 @@ export function createAskLimiter(limits: AskLimits, now: () => number) {
       if (e.minuteCount >= limits.perMinute) return { ok: false, retryAfterSeconds: Math.max(1, Math.ceil((e.minuteStart + MINUTE_MS - t) / 1000)) }
       e.minuteCount++
       e.dayCount++
+      globalCount++
       if (hits.size >= MAX_KEYS && !hits.has(key)) for (const [k, v] of hits) if (v.day !== day) hits.delete(k)
       hits.set(key, e)
       return { ok: true }

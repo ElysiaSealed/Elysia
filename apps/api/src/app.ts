@@ -40,6 +40,7 @@ import { kolStats, rankEntries } from './leaderboard'
 import { buildMarket } from './market'
 import { CHAINS, chainSlug } from '@elysia/shared'
 import { buildPricingResponse, DEFAULT_PRICING, type PricingConfig } from './pricing'
+import { createTtlCache } from './cache'
 import { DEFAULT_ASK_LIMITS, createAskLimiter, type AskLimits } from './ask-limit'
 import { buildRiskReport, verifyUsdgPayment, type AskConfig } from './ask'
 import { formatBps, formatUnits, formatWinRate, shortAddress } from './format'
@@ -81,10 +82,16 @@ export interface AppConfig {
   pro?: ProConfig
   /** Public prices shown by GET /pricing (env-driven). Defaults to DEFAULT_PRICING. */
   pricing?: PricingConfig
+  /** Seconds that public read endpoints are served from memory before the database is read again. 0 = no cache. Keeps Supabase egress low. */
+  publicCacheSeconds?: number
   now?: () => Date
 }
 
-type PredictionRow = typeof predictions.$inferSelect
+/** Only the public columns: the encrypted preimage is never selected by the API. */
+type PredictionRow = Pick<
+  typeof predictions.$inferSelect,
+  'ledgerId' | 'hash' | 'status' | 'commitTxHash' | 'committedAt' | 'maturesAt' | 'revealedText' | 'revealedAsset' | 'revealedDirection' | 'revealTxHash' | 'won' | 'returnBps'
+>
 const DAY_MS = 86_400_000
 const RECENT_LIMIT = 10
 /** Kontrak Pons/Uniswap yang memegang suplai tetapi bukan holder sungguhan (dikecualikan dari peringkat holder). */
@@ -99,6 +106,16 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
   const askLimiter = createAskLimiter(cfg.askRateLimit ?? DEFAULT_ASK_LIMITS, () => now().getTime())
   const now = () => (cfg.now ? cfg.now() : new Date())
   const symbols = cfg.symbols ?? {}
+  // Cache windows follow how often the data really changes (base = PUBLIC_CACHE_SECONDS, default 120 s):
+  //   publicCache x1  new launches (rug radar)
+  //   slowCache   x2.5 scoreboard and Signals posts: change a few times a day
+  //   marketCache x5  price snapshots: the worker writes one every 10 minutes
+  //   fixedCache  x30 a single prediction: immutable once revealed
+  const baseCacheMs = (cfg.publicCacheSeconds ?? 0) * 1000
+  const publicCache = createTtlCache(baseCacheMs, () => now().getTime())
+  const slowCache = createTtlCache(baseCacheMs * 2.5, () => now().getTime())
+  const marketCache = createTtlCache(baseCacheMs * 5, () => now().getTime())
+  const fixedCache = createTtlCache(baseCacheMs * 30, () => now().getTime())
   const txPath = (cfg.explorerTxPath ?? '/tx/')
   const tx = (hash: string) => `${cfg.explorerUrl}${txPath}${hash}`
   // The service serves one chain, Robinhood Chain mainnet, unless overridden.
@@ -145,12 +162,54 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     return row.revealedDirection === 1 ? row.returnBps : -row.returnBps
   }
 
-  const publicRows = (db: Db) =>
-    db
-      .select()
-      .from(predictions)
-      .where(and(inArray(predictions.status, [...PUBLIC_STATUSES]), isNotNull(predictions.ledgerId), isNotNull(predictions.commitTxHash)))
-      .orderBy(desc(predictions.committedAt))
+  // Egress rules (Supabase free plan): never select the whole predictions table, never select the encrypted preimage,
+  // aggregate in SQL, and serve public reads from the TTL cache.
+  const publicFilter = and(inArray(predictions.status, [...PUBLIC_STATUSES]), isNotNull(predictions.ledgerId), isNotNull(predictions.commitTxHash))
+  const predictionColumns = {
+    ledgerId: predictions.ledgerId,
+    hash: predictions.hash,
+    status: predictions.status,
+    commitTxHash: predictions.commitTxHash,
+    committedAt: predictions.committedAt,
+    maturesAt: predictions.maturesAt,
+    revealedText: predictions.revealedText,
+    revealedAsset: predictions.revealedAsset,
+    revealedDirection: predictions.revealedDirection,
+    revealTxHash: predictions.revealTxHash,
+    won: predictions.won,
+    returnBps: predictions.returnBps,
+  }
+
+  /** Scoreboard numbers and the few full rows /proof shows, from three small queries. Shared by /proof and /leaderboard. */
+  const loadProofData = () =>
+    slowCache.get('proof-data', async () => {
+      const scoredCond = sql`${predictions.status} = 'revealed' and ${predictions.returnBps} is not null and ${predictions.revealedDirection} is not null`
+      const [agg] = await cfg.db
+        .select({
+          scored: sql<string>`count(*) filter (where ${scoredCond})`,
+          wins: sql<string>`count(*) filter (where ${scoredCond} and ${predictions.won} is true)`,
+          open: sql<string>`count(*) filter (where ${predictions.status} <> 'revealed')`,
+          sumAligned: sql<string>`coalesce(sum(case when ${predictions.revealedDirection} = 1 then ${predictions.returnBps} else -${predictions.returnBps} end) filter (where ${scoredCond}), 0)`,
+        })
+        .from(predictions)
+        .where(publicFilter)
+      const [current] = await cfg.db
+        .select(predictionColumns)
+        .from(predictions)
+        .where(and(publicFilter, sql`${predictions.status} <> 'revealed'`))
+        .orderBy(desc(predictions.committedAt))
+        .limit(1)
+      const recent = await cfg.db.select(predictionColumns).from(predictions).where(publicFilter).orderBy(desc(predictions.committedAt)).limit(RECENT_LIMIT)
+      const scored = Number(agg?.scored ?? 0)
+      return {
+        scored,
+        wins: Number(agg?.wins ?? 0),
+        open: Number(agg?.open ?? 0),
+        avgReturnBps: scored > 0 ? Math.round(Number(agg?.sumAligned ?? 0) / scored) : null,
+        current: current ?? null,
+        recent,
+      }
+    })
 
   const cache = (reply: { header: (k: string, v: string) => unknown }) => reply.header('cache-control', 'public, max-age=15')
 
@@ -172,15 +231,9 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
 
   app.get('/proof', async (req, reply) => {
     if (!validateChain(req, reply)) return
-    const rows = await publicRows(cfg.db)
-    const scoredRows = rows.filter((r) => r.status === 'revealed' && alignedBps(r) !== null)
-    const open = rows.filter((r) => r.status !== 'revealed')
-    const wins = scoredRows.filter((r) => r.won === true).length
-    const scored = scoredRows.length
-    const winRate = scored > 0 ? wins / scored : null
-    const avgReturnBps = scored > 0 ? Math.round(scoredRows.reduce((a, r) => a + alignedBps(r)!, 0) / scored) : null
-
-    const cur = open[0]
+    const d = await loadProofData()
+    const winRate = d.scored > 0 ? d.wins / d.scored : null
+    const cur = d.current
     const current = cur
       ? {
           day: Math.min(
@@ -192,13 +245,13 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
       : null
 
     const body: ProofResponse = proofResponseSchema.parse({
-      stats: { scored, wins, pending: open.length, winRate, avgReturnBps },
+      stats: { scored: d.scored, wins: d.wins, pending: d.open, winRate, avgReturnBps: d.avgReturnBps },
       formatted: {
         winRate: winRate === null ? null : formatWinRate(winRate),
-        avgReturn: avgReturnBps === null ? null : formatBps(avgReturnBps),
+        avgReturn: d.avgReturnBps === null ? null : formatBps(d.avgReturnBps),
       },
       current,
-      recent: rows.slice(0, RECENT_LIMIT).map(toPrediction),
+      recent: d.recent.map(toPrediction),
       chainId: serviceChainId,
       explorerBaseUrl: cfg.explorerUrl,
     })
@@ -210,7 +263,11 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     if (!validateChain(req, reply)) return
     const parsed = z.object({ id: z.coerce.number().int().nonnegative() }).safeParse(req.params)
     if (!parsed.success) return reply.code(400).send({ error: 'invalid_id' })
-    const [row] = await publicRows(cfg.db).then((rs) => rs.filter((r) => r.ledgerId === parsed.data.id))
+    const id = parsed.data.id
+    const row = await fixedCache.get(`prediction:${id}`, async () => {
+      const [r] = await cfg.db.select(predictionColumns).from(predictions).where(and(publicFilter, eq(predictions.ledgerId, id))).orderBy(desc(predictions.committedAt)).limit(1)
+      return r ?? null
+    })
     if (!row) return reply.code(404).send({ error: 'not_found' })
     cache(reply)
     return predictionResponseSchema.parse(toPrediction(row))
@@ -218,22 +275,37 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
 
   app.get('/rug-radar', async (req, reply) => {
     if (!validateChain(req, reply)) return
-    const rows = await cfg.db.select().from(ponsTokens).orderBy(desc(ponsTokens.launchedAt)).limit(RADAR_LIMIT)
-    const t = now()
-    const body: RugRadarResponse = rugRadarResponseSchema.parse({
-      updatedAt: t.toISOString(),
-      items: rows.map((r) => ({
-        token: r.address,
-        name: r.name,
-        symbol: r.symbol,
-        launchedAt: r.launchedAt.toISOString(),
-        ageSeconds: Math.max(0, Math.floor((t.getTime() - r.launchedAt.getTime()) / 1000)),
-        graduated: r.graduatedAt !== null,
-        creatorTaxBps: r.creatorTaxBps,
-        topHolderShareBps: r.topHolderShareBps,
-        redFlags: r.redFlags,
-        explorerUrl: `${cfg.tokenExplorerUrl ?? cfg.explorerUrl}/address/${r.address}`,
-      })),
+    const body = await publicCache.get('rug-radar', async (): Promise<RugRadarResponse> => {
+      const rows = await cfg.db
+        .select({
+          address: ponsTokens.address,
+          name: ponsTokens.name,
+          symbol: ponsTokens.symbol,
+          launchedAt: ponsTokens.launchedAt,
+          graduatedAt: ponsTokens.graduatedAt,
+          creatorTaxBps: ponsTokens.creatorTaxBps,
+          topHolderShareBps: ponsTokens.topHolderShareBps,
+          redFlags: ponsTokens.redFlags,
+        })
+        .from(ponsTokens)
+        .orderBy(desc(ponsTokens.launchedAt))
+        .limit(RADAR_LIMIT)
+      const t = now()
+      return rugRadarResponseSchema.parse({
+        updatedAt: t.toISOString(),
+        items: rows.map((r) => ({
+          token: r.address,
+          name: r.name,
+          symbol: r.symbol,
+          launchedAt: r.launchedAt.toISOString(),
+          ageSeconds: Math.max(0, Math.floor((t.getTime() - r.launchedAt.getTime()) / 1000)),
+          graduated: r.graduatedAt !== null,
+          creatorTaxBps: r.creatorTaxBps,
+          topHolderShareBps: r.topHolderShareBps,
+          redFlags: r.redFlags,
+          explorerUrl: `${cfg.tokenExplorerUrl ?? cfg.explorerUrl}/address/${r.address}`,
+        })),
+      })
     })
     cache(reply)
     return body
@@ -241,35 +313,38 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
 
   // Harga Stock Token: oracle vs DEX dari snapshot worker (24 jam terakhir). Tanpa snapshot = daftar kosong, tidak menebak.
   app.get('/market', async (_req, reply) => {
-    const t = now()
-    const rows = await cfg.db
-      .select()
-      .from(priceSnapshots)
-      .where(gte(priceSnapshots.at, new Date(t.getTime() - 24 * 3600_000)))
-      .orderBy(asc(priceSnapshots.at))
-    const body: MarketResponse = marketResponseSchema.parse(buildMarket(rows.map((r) => ({ asset: r.asset, source: r.source, price: BigInt(r.price), decimals: r.decimals, at: r.at })), t))
+    const body = await marketCache.get('market', async (): Promise<MarketResponse> => {
+      const t = now()
+      const rows = await cfg.db
+        .select({ asset: priceSnapshots.asset, source: priceSnapshots.source, price: priceSnapshots.price, decimals: priceSnapshots.decimals, at: priceSnapshots.at })
+        .from(priceSnapshots)
+        .where(gte(priceSnapshots.at, new Date(t.getTime() - 24 * 3600_000)))
+        .orderBy(asc(priceSnapshots.at))
+      return marketResponseSchema.parse(buildMarket(rows.map((r) => ({ asset: r.asset, source: r.source, price: BigInt(r.price), decimals: r.decimals, at: r.at })), t))
+    })
     cache(reply)
     return body
   })
 
   // Elysia vs KOL: leaderboard akurasi. Hanya KOL yang opted_in; baris Elysia dihitung dari /proof yang sama.
   app.get('/leaderboard', async (_req, reply) => {
-    const rows = await publicRows(cfg.db)
-    const scoredRows = rows.filter((r) => r.status === 'revealed' && alignedBps(r) !== null)
-    const elysia = {
-      handle: 'elysia',
-      displayName: 'Elysia',
-      isElysia: true,
-      scored: scoredRows.length,
-      wins: scoredRows.filter((r) => r.won === true).length,
-      pending: rows.filter((r) => r.status !== 'revealed').length,
-      avgReturnBps: scoredRows.length ? Math.round(scoredRows.reduce((a, r) => a + alignedBps(r)!, 0) / scoredRows.length) : null,
-    }
-    const minScored = cfg.leaderboardMinScored ?? 3
-    const body: LeaderboardResponse = leaderboardResponseSchema.parse({
-      updatedAt: now().toISOString(),
-      minScored,
-      entries: rankEntries([elysia, ...(await kolStats(cfg.db))], minScored),
+    const body = await slowCache.get('leaderboard', async (): Promise<LeaderboardResponse> => {
+      const d = await loadProofData()
+      const elysia = {
+        handle: 'elysia',
+        displayName: 'Elysia',
+        isElysia: true,
+        scored: d.scored,
+        wins: d.wins,
+        pending: d.open,
+        avgReturnBps: d.avgReturnBps,
+      }
+      const minScored = cfg.leaderboardMinScored ?? 3
+      return leaderboardResponseSchema.parse({
+        updatedAt: now().toISOString(),
+        minScored,
+        entries: rankEntries([elysia, ...(await kolStats(cfg.db))], minScored),
+      })
     })
     cache(reply)
     return body
@@ -307,6 +382,7 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
   const rateWindow = new Map<number, { start: number; count: number }>()
   const rateLimit = cfg.signalsRateLimitPerMinute ?? 60
   /** Pagar Signals API: flag fitur berbayar, kunci API aktif, batas laju. Mengirim respons sendiri dan mengembalikan false bila ditolak. */
+  const keyCache = createTtlCache(Math.min((cfg.publicCacheSeconds ?? 0) * 1000, 30_000), () => now().getTime())
   async function signalsGate(req: FastifyRequest, reply: FastifyReply): Promise<boolean> {
     const deny = (code: number, error: string) => {
       void reply.code(code).send({ error })
@@ -316,7 +392,8 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     const key = req.headers['x-api-key']
     if (typeof key !== 'string' || key.length === 0) return deny(401, 'api_key_required')
     const keyHash = createHash('sha256').update(key).digest('hex')
-    const [row] = await cfg.db.select().from(apiKeys).where(and(eq(apiKeys.keyHash, keyHash), eq(apiKeys.active, true)))
+    // Key lookups are cached briefly: a key at its rate limit would otherwise cost one database read per request.
+    const row = await keyCache.get(`key:${keyHash}`, async () => (await cfg.db.select().from(apiKeys).where(and(eq(apiKeys.keyHash, keyHash), eq(apiKeys.active, true))))[0] ?? null)
     if (!row) return deny(401, 'invalid_api_key')
 
     const t = now().getTime()
@@ -341,13 +418,15 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     if (!(await signalsGate(req, reply))) return reply
     const q = limitQuery.safeParse(req.query)
     if (!q.success) return reply.code(400).send({ error: 'invalid_query' })
-    const rows = await cfg.db
-      .select({ post: postQueue, ledgerId: predictions.ledgerId })
-      .from(postQueue)
-      .leftJoin(predictions, eq(postQueue.predictionId, predictions.id))
-      .where(and(eq(postQueue.status, 'posted'), isNotNull(postQueue.postedAt)))
-      .orderBy(desc(postQueue.postedAt))
-      .limit(q.data.limit)
+    const rows = await slowCache.get(`signals:${q.data.limit}`, () =>
+      cfg.db
+        .select({ post: { id: postQueue.id, kind: postQueue.kind, content: postQueue.content, postedAt: postQueue.postedAt }, ledgerId: predictions.ledgerId })
+        .from(postQueue)
+        .leftJoin(predictions, eq(postQueue.predictionId, predictions.id))
+        .where(and(eq(postQueue.status, 'posted'), isNotNull(postQueue.postedAt)))
+        .orderBy(desc(postQueue.postedAt))
+        .limit(q.data.limit),
+    )
     const body: SignalsResponse = signalsResponseSchema.parse({
       items: rows.map((r) => ({
         id: r.post.id,
@@ -452,7 +531,46 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
   // preClose (bukan onClose): server menunggu koneksi terbuka selesai, jadi stream harus diberi tahu lebih dulu.
   app.addHook('preClose', async () => {
     shuttingDown = true
+    for (const wake of [...alertWaiters]) wake()
   })
+  // One shared poller for every connected Pro client (Supabase free plan egress): the database is read once per poll
+  // interval no matter how many streams are open, and only while at least one stream is connected.
+  type AlertRow = typeof proAlerts.$inferSelect
+  const ALERT_BUFFER_MAX = 200
+  /** How often an open stream re-checks that its session and subscription are still valid (one tiny query per stream). */
+  const SESSION_RECHECK_MS = 300_000
+  const alertBuffer: AlertRow[] = []
+  let alertCursor = 0 // highest alert id loaded by the hub
+  let alertFloor = 0 // alert ids <= alertFloor are no longer in the buffer
+  let alertSubscribers = 0
+  let alertHubRunning = false
+  const alertWaiters = new Set<() => void>()
+
+  async function runAlertHub(pollMs: number): Promise<void> {
+    if (alertHubRunning) return
+    alertHubRunning = true
+    try {
+      while (alertSubscribers > 0 && !shuttingDown) {
+        let more = false
+        try {
+          const rows = await cfg.db.select().from(proAlerts).where(gt(proAlerts.id, alertCursor)).orderBy(asc(proAlerts.id)).limit(50)
+          if (rows.length > 0) {
+            alertBuffer.push(...rows)
+            alertCursor = rows[rows.length - 1]!.id
+            while (alertBuffer.length > ALERT_BUFFER_MAX) alertFloor = alertBuffer.shift()!.id
+            for (const wake of [...alertWaiters]) wake()
+          }
+          more = rows.length === 50
+        } catch {
+          /* database hiccup: try again after the poll interval */
+        }
+        if (!more) await new Promise<void>((resolve) => setTimeout(resolve, pollMs))
+      }
+    } finally {
+      alertHubRunning = false
+    }
+  }
+
   app.get('/alerts/stream', async (req, reply) => {
     if (!proOn() || !auth) return reply.code(503).send({ error: 'paid_features_disabled' })
     const s = await sessionFrom(cfg.db, req.headers.authorization, now())
@@ -476,26 +594,43 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     })
     raw.write('retry: 5000\n: connected\n\n')
 
+    alertSubscribers += 1
+    if (alertSubscribers === 1 && !alertHubRunning) {
+      alertBuffer.length = 0
+      alertCursor = last
+      alertFloor = last
+    }
+    void runAlertHub(pollMs)
+
     let closed = false
     let wake: (() => void) | null = null
+    const notify = () => wake?.()
+    alertWaiters.add(notify)
     raw.on('close', () => {
       closed = true
-      wake?.()
+      notify()
     })
-    const sleep = (ms: number) =>
+    const waitForAlerts = (ms: number) =>
       new Promise<void>((resolve) => {
-        const t = setTimeout(resolve, ms)
-        wake = () => {
+        const done = () => {
           clearTimeout(t)
+          wake = null
           resolve()
         }
+        const t = setTimeout(done, ms)
+        wake = done
       })
 
     let lastWrite = Date.now()
     let lastCheck = Date.now()
     try {
       while (!closed && !shuttingDown) {
-        const rows = await cfg.db.select().from(proAlerts).where(gt(proAlerts.id, last)).orderBy(asc(proAlerts.id)).limit(50)
+        // Normally served from the shared buffer. A client that reconnects with an old Last-Event-ID, or stalls for long,
+        // catches up straight from the database.
+        const rows =
+          last < alertFloor
+            ? await cfg.db.select().from(proAlerts).where(gt(proAlerts.id, last)).orderBy(asc(proAlerts.id)).limit(50)
+            : alertBuffer.filter((r) => r.id > last)
         for (const r of rows) {
           const ev = alertEventSchema.parse({ id: r.id, kind: r.kind, content: r.content, createdAt: r.createdAt.toISOString(), publicAt: r.publicAt ? r.publicAt.toISOString() : null })
           raw.write(`id: ${r.id}\nevent: alert\ndata: ${JSON.stringify(ev)}\n\n`)
@@ -507,15 +642,21 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
           lastWrite = Date.now()
         }
         // Langganan atau sesi berakhir: tutup stream (klien akan melihat 402/401 saat tersambung ulang).
-        if (Date.now() - lastCheck >= 30_000) {
+        if (Date.now() - lastCheck >= SESSION_RECHECK_MS) {
           lastCheck = Date.now()
           if (!(await sessionFrom(cfg.db, req.headers.authorization, now())) || !(await proStatus(cfg.db, s.address, now())).active) break
         }
-        if (rows.length < 50) await sleep(pollMs)
+        if (rows.length === 0) {
+          const untilHeartbeat = heartbeatMs - (Date.now() - lastWrite)
+          const untilCheck = SESSION_RECHECK_MS - (Date.now() - lastCheck)
+          await waitForAlerts(Math.max(50, Math.min(untilHeartbeat, untilCheck)))
+        }
       }
     } catch {
       /* koneksi putus atau DB gagal sesaat: tutup, klien menyambung ulang dengan Last-Event-ID */
     } finally {
+      alertSubscribers -= 1
+      alertWaiters.delete(notify)
       raw.end()
     }
   })

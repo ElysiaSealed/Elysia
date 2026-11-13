@@ -41,4 +41,17 @@ describe('ask limiter', () => {
     t += 60_000
     expect(l.check('a').ok).toBe(true)
   })
+
+  it('a global daily cap applies to all keys together and resets on the next UTC day', () => {
+    let t = Date.UTC(2026, 11, 1, 12)
+    const l = createAskLimiter({ perMinute: 10, perDay: 10, globalPerDay: 3 }, () => t)
+    expect(l.check('a').ok).toBe(true)
+    expect(l.check('b').ok).toBe(true)
+    expect(l.check('c').ok).toBe(true)
+    const blocked = l.check('d')
+    expect(blocked.ok).toBe(false)
+    expect(blocked.ok === false && blocked.retryAfterSeconds).toBeGreaterThan(0)
+    t += 24 * 3_600_000
+    expect(l.check('d').ok).toBe(true)
+  })
 })

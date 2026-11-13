@@ -14,7 +14,9 @@ export const envSchema = z
     /** Blok awal bila belum ada kursor. Kosong = mulai dari ujung chain (tanpa backfill). */
     INDEXER_START_BLOCK: z.coerce.bigint().optional(),
     INDEXER_CHUNK_BLOCKS: z.coerce.bigint().default(2000n),
-    INDEXER_POLL_SECONDS: z.coerce.number().int().positive().default(5),
+    INDEXER_POLL_SECONDS: z.coerce.number().int().positive().default(10),
+    /** Pause ingestion above this database size in MB (Supabase free plan: 500 MB, read-only above it). */
+    DB_SIZE_LIMIT_MB: z.coerce.number().int().positive().default(420),
     HIGH_CREATOR_TAX_BPS: z.coerce.number().int().nonnegative().default(500),
     /** Satu holder (di luar curve/pool) >= ini dari total suplai = red flag "Holders concentrated". */
     HOLDER_CONCENTRATED_BPS: z.coerce.number().int().min(1).max(10_000).default(2000),

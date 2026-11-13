@@ -51,3 +51,43 @@ Migrasi 0000–0012 dijalankan ke project baru. Perubahan skema memakai migrasi 
 - Kuota resmi Supabase Free saat ini.
 - Volume event Pons V2 di mainnet (untuk ukuran `pons_trades`).
 - Skema event burn dari PM.
+
+## 6. Anggaran egress dan ukuran (Supabase Free: 5 GB egress per bulan, database 500 MB)
+Target: egress database **di bawah 150 MB per hari** (batas bulanan 5 GB setara sekitar 166 MB per hari) dan ukuran database di bawah 420 MB. Egress dihitung sebagai byte yang dikirim Postgres ke klien (api, worker, indexer), bukan trafik pengunjung ke web.
+
+### Temuan dan perbaikan
+| Sumber egress | Sebelum | Sesudah |
+|---|---|---|
+| `/proof`, `/leaderboard`, `/predictions/:id` | `select` seluruh tabel prediksi, termasuk kolom preimage terenkripsi, tiap request; tumbuh sekitar 1,4 KB per prediksi per request | Agregat dihitung di SQL, hanya 10 baris terbaru dan satu baris berjalan, tanpa kolom preimage; cache memori 150 detik (satu prediksi 1 jam) |
+| `/rug-radar`, `/market` | Query DB tiap request | Kolom terpilih; cache 120 detik dan 600 detik (snapshot harga hanya ditulis tiap 10 menit) |
+| `/signals` | Satu query kunci dan satu query posting per request; satu kunci di batas laju (60 per menit) bisa memicu ribuan query per jam | Cache pencarian kunci 30 detik dan daftar posting 150 detik |
+| Stream alert Pro (SSE) | Tiap koneksi memanggil DB tiap 3 detik, ditambah cek sesi tiap 30 detik | Satu poller bersama untuk semua koneksi dan hanya saat ada koneksi; cek sesi tiap 5 menit |
+| Ask gratis | Batas per IP saja | Ditambah batas global `ASK_GLOBAL_PER_DAY` (2000) |
+| Indexer | Baca kursor dari DB tiap 5 detik | Kursor di memori; polling 10 detik |
+
+### Hasil ukur (Postgres lokal dengan data seed: 365 prediksi, 500 token, 1152 snapshot)
+| Endpoint | Byte DB per request tanpa cache | Segar ulang per hari | Egress per hari |
+|---|---|---|---|
+| `/proof` (data skor) | 13,9 KB (termasuk handshake koneksi pertama; sekitar 6 KB sesudahnya) | 576 (tiap 150 dtk) | 8,0 MB (batas atas) |
+| `/leaderboard` | 6,0 KB | 576 | 3,5 MB |
+| `/rug-radar` | 8,9 KB | 720 (tiap 120 dtk) | 6,4 MB |
+| `/market` | 87 KB pada data seed (sekitar 44 KB pada data nyata) | 144 (tiap 600 dtk) | 12,6 MB (seed) |
+| `/predictions/:id` | 0,9 KB | paling banyak 24 per id, 256 id | 5,5 MB (batas atas) |
+| Worker, idle | 11,8 KB per 90 detik pada siklus 10 detik | siklus bawaan 60 detik | sekitar 2 MB |
+| Indexer, setelah perbaikan | 22 KB per 85 detik pada mainnet nyata (termasuk handshake sekitar 8 KB dan 29 trade yang diproses) | | proyeksi kasar 22 MB; pengukuran pendek, tergantung aktivitas Pons, ukur ulang beberapa jam |
+
+Perkiraan total per hari pada pemakaian tinggi: skor, leaderboard, radar, dan market sekitar 30,5 MB; prediksi 5,5 MB; Signals 17 MB bila satu kunci memakainya terus (30 KB per segar ulang); stream Pro sekitar 3 MB; Ask 30 MB pada batas global (asumsi 15 KB per Ask, **belum diukur**); worker 10 MB; indexer 25 MB. Jumlahnya sekitar 121 MB, sisa sekitar 29 MB di bawah 150 MB. Angka asumsi harus diverifikasi dengan data nyata.
+
+Byte dari cache dilayani tanpa menyentuh database, berapa pun jumlah pengunjung.
+
+### Ukuran database (500 MB)
+- Worker menjalankan `housekeeping` sekali sehari: menghapus `pons_trades` dan `whale_transfers` lebih tua dari 30 hari, `price_snapshots` lebih tua dari 7 hari, `pro_alerts` yang sudah terkirim lebih tua dari 30 hari, dan nonce atau sesi login yang kedaluwarsa. **Tidak pernah** menghapus `predictions`, `post_queue`, pembayaran, langganan, atau `riskguard_log`. Batas hari diatur lewat `RETAIN_*`.
+- Housekeeping mencatat ukuran database; peringatan di `DB_SIZE_WARN_MB` (350 MB). Indexer berhenti menulis di `DB_SIZE_LIMIT_MB` (420 MB) supaya database tidak mencapai 500 MB dan berubah menjadi read-only. Ukuran yang dilaporkan Supabase mencakup skema sistem, jadi sisakan margin.
+
+### Cara mengukur sendiri
+```bash
+# Jalankan di: ROOT (database lokal saja)
+node scripts/measure-egress.mjs 55434 55433 120
+# lalu jalankan service dengan DATABASE_URL yang menunjuk localhost:55434
+```
+Setelah deploy, bandingkan angka ini dengan grafik Egress di dashboard Supabase setiap hari selama seminggu pertama.

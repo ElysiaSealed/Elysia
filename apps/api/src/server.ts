@@ -15,6 +15,8 @@ const env = z
     /** Free Ask rate limit per IP. PENDING: temporary numbers, to be evaluated. */
     ASK_RATE_PER_MINUTE: z.coerce.number().int().min(1).default(10),
     ASK_RATE_PER_DAY: z.coerce.number().int().min(1).default(100),
+    /** Cap on all free Ask requests per UTC day, from every IP together (Supabase egress budget). */
+    ASK_GLOBAL_PER_DAY: z.coerce.number().int().min(1).default(2000),
     /** Trusted reverse-proxy hops (Railway etc.). 0 = ignore X-Forwarded-For (safe default; behind a proxy every client shares one IP until set). */
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
     PAID_FEATURES_ENABLED: z.enum(['true', 'false']).default('false'),
@@ -33,6 +35,8 @@ const env = z
     PRO_PRICE_USDG_MICROS: z.coerce.bigint().positive().default(5_000_000n),
     PRO_DAYS: z.coerce.number().int().min(1).default(30),
     /** Signals API and Sponsored report prices (USDG micros, 1000000 = $1). Sold by contact; shown by GET /pricing. Temporary values, edit freely. */
+    /** Seconds public read endpoints are cached in memory (Supabase free plan egress). 0 disables the cache. */
+    PUBLIC_CACHE_SECONDS: z.coerce.number().int().min(0).default(120),
     SIGNALS_PRICE_USDG_MICROS: z.coerce.bigint().nonnegative().default(499_000_000n),
     SIGNALS_PERIOD_DAYS: z.coerce.number().int().min(1).default(30),
     SPONSORED_PRICE_USDG_MICROS: z.coerce.bigint().nonnegative().default(750_000_000n),
@@ -125,13 +129,14 @@ const app = buildApp({
   webOrigin: env.WEB_ORIGIN,
   leaderboardMinScored: env.LEADERBOARD_MIN_SCORED,
   paidFeaturesEnabled: env.PAID_FEATURES_ENABLED === 'true',
+  publicCacheSeconds: env.PUBLIC_CACHE_SECONDS,
   pricing: {
     pro: { priceMicros: env.PRO_PRICE_USDG_MICROS, days: env.PRO_DAYS },
     ask: { priceMicros: env.ASK_PRICE_USDG_MICROS },
     signals: { priceMicros: env.SIGNALS_PRICE_USDG_MICROS, days: env.SIGNALS_PERIOD_DAYS },
     sponsored: { priceMicros: env.SPONSORED_PRICE_USDG_MICROS },
   },
-  askRateLimit: { perMinute: env.ASK_RATE_PER_MINUTE, perDay: env.ASK_RATE_PER_DAY },
+  askRateLimit: { perMinute: env.ASK_RATE_PER_MINUTE, perDay: env.ASK_RATE_PER_DAY, globalPerDay: env.ASK_GLOBAL_PER_DAY },
   trustProxyHops: env.TRUST_PROXY_HOPS,
   ask,
   pro,

@@ -52,19 +52,21 @@ api:
 - `WEB_ORIGIN=https://<domain-vercel>` (tanpa slash akhir; pisahkan dengan koma bila lebih dari satu)
 - `TRUST_PROXY_HOPS=1` (Railway ada satu proxy di depan; tanpa ini semua klien dianggap satu IP untuk batas laju)
 - `PAID_FEATURES_ENABLED=false` (tetap sampai gate R4)
+- Hemat egress: `PUBLIC_CACHE_SECONDS=120`, `ASK_GLOBAL_PER_DAY=2000` (jangan dimatikan)
 - Harga (opsional, sudah ada nilai bawaan): `PRO_PRICE_USDG_MICROS`, `PRO_DAYS`, `ASK_PRICE_USDG_MICROS`, `SIGNALS_PRICE_USDG_MICROS`, `SIGNALS_PERIOD_DAYS`, `SPONSORED_PRICE_USDG_MICROS`
 - Tunda sampai pembayaran dibuka: `PAYMENT_CHAIN_ID`, `TREASURY_ADDRESS`
 
 worker:
 - `RPC_URL=https://rpc.mainnet.chain.robinhood.com`, `ORACLE_RPC_URL=https://rpc.mainnet.chain.robinhood.com`, `CHAIN_ID=4663`
 - `X_POST_MODE=dry`, `APPROVAL_MODE=all`
+- Hemat ukuran database: `RETAIN_TRADES_DAYS=30`, `RETAIN_WHALES_DAYS=30`, `RETAIN_SNAPSHOTS_DAYS=7`, `RETAIN_ALERTS_DAYS=30`, `DB_SIZE_WARN_MB=350`
 - `PREIMAGE_KEY`: buat sendiri dengan `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` dan **simpan cadangan**; tanpa kunci ini preimage lama tidak dapat dibuka.
 - `LLM_PROVIDER=mimo`, `LLM_BASE_URL`, `LLM_MODEL_SMALL`, `LLM_MODEL_LARGE`, `LLM_API_KEY` (kunci baru milik ELYSIA; kosong berarti mock)
 - Setelah deploy kontrak disetujui: `ELYSIA_LEDGER_ADDRESS` dan `AGENT_PRIVATE_KEY` (diketik manusia; tanpa keduanya commit dan reveal nonaktif)
 - Opsional: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_PRO_CHAT_ID`, kredensial `X_*` (hanya untuk mode `live`)
 
 indexer:
-- `CHAIN_ENV=mainnet`
+- `CHAIN_ENV=mainnet`, `INDEXER_POLL_SECONDS=10`, `DB_SIZE_LIMIT_MB=420` (indexer berhenti menulis di batas ini agar database tidak mencapai 500 MB)
 - `INDEXER_START_BLOCK`: biarkan kosong agar indexer mulai dari blok terkini. **Jangan** mengisi blok lama; backfill besar menghabiskan ukuran DB free plan.
 - `BURN_CONTRACT_ADDRESS` kosong sampai PM memberi CA.
 

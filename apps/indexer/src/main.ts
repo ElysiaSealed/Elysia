@@ -1,7 +1,7 @@
 import { eq, gte } from 'drizzle-orm'
 import { createPublicClient, getAddress, http, parseAbi, type PublicClient } from 'viem'
 import { z } from 'zod'
-import { createDb, indexerState, ponsTokens } from '@elysia/db'
+import { createDb, databaseSizeBytes, indexerState, ponsTokens } from '@elysia/db'
 import { CHAINS } from '@elysia/shared'
 import { burnedAbi, curveAbi, erc20Abi, factoryAbi, transferAbi } from './abi'
 import { processBurns, type BurnLog } from './burns'
@@ -143,10 +143,30 @@ async function fetchBurns(from: bigint, to: bigint): Promise<BurnLog[]> {
   )
 }
 
+let cursor: bigint | null = null
+
+// Supabase free plan goes read-only above 500 MB: stop ingesting well before that. Checked every 10 minutes.
+const SIZE_CHECK_MS = 600_000
+let sizeCheckedAt = 0
+let sizeBlocked = false
+async function databaseTooLarge(): Promise<boolean> {
+  if (Date.now() - sizeCheckedAt < SIZE_CHECK_MS) return sizeBlocked
+  sizeCheckedAt = Date.now()
+  const mb = (await databaseSizeBytes(db)) / 1_048_576
+  sizeBlocked = mb > env.DB_SIZE_LIMIT_MB
+  if (sizeBlocked) console.error(`indexer: database is ${mb.toFixed(0)} MB, above DB_SIZE_LIMIT_MB=${env.DB_SIZE_LIMIT_MB}: ingestion paused`)
+  return sizeBlocked
+}
+
 async function tick() {
+  if (await databaseTooLarge()) return
   const head = await client.getBlockNumber()
-  const [state] = await db.select().from(indexerState).where(eq(indexerState.name, STATE))
-  const next = state ? state.lastBlock + 1n : (env.INDEXER_START_BLOCK ?? head)
+  // The cursor lives in memory after the first read: reading it from the database every tick cost egress for nothing.
+  if (cursor === null) {
+    const [state] = await db.select().from(indexerState).where(eq(indexerState.name, STATE))
+    cursor = state ? state.lastBlock : null
+  }
+  const next = cursor !== null ? cursor + 1n : (env.INDEXER_START_BLOCK ?? head)
   if (next > head) return
   const to = next + env.INDEXER_CHUNK_BLOCKS - 1n < head ? next + env.INDEXER_CHUNK_BLOCKS - 1n : head
 
@@ -175,6 +195,7 @@ async function tick() {
       .onConflictDoUpdate({ target: indexerState.name, set: { lastBlock: to, updatedAt: new Date() } })
     return { ...pons, ...h, burned }
   })
+  cursor = to
   if (r.launches || r.trades || r.graduations || r.whales || r.burned)
     console.log(`indexer: blok ${next}-${to}: ${r.launches} launch, ${r.trades} trade, ${r.graduations} graduation, ${r.whales} whale, ${r.burned} burn`)
 }
@@ -185,6 +206,7 @@ for (;;) {
     await tick()
   } catch (e) {
     console.error('indexer: tick gagal:', e instanceof Error ? e.message : e)
+    cursor = null // re-read the cursor from the database after a failure
   }
   await new Promise((r) => setTimeout(r, env.INDEXER_POLL_SECONDS * 1000))
 }
