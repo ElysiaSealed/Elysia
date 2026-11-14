@@ -168,7 +168,7 @@ export function buildOpenApi() {
       },
       '/ask': {
         post: {
-          summary: 'Ask ELYSIA (free): risk summary for one token from indexed data. No payment, API key, or login; txHash in the body is ignored. Rate limited per IP (PENDING numbers: 10/min, 100/day).',
+          summary: 'Ask ELYSIA (free): risk summary for one token. Pons V2 tokens use indexed data; other tokens get a limited report (source "external") from DexScreener and Blockscout. No payment, API key, or login; txHash in the body is ignored. Rate limited per IP (PENDING numbers: 10/min, 100/day).',
           requestBody: { required: true, content: { 'application/json': { schema: schema(askRequestSchema) } } },
           responses: {
             '200': { description: 'Risk report', content: { 'application/json': { schema: schema(askResponseSchema) } } },

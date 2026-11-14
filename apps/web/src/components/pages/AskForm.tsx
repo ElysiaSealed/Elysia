@@ -6,7 +6,7 @@ import { AskReport } from './AskReport'
 
 const MESSAGES: Record<string, string> = {
   '400': 'Check the token address: it must be a valid 0x address.',
-  '422': 'ELYSIA does not have enough data on this token, or it is younger than one hour. Try again later.',
+  '422': 'ELYSIA found no market data for this token on Robinhood Chain, or it is younger than one hour. Check the address or try again later.',
   '429': 'Too many requests. Wait a little and try again.',
 }
 

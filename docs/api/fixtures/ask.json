@@ -2,6 +2,7 @@
   "address": "0x3333333333333333333333333333333333333333",
   "generatedAt": "2026-12-01T12:00:00.000Z",
   "report": {
+    "source": "indexer",
     "name": "Example Token",
     "symbol": "EXT",
     "ageSeconds": 18000,
@@ -28,6 +29,8 @@
       "pair": { "address": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168", "symbol": "USDG", "decimals": 6 },
       "launchedAt": "2026-12-01T07:00:00.000Z",
       "graduatedAt": null,
+      "market": null,
+      "contractVerified": null,
       "activity": {
         "uniqueTraders": 2,
         "uniqueBuyers": 2,

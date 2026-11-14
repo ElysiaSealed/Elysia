@@ -2149,7 +2149,7 @@
     },
     "/ask": {
       "post": {
-        "summary": "Ask ELYSIA (free): risk summary for one token from indexed data. No payment, API key, or login; txHash in the body is ignored. Rate limited per IP (PENDING numbers: 10/min, 100/day).",
+        "summary": "Ask ELYSIA (free): risk summary for one token. Pons V2 tokens use indexed data; other tokens get a limited report (source \"external\") from DexScreener and Blockscout. No payment, API key, or login; txHash in the body is ignored. Rate limited per IP (PENDING numbers: 10/min, 100/day).",
         "requestBody": {
           "required": true,
           "content": {
@@ -2192,6 +2192,13 @@
                     "report": {
                       "type": "object",
                       "properties": {
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "indexer",
+                            "external"
+                          ]
+                        },
                         "name": {
                           "type": "string",
                           "nullable": true
@@ -2236,7 +2243,8 @@
                             "buys",
                             "sells"
                           ],
-                          "additionalProperties": false
+                          "additionalProperties": false,
+                          "nullable": true
                         },
                         "redFlags": {
                           "type": "array",
@@ -2331,7 +2339,8 @@
                                 "address",
                                 "url"
                               ],
-                              "additionalProperties": false
+                              "additionalProperties": false,
+                              "nullable": true
                             },
                             "curve": {
                               "type": "object",
@@ -2382,6 +2391,70 @@
                             "graduatedAt": {
                               "type": "string",
                               "format": "date-time",
+                              "nullable": true
+                            },
+                            "market": {
+                              "type": "object",
+                              "properties": {
+                                "dex": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "pairUrl": {
+                                  "type": "string",
+                                  "format": "uri",
+                                  "nullable": true
+                                },
+                                "priceUsd": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "liquidityUsd": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "nullable": true
+                                },
+                                "fdvUsd": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "nullable": true
+                                },
+                                "volume24hUsd": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "nullable": true
+                                },
+                                "buys24h": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "nullable": true
+                                },
+                                "sells24h": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "nullable": true
+                                },
+                                "priceChange24hPct": {
+                                  "type": "number",
+                                  "nullable": true
+                                }
+                              },
+                              "required": [
+                                "dex",
+                                "pairUrl",
+                                "priceUsd",
+                                "liquidityUsd",
+                                "fdvUsd",
+                                "volume24hUsd",
+                                "buys24h",
+                                "sells24h",
+                                "priceChange24hPct"
+                              ],
+                              "additionalProperties": false,
+                              "nullable": true
+                            },
+                            "contractVerified": {
+                              "type": "boolean",
                               "nullable": true
                             },
                             "activity": {
@@ -2495,7 +2568,8 @@
                                 "volume",
                                 "largestTrade"
                               ],
-                              "additionalProperties": false
+                              "additionalProperties": false,
+                              "nullable": true
                             },
                             "creatorActivity": {
                               "type": "object",
@@ -2526,7 +2600,8 @@
                                 "soldRaw",
                                 "soldFormatted"
                               ],
-                              "additionalProperties": false
+                              "additionalProperties": false,
+                              "nullable": true
                             },
                             "holders": {
                               "type": "object",
@@ -2586,6 +2661,8 @@
                             "pair",
                             "launchedAt",
                             "graduatedAt",
+                            "market",
+                            "contractVerified",
                             "activity",
                             "creatorActivity",
                             "holders"
@@ -2597,6 +2674,7 @@
                         }
                       },
                       "required": [
+                        "source",
                         "name",
                         "symbol",
                         "ageSeconds",

@@ -42,7 +42,10 @@ import { CHAINS, chainSlug } from '@elysia/shared'
 import { buildPricingResponse, DEFAULT_PRICING, type PricingConfig } from './pricing'
 import { createTtlCache } from './cache'
 import { DEFAULT_ASK_LIMITS, createAskLimiter, type AskLimits } from './ask-limit'
+import { getAddress } from 'viem'
 import { buildRiskReport, verifyUsdgPayment, type AskConfig } from './ask'
+import { buildExternalReport } from './ask-external'
+import { fetchChainData, fetchMarket, type FetchLike } from './external-token'
 import { formatBps, formatUnits, formatWinRate, shortAddress } from './format'
 import { createLinkCode, proStatus, subscribe, unlinkTelegram, type ProConfig } from './pro'
 
@@ -84,6 +87,8 @@ export interface AppConfig {
   pricing?: PricingConfig
   /** Seconds that public read endpoints are served from memory before the database is read again. 0 = no cache. Keeps Supabase egress low. */
   publicCacheSeconds?: number
+  /** HTTP client for DexScreener and Blockscout lookups on tokens outside Pons V2. Default: global fetch. */
+  externalFetch?: FetchLike
   now?: () => Date
 }
 
@@ -116,6 +121,8 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
   const slowCache = createTtlCache(baseCacheMs * 2.5, () => now().getTime())
   const marketCache = createTtlCache(baseCacheMs * 5, () => now().getTime())
   const fixedCache = createTtlCache(baseCacheMs * 30, () => now().getTime())
+  // Third-party lookups for Ask: short fixed TTL so repeated requests do not burn DexScreener/Blockscout quota.
+  const externalCache = createTtlCache(60_000, () => now().getTime())
   const txPath = (cfg.explorerTxPath ?? '/tx/')
   const tx = (hash: string) => `${cfg.explorerUrl}${txPath}${hash}`
   // The service serves one chain, Robinhood Chain mainnet, unless overridden.
@@ -689,7 +696,16 @@ export function buildApp(cfg: AppConfig): FastifyInstance {
     if (!parsed.success) return reply.code(400).send({ error: 'invalid_body' })
     const { address } = parsed.data
 
-    const result = await buildRiskReport(cfg.db, address, now(), { explorerBase: cfg.tokenExplorerUrl ?? cfg.explorerUrl, excludedHolders: POOL_ADDRESSES })
+    const explorerBase = cfg.tokenExplorerUrl ?? cfg.explorerUrl
+    let result = await buildRiskReport(cfg.db, address, now(), { explorerBase, excludedHolders: POOL_ADDRESSES })
+    // Not in the Pons V2 indexer: fall back to a limited report from DexScreener + Blockscout (cached to spare third-party rate limits).
+    if (result.kind === 'no_data') {
+      const fetchFn = cfg.externalFetch ?? (fetch as unknown as FetchLike)
+      const [market, chain] = await externalCache.get(address.toLowerCase(), () =>
+        Promise.all([fetchMarket(fetchFn, serviceChainSlug, address), fetchChainData(fetchFn, explorerBase, address, POOL_ADDRESSES)]),
+      )
+      result = buildExternalReport(market, chain, getAddress(address), now(), { explorerBase })
+    }
     if (result.kind !== 'report') return reply.code(422).send({ error: result.kind === 'too_new' ? 'token_too_new' : 'no_data' })
 
     const body: AskResponse = askResponseSchema.parse({

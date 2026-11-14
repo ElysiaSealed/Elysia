@@ -16,6 +16,9 @@ export const THRESHOLDS = {
   thinTradersRisk: 3,
   sellPressureWatchPct: 90,
   creatorSellShareRiskPct: 30,
+  // External tokens only. [di luar brief] PENDING: numbers are provisional.
+  liquidityWatchUsd: 5000,
+  liquidityRiskUsd: 1000,
 } as const
 
 export interface SignalInput {
@@ -134,4 +137,51 @@ export function riskLevelOf(signals: Signal[]): RiskLevel {
   if (unknown >= Math.ceil(signals.length / 2)) return 'unknown'
   if (signals.some((s) => s.level === 'watch')) return 'medium'
   return 'low'
+}
+
+export interface ExternalSignalInput {
+  top1ShareBps: number | null
+  top10ShareBps: number | null
+  liquidityUsd: number | null
+  buys24h: number | null
+  sells24h: number | null
+  verified: boolean | null
+}
+
+const unknownSignal = (id: string, label: string, note: string): Signal => ({ id, label, value: 'unknown', level: 'unknown', note })
+const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`
+
+/** Fixed-rule signals for tokens outside the Pons V2 indexer. Missing data is "unknown", never a guess. */
+export function buildExternalSignals(i: ExternalSignalInput): Signal[] {
+  const T = THRESHOLDS
+  const out: Signal[] = []
+
+  if (i.top1ShareBps === null) out.push(unknownSignal('top_holder', 'Largest holder', 'Holder data is not available.'))
+  else {
+    const level = i.top1ShareBps >= T.topHolderRiskBps ? 'risk' : i.top1ShareBps >= T.topHolderWatchBps ? 'watch' : 'ok'
+    out.push({ id: 'top_holder', label: 'Largest holder', value: pct(i.top1ShareBps), level, note: `Excludes known pool contracts. Watch from ${pct(T.topHolderWatchBps)}, risk from ${pct(T.topHolderRiskBps)}.` })
+  }
+
+  if (i.top10ShareBps === null) out.push(unknownSignal('top10', 'Top 10 holders', 'Holder data is not available.'))
+  else {
+    const level = i.top10ShareBps >= T.top10RiskBps ? 'risk' : i.top10ShareBps >= T.top10WatchBps ? 'watch' : 'ok'
+    out.push({ id: 'top10', label: 'Top 10 holders', value: pct(i.top10ShareBps), level, note: `Combined share. Watch from ${pct(T.top10WatchBps)}, risk from ${pct(T.top10RiskBps)}.` })
+  }
+
+  if (i.liquidityUsd === null) out.push(unknownSignal('liquidity', 'Pool liquidity', 'Liquidity is not reported.'))
+  else {
+    const level = i.liquidityUsd < T.liquidityRiskUsd ? 'risk' : i.liquidityUsd < T.liquidityWatchUsd ? 'watch' : 'ok'
+    out.push({ id: 'liquidity', label: 'Pool liquidity', value: usd(i.liquidityUsd), level, note: `Main pair only. Watch below ${usd(T.liquidityWatchUsd)}, risk below ${usd(T.liquidityRiskUsd)}.` })
+  }
+
+  if (i.buys24h === null || i.sells24h === null) out.push(unknownSignal('recent_activity', 'Trades in the last 24h', 'Trade counts are not reported.'))
+  else {
+    const n = i.buys24h + i.sells24h
+    out.push({ id: 'recent_activity', label: 'Trades in the last 24h', value: String(n), level: n === 0 ? 'watch' : 'ok', note: 'No trades in 24 hours means the market is inactive.' })
+  }
+
+  if (i.verified === null) out.push(unknownSignal('verified', 'Contract source', 'Verification status is not available.'))
+  else out.push({ id: 'verified', label: 'Contract source', value: i.verified ? 'verified' : 'not verified', level: i.verified ? 'ok' : 'watch', note: 'Verified source code can be read on Blockscout.' })
+
+  return out
 }

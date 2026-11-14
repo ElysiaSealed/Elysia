@@ -163,6 +163,7 @@ export async function buildRiskReport(db: Db, address: string, now: Date, opts: 
   return {
     kind: 'report',
     report: {
+      source: 'indexer',
       name: t.name,
       symbol: t.symbol,
       ageSeconds,
@@ -181,6 +182,8 @@ export async function buildRiskReport(db: Db, address: string, now: Date, opts: 
         pair: pairAddr ? { address: pairAddr, symbol: PAIR_SYMBOLS[pairAddr.toLowerCase()] ?? null, decimals } : null,
         launchedAt: t.launchedAt.toISOString(),
         graduatedAt: toIso(t.graduatedAt),
+        market: null,
+        contractVerified: null,
         activity: {
           uniqueTraders: overall?.traders ?? 0,
           uniqueBuyers: buy?.traders ?? 0,

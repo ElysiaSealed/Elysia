@@ -6,16 +6,23 @@ const utc = (iso: string | null) => (iso ? `${iso.slice(0, 16).replace('T', ' ')
 const LEVEL_TEXT = { ok: 'OK', watch: 'Watch', risk: 'Risk', unknown: 'Unknown' } as const
 const RISK_TEXT = { low: 'Low', medium: 'Medium', high: 'High', unknown: 'Not enough data' } as const
 
-/** Full Ask ELYSIA risk report. All values derive from indexer data; evaluation follows fixed rules in the API. */
+const usd = (n: number | null) => (n === null ? 'unknown' : `$${Math.round(n).toLocaleString('en-US')}`)
+const orUnknown = (n: number | null) => (n === null ? 'unknown' : String(n))
+
+/** Full Ask ELYSIA risk report. Pons V2 tokens use indexer data; other tokens get a limited report. Evaluation follows fixed rules in the API. */
 export function AskReport({ result }: { result: AskResponse }) {
   const r = result.report
   const d = r.details
   const unit = d.pair?.symbol ?? 'pair token'
+  const limited = r.source === 'external'
   return (
     <div className="card pg-card" style={{ marginTop: 20 }} aria-live="polite">
       <span className="label" style={{ marginBottom: 0 }}>
-        Risk report
+        {limited ? 'Risk report · limited data' : 'Risk report'}
       </span>
+      {limited ? (
+        <p className="pg-note">This token is not tracked by the ELYSIA indexer. Market data comes from DexScreener and holder data from Blockscout. Fields shown as unknown could not be read.</p>
+      ) : null}
       <h3>
         {r.symbol ?? 'Unknown token'} {r.name ? `· ${r.name}` : ''}
       </h3>
@@ -45,14 +52,16 @@ export function AskReport({ result }: { result: AskResponse }) {
           <span className="k">Top holder share</span>
           <span className="v">{bpsText(r.topHolderShareBps)}</span>
         </div>
+        {r.trades ? (
+          <div>
+            <span className="k">Trades (buys · sells)</span>
+            <span className="v">
+              {r.trades.total} ({r.trades.buys} · {r.trades.sells})
+            </span>
+          </div>
+        ) : null}
         <div>
-          <span className="k">Trades (buys · sells)</span>
-          <span className="v">
-            {r.trades.total} ({r.trades.buys} · {r.trades.sells})
-          </span>
-        </div>
-        <div>
-          <span className="k">Launched</span>
+          <span className="k">{limited ? 'First pair created' : 'Launched'}</span>
           <span className="v">{utc(d.launchedAt)}</span>
         </div>
       </div>
@@ -73,6 +82,44 @@ export function AskReport({ result }: { result: AskResponse }) {
         ))}
       </div>
 
+      {d.market ? (
+        <>
+          <span className="label" style={{ marginBottom: 0 }}>
+            Market (main pair{d.market.dex ? `, ${d.market.dex}` : ''})
+          </span>
+          <div className="pg-kv">
+            <div>
+              <span className="k">Price</span>
+              <span className="v">{d.market.priceUsd ? `$${d.market.priceUsd}` : 'unknown'}</span>
+            </div>
+            <div>
+              <span className="k">Liquidity</span>
+              <span className="v">{usd(d.market.liquidityUsd)}</span>
+            </div>
+            <div>
+              <span className="k">FDV</span>
+              <span className="v">{usd(d.market.fdvUsd)}</span>
+            </div>
+            <div>
+              <span className="k">Volume 24h</span>
+              <span className="v">{usd(d.market.volume24hUsd)}</span>
+            </div>
+            <div>
+              <span className="k">Trades 24h (buys · sells)</span>
+              <span className="v">
+                {orUnknown(d.market.buys24h)} · {orUnknown(d.market.sells24h)}
+              </span>
+            </div>
+            <div>
+              <span className="k">Price change 24h</span>
+              <span className="v">{d.market.priceChange24hPct === null ? 'unknown' : `${d.market.priceChange24hPct}%`}</span>
+            </div>
+          </div>
+        </>
+      ) : null}
+
+      {d.activity ? (
+        <>
       <span className="label" style={{ marginBottom: 0 }}>
         Trading activity
       </span>
@@ -122,6 +169,8 @@ export function AskReport({ result }: { result: AskResponse }) {
           </div>
         ) : null}
       </div>
+        </>
+      ) : null}
 
       <span className="label" style={{ marginBottom: 0 }}>
         Creator wallet
@@ -129,22 +178,30 @@ export function AskReport({ result }: { result: AskResponse }) {
       <div className="pg-kv">
         <div>
           <span className="k">Address</span>
-          <a className="v pg-link" href={d.creator.url} target="_blank" rel="noopener">
-            {short(d.creator.address)}
-          </a>
+          {d.creator ? (
+            <a className="v pg-link" href={d.creator.url} target="_blank" rel="noopener">
+              {short(d.creator.address)}
+            </a>
+          ) : (
+            <span className="v">unknown</span>
+          )}
         </div>
-        <div>
-          <span className="k">Own trades (buys · sells)</span>
-          <span className="v">
-            {d.creatorActivity.trades} ({d.creatorActivity.buys} · {d.creatorActivity.sells})
-          </span>
-        </div>
-        <div>
-          <span className="k">Sold by creator</span>
-          <span className="v">
-            {d.creatorActivity.soldFormatted} {unit}
-          </span>
-        </div>
+        {d.creatorActivity ? (
+          <>
+            <div>
+              <span className="k">Own trades (buys · sells)</span>
+              <span className="v">
+                {d.creatorActivity.trades} ({d.creatorActivity.buys} · {d.creatorActivity.sells})
+              </span>
+            </div>
+            <div>
+              <span className="k">Sold by creator</span>
+              <span className="v">
+                {d.creatorActivity.soldFormatted} {unit}
+              </span>
+            </div>
+          </>
+        ) : null}
       </div>
 
       {d.holders ? (
@@ -184,6 +241,11 @@ export function AskReport({ result }: { result: AskResponse }) {
         <a className="pg-link" href={d.token.url} target="_blank" rel="noopener">
           Token on Blockscout ↗
         </a>
+        {d.market?.pairUrl ? (
+          <a className="pg-link" href={d.market.pairUrl} target="_blank" rel="noopener">
+            Pair on DexScreener ↗
+          </a>
+        ) : null}
         {d.curve ? (
           <a className="pg-link" href={d.curve.url} target="_blank" rel="noopener">
             Bonding curve ↗

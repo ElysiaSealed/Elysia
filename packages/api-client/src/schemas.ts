@@ -166,13 +166,16 @@ export const askResponseSchema = z.object({
   generatedAt: iso,
   /** Ringkasan risiko berbasis data indexer saja. Tanpa data = "tidak tahu", bukan tebakan. */
   report: z.object({
+    /** 'indexer' = token Pons V2 dari data indexer sendiri; 'external' = token lain, data terbatas dari DexScreener dan Blockscout. */
+    source: z.enum(['indexer', 'external']),
     name: z.string().nullable(),
     symbol: z.string().nullable(),
     ageSeconds: z.number().int().nonnegative(),
     graduated: z.boolean(),
     creatorTaxBps: z.number().int().nullable(),
     topHolderShareBps: z.number().int().nullable(),
-    trades: z.object({ total: z.number().int().nonnegative(), buys: z.number().int().nonnegative(), sells: z.number().int().nonnegative() }),
+    /** Null untuk laporan 'external': jumlah trade dari indexer tidak tersedia (lihat `details.market`). */
+    trades: z.object({ total: z.number().int().nonnegative(), buys: z.number().int().nonnegative(), sells: z.number().int().nonnegative() }).nullable(),
     redFlags: z.array(z.string()),
     unknowns: z.array(z.string()),
     /** Ringkasan satu kata dari `signals`: aturan tetap, bukan prediksi dan bukan saran beli atau jual. */
@@ -190,12 +193,29 @@ export const askResponseSchema = z.object({
     details: z.object({
       /** Alamat on-chain beserta link Blockscout. */
       token: z.object({ address: z.string(), url: z.string().url() }),
-      creator: z.object({ address: z.string(), url: z.string().url() }),
+      /** Null bila kreator tidak dapat dibaca (laporan 'external'). */
+      creator: z.object({ address: z.string(), url: z.string().url() }).nullable(),
       curve: z.object({ address: z.string(), url: z.string().url() }).nullable(),
       /** Aset pasangan; `symbol` null bila alamatnya tidak dikenal. */
       pair: z.object({ address: z.string(), symbol: z.string().nullable(), decimals: z.number().int().nonnegative().nullable() }).nullable(),
       launchedAt: iso,
       graduatedAt: iso.nullable(),
+      /** Data pasar dari DexScreener; null untuk token indexer. Nilai yang tidak tersedia = null (bukan 0). */
+      market: z
+        .object({
+          dex: z.string().nullable(),
+          pairUrl: z.string().url().nullable(),
+          priceUsd: z.string().nullable(),
+          liquidityUsd: z.number().nonnegative().nullable(),
+          fdvUsd: z.number().nonnegative().nullable(),
+          volume24hUsd: z.number().nonnegative().nullable(),
+          buys24h: z.number().int().nonnegative().nullable(),
+          sells24h: z.number().int().nonnegative().nullable(),
+          priceChange24hPct: z.number().nullable(),
+        })
+        .nullable(),
+      /** Status verifikasi kontrak di Blockscout; null = tidak diketahui. */
+      contractVerified: z.boolean().nullable(),
       activity: z.object({
         uniqueTraders: z.number().int().nonnegative(),
         uniqueBuyers: z.number().int().nonnegative(),
@@ -214,14 +234,14 @@ export const askResponseSchema = z.object({
           netFormatted: z.string(),
         }),
         largestTrade: z.object({ side: z.enum(['buy', 'sell']), quoteRaw: z.string(), quoteFormatted: z.string(), trader: z.string(), at: iso }).nullable(),
-      }),
+      }).nullable(),
       creatorActivity: z.object({
         trades: z.number().int().nonnegative(),
         buys: z.number().int().nonnegative(),
         sells: z.number().int().nonnegative(),
         soldRaw: z.string(),
         soldFormatted: z.string(),
-      }),
+      }).nullable(),
       /** Null bila riwayat holder tidak lengkap (sama seperti `topHolderShareBps`). */
       holders: z
         .object({
