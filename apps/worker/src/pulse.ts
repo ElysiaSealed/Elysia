@@ -1,11 +1,14 @@
-import { and, count, desc, eq, gte, inArray, ne } from 'drizzle-orm'
+import { and, count, eq, gte, inArray, ne } from 'drizzle-orm'
 import { postQueue } from '@elysia/db'
 import { loadPonsHighlights } from './facts'
 import { buildGraduationFrom, buildLaunchFrom, buildSummary, type Built, type ReportDeps } from './reports'
-import { enqueuePost } from './queue'
+import { PUBLIC_POST_DELAY_MS, enqueuePost, lastSlotAt } from './queue'
 
 /** Jenis antrian untuk post pulse. Masuk X hanya bila ada di X_POST_KINDS. */
 export const PULSE_KIND = 'pulse'
+
+/** Setelah selama ini tanpa post baru sejak slot terakhir, topik Stock Token yang sudah dibahas boleh diulang. */
+const URGENT_AFTER_MS = 25 * 60_000
 
 export interface PulseConfig {
   /** Jarak minimum antar pulse (ms). Arahan head dev: 30 menit. */
@@ -69,13 +72,14 @@ export async function runPulse(d: PulseDeps, now = new Date()): Promise<PulseSte
     .limit(1)
   if (open) return 'backlog'
 
-  const [last] = await db
-    .select({ at: postQueue.createdAt })
-    .from(postQueue)
-    .where(and(eq(postQueue.kind, PULSE_KIND), ne(postQueue.status, 'rejected')))
-    .orderBy(desc(postQueue.createdAt))
-    .limit(1)
-  if (last && now.getTime() - last.at.getTime() < d.cfg.intervalMs) return 'wait'
+  // Jeda dihitung dari slot terakhir di antrian (semua jenis post), bukan dari pulse terakhir: pulse dibuat 15 menit sebelum
+  // slot berikutnya (intervalMs setelah slot terakhir), sehingga jeda antar post publik 30 menit dan tidak tumpang tindih
+  // dengan prediksi atau ringkasan harian.
+  const lastSlot = await lastSlotAt(db)
+  if (lastSlot && now.getTime() < lastSlot.getTime() + d.cfg.intervalMs - PUBLIC_POST_DELAY_MS) return 'wait'
+  // Sepi topik: bila slot berikutnya sudah mendekati 1 jam sejak post terakhir, Stock Token boleh dibahas lagi (data oracle
+  // selalu baru) supaya jeda antar post tidak melewati 1 jam.
+  const urgent = lastSlot !== null && now.getTime() - lastSlot.getTime() >= URGENT_AFTER_MS
   if (now.getTime() - d.state.lastAttemptAt < d.cfg.minRetryMs) return 'retry_later'
 
   const widest = Math.max(d.cfg.tokenRepeatMs, d.cfg.stockRepeatMs)
@@ -83,7 +87,7 @@ export async function runPulse(d: PulseDeps, now = new Date()): Promise<PulseSte
     .select({ content: postQueue.content, at: postQueue.createdAt })
     .from(postQueue)
     .where(and(eq(postQueue.kind, PULSE_KIND), ne(postQueue.status, 'rejected'), gte(postQueue.createdAt, new Date(now.getTime() - widest))))
-  const covered = (t: Topic) => recent.some((r) => now.getTime() - r.at.getTime() < t.windowMs && mentions(r.content, t.symbol))
+  const covered = (t: Topic) => !(urgent && t.key.startsWith('stock:')) && recent.some((r) => now.getTime() - r.at.getTime() < t.windowMs && mentions(r.content, t.symbol))
 
   const topics: Topic[] = []
   const highlights = await loadPonsHighlights(db, now)

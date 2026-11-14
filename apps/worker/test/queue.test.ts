@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { eq } from 'drizzle-orm'
 import { postQueue, proAlerts, predictions, riskguardLog } from '@elysia/db'
 import {
+  POST_GAP_MS,
   PUBLIC_POST_DELAY_MS,
   PipelineError,
   approvePost,
@@ -117,6 +118,28 @@ describe.skipIf(!dbUp)('antrian persetujuan', () => {
     expect(await dueForPublish(db, new Date(due))).toHaveLength(1)
     const [alert] = await db.select().from(proAlerts).where(eq(proAlerts.postId, r.id))
     expect(alert?.publicAt?.getTime()).toBe(due)
+  })
+
+  it('slot: dua post disetujui bersamaan terbit berjarak 30 menit, dan alert memuat jam yang sama', async () => {
+    const a = await enqueuePost(db, { ...summary('Selisih DEX vs oracle NVDA 0.4%.'), kind: 'pulse', now: T0, riskguardConfig: { approvalMode: 'risky' } })
+    const b = await enqueuePost(db, { ...summary('Selisih DEX vs oracle ETH 0.3%.'), kind: 'pulse', now: T0, riskguardConfig: { approvalMode: 'risky' } })
+    const [pa, pb] = [await getPost(db, a.id), await getPost(db, b.id)]
+    expect(pa?.scheduledAt?.getTime()).toBe(T0.getTime() + PUBLIC_POST_DELAY_MS)
+    expect(pb?.scheduledAt?.getTime()).toBe(T0.getTime() + PUBLIC_POST_DELAY_MS + POST_GAP_MS)
+    const [alert] = await db.select().from(proAlerts).where(eq(proAlerts.postId, b.id))
+    expect(alert?.publicAt?.getTime()).toBe(pb?.scheduledAt?.getTime())
+  })
+
+  it('slot: prediksi dan ringkasan harian didahulukan dari pulse yang belum dialert, pulse digeser', async () => {
+    const pulse = await enqueuePost(db, { ...summary('Selisih DEX vs oracle NVDA 0.4%.'), kind: 'pulse', now: T0, riskguardConfig: { approvalMode: 'risky' } })
+    const frozen = await getPost(db, pulse.id) // jadwal T0+15 menit: alert sudah keluar, tidak digeser
+    const later = new Date(T0.getTime() + 20 * 60_000)
+    const p2 = await enqueuePost(db, { ...summary('Selisih DEX vs oracle ETH 0.3%.'), kind: 'pulse', now: later, riskguardConfig: { approvalMode: 'risky' } })
+    const daily = await enqueuePost(db, { ...summary('Stock Token NVDA oracle $161.40.'), now: later, riskguardConfig: { approvalMode: 'risky' } })
+    const [rf, rp, rd] = [await getPost(db, pulse.id), await getPost(db, p2.id), await getPost(db, daily.id)]
+    expect(rf?.scheduledAt?.getTime()).toBe(frozen?.scheduledAt?.getTime())
+    expect(rd?.scheduledAt?.getTime()).toBe(frozen!.scheduledAt!.getTime() + POST_GAP_MS)
+    expect(rp?.scheduledAt?.getTime()).toBe(rd!.scheduledAt!.getTime() + POST_GAP_MS)
   })
 
   it('reject menghapus dari daftar pending; tidak bisa approve dua kali', async () => {

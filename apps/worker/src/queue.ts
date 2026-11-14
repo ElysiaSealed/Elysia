@@ -1,4 +1,4 @@
-import { and, asc, eq, lte } from 'drizzle-orm'
+import { and, asc, desc, eq, isNull, lte, sql } from 'drizzle-orm'
 import type { createDb } from '@elysia/db'
 import { postQueue, predictions, proAlerts, riskguardLog } from '@elysia/db'
 import {
@@ -14,6 +14,70 @@ export type PostMode = 'dry' | 'live'
 
 /** Post publik ditunda 15 menit dari alert Pro (brief, aturan pipeline 5). */
 export const PUBLIC_POST_DELAY_MS = 15 * 60 * 1000
+
+/** Jeda minimum antar post publik: 30 menit. Dijaga lewat slot di antrian, jadi jam di alert Pro sama dengan jam terbit di X. */
+export const POST_GAP_MS = 30 * 60 * 1000
+
+/** Jenis post yang didahulukan di antrian slot: prediksi harian dan ringkasan Stock Token harian. */
+export const PRIORITY_KINDS: readonly string[] = ['prediction', 'daily_summary']
+
+/** Slot terakhir yang terpakai: post terbit terakhir atau jadwal terjauh dari post yang sudah disetujui. Null bila antrian kosong. */
+export async function lastSlotAt(db: Db): Promise<Date | null> {
+  const [posted] = await db
+    .select({ posted: postQueue.postedAt, scheduled: postQueue.scheduledAt })
+    .from(postQueue)
+    .where(eq(postQueue.status, 'posted'))
+    .orderBy(desc(sql`coalesce(${postQueue.postedAt}, ${postQueue.scheduledAt})`))
+    .limit(1)
+  const [queued] = await db
+    .select({ at: postQueue.scheduledAt })
+    .from(postQueue)
+    .where(eq(postQueue.status, 'approved'))
+    .orderBy(desc(postQueue.scheduledAt))
+    .limit(1)
+  const times = [posted?.posted ?? posted?.scheduled, queued?.at].filter((d): d is Date => d instanceof Date)
+  return times.length ? new Date(Math.max(...times.map((d) => d.getTime()))) : null
+}
+
+/**
+ * Membagi slot untuk semua post yang sudah disetujui dan belum terbit, dengan jeda minimal POST_GAP_MS antar post.
+ * Slot dihitung dari persetujuan + 15 menit untuk `newId`; post lain tidak pernah dimajukan, hanya digeser ke belakang.
+ * Post yang alert Pro-nya sudah keluar (jadwal <= sekarang + 15 menit) atau sudah terbit tidak digeser. Jenis prioritas
+ * (PRIORITY_KINDS) dilayani lebih dulu, sisanya menurut urutan pembuatan. Jadwal alert yang belum terkirim ikut diperbarui.
+ */
+export async function assignSlots(db: Db, now: Date, newId: number): Promise<void> {
+  const horizon = now.getTime() + PUBLIC_POST_DELAY_MS
+  const approved = await db
+    .select({ id: postQueue.id, kind: postQueue.kind, scheduledAt: postQueue.scheduledAt })
+    .from(postQueue)
+    .where(eq(postQueue.status, 'approved'))
+    .orderBy(asc(postQueue.id))
+  const frozen = approved.filter((r) => r.id !== newId && (r.scheduledAt?.getTime() ?? 0) <= horizon)
+  const free = approved
+    .filter((r) => !frozen.includes(r))
+    .sort((a, b) => Number(PRIORITY_KINDS.includes(b.kind)) - Number(PRIORITY_KINDS.includes(a.kind)) || a.id - b.id)
+
+  const [posted] = await db
+    .select({ posted: postQueue.postedAt, scheduled: postQueue.scheduledAt })
+    .from(postQueue)
+    .where(eq(postQueue.status, 'posted'))
+    .orderBy(desc(sql`coalesce(${postQueue.postedAt}, ${postQueue.scheduledAt})`))
+    .limit(1)
+  let prev = Math.max(
+    posted ? (posted.posted ?? posted.scheduled)?.getTime() ?? -Infinity : -Infinity,
+    ...frozen.map((r) => r.scheduledAt?.getTime() ?? -Infinity),
+  )
+
+  for (const r of free) {
+    const earliest = r.id === newId ? horizon : (r.scheduledAt?.getTime() ?? horizon)
+    const slot = Math.max(earliest, prev + POST_GAP_MS)
+    prev = slot
+    if (slot === r.scheduledAt?.getTime()) continue
+    const at = new Date(slot)
+    await db.update(postQueue).set({ scheduledAt: at }).where(eq(postQueue.id, r.id))
+    await db.update(proAlerts).set({ publicAt: at }).where(and(eq(proAlerts.postId, r.id), isNull(proAlerts.telegramDispatchedAt)))
+  }
+}
 
 export interface EnqueueParams {
   kind: string
@@ -80,7 +144,12 @@ export async function enqueuePost(db: Db, p: EnqueueParams): Promise<EnqueueResu
         mode: p.mode,
       })
       .returning()
-    if (status === 'approved') await recordProAlert(tx as unknown as Db, post!)
+    if (status === 'approved') {
+      await assignSlots(tx as unknown as Db, now, post!.id)
+      const [fresh] = await tx.select().from(postQueue).where(eq(postQueue.id, post!.id))
+      await recordProAlert(tx as unknown as Db, fresh!)
+      return fresh!
+    }
     return post!
   })
   return { id: row.id, status, decision }
@@ -116,7 +185,11 @@ async function transition(db: Db, id: number, to: 'approved' | 'rejected', now =
       .where(and(eq(postQueue.id, id), eq(postQueue.status, 'pending_approval')))
       .returning()
     if (updated.length === 0) throw new PipelineError(`post ${id} tidak ada atau tidak sedang menunggu persetujuan`)
-    if (to === 'approved') await recordProAlert(tx as unknown as Db, updated[0]!)
+    if (to === 'approved') {
+      await assignSlots(tx as unknown as Db, now, id)
+      const [fresh] = await tx.select().from(postQueue).where(eq(postQueue.id, id))
+      await recordProAlert(tx as unknown as Db, fresh!)
+    }
   })
 }
 

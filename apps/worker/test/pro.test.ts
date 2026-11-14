@@ -114,6 +114,15 @@ describe.skipIf(!dbUp)('dispatchProAlerts', () => {
     expect(s.sent).toEqual([{ chatId: '111', text: 'Isi alert.\n\nPublic on X around 12:15 UTC.' }])
   })
 
+  it('alert ditahan sampai 15 menit sebelum jadwal publik (slot antrian), baru lalu dikirim', async () => {
+    await addAlert('Slot nanti.', new Date(NOW.getTime() + 45 * MIN))
+    await sub(A, DAY)
+    await link(A, '111')
+    const s = new FakeSender()
+    expect((await dispatchProAlerts(db, s, NOW)).alerts).toBe(0)
+    expect((await dispatchProAlerts(db, s, new Date(NOW.getTime() + 30 * MIN))).sent).toBe(1)
+  })
+
   it('setiap alert diklaim sekali: putaran kedua tidak mengirim ulang', async () => {
     await addAlert('Satu kali saja.', publicLater)
     await sub(A, DAY)

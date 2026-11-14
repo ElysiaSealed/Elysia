@@ -1,6 +1,6 @@
-import { and, asc, eq, gt, isNull } from 'drizzle-orm'
+import { and, asc, eq, gt, isNull, lte, or } from 'drizzle-orm'
 import { indexerState, proAlerts, proSubscriptions, telegramLinkCodes, telegramLinks } from '@elysia/db'
-import type { Db } from './queue'
+import { PUBLIC_POST_DELAY_MS, type Db } from './queue'
 import { TelegramError, type ChatSender, type TelegramApi, type TelegramUpdate } from './telegram'
 
 const BATCH = 20
@@ -23,7 +23,10 @@ export interface DispatchResult {
  */
 export async function dispatchProAlerts(db: Db, sender: ChatSender, now: Date = new Date()): Promise<DispatchResult> {
   const res: DispatchResult = { alerts: 0, sent: 0, failed: 0, skippedPublic: 0 }
-  const pending = await db.select().from(proAlerts).where(isNull(proAlerts.telegramDispatchedAt)).orderBy(asc(proAlerts.id)).limit(BATCH)
+  // Alert keluar tepat 15 menit sebelum jadwal publik. Jadwal ditentukan antrian slot (jeda minimal 30 menit antar post),
+  // jadi alert juga berjarak sama; alert tanpa jadwal langsung dikirim.
+  const due = or(isNull(proAlerts.publicAt), lte(proAlerts.publicAt, new Date(now.getTime() + PUBLIC_POST_DELAY_MS)))
+  const pending = await db.select().from(proAlerts).where(and(isNull(proAlerts.telegramDispatchedAt), due)).orderBy(asc(proAlerts.id)).limit(BATCH)
   for (const alert of pending) {
     const claimed = await db
       .update(proAlerts)
