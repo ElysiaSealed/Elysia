@@ -52,9 +52,14 @@ export async function loadTokenFacts(db: Db, address: string, now: Date): Promis
 export interface PonsHighlights {
   /** Launch (dalam 24 jam terakhir) dengan trade terbanyak; umur >= 1 jam. */
   top: (TokenFacts & { trades24h: number }) | null
-  /** Token yang graduate dalam 24 jam terakhir; umur >= 1 jam. */
+  /** Semua launch yang memenuhi syarat `top`, urut trade terbanyak (maks. PULSE_CANDIDATES). Dipakai pulse agar token yang sudah dibahas tidak menutup yang lain. */
+  launches: (TokenFacts & { trades24h: number })[]
+  /** Token yang graduate dalam 24 jam terakhir; umur >= 1 jam (maks. PULSE_CANDIDATES). */
   graduated: TokenFacts[]
 }
+
+/** Jumlah kandidat per jenis yang dikembalikan; pulse memilih yang belum dibahas. */
+const PULSE_CANDIDATES = 10
 
 export async function loadPonsHighlights(db: Db, now: Date, minAgeSeconds = 3600): Promise<PonsHighlights> {
   const since = new Date(now.getTime() - DAY_MS)
@@ -67,22 +72,22 @@ export async function loadPonsHighlights(db: Db, now: Date, minAgeSeconds = 3600
     .limit(25)
 
   // "Launch": diluncurkan dalam 24 jam terakhir (umur <= 24 jam), bukan token lama yang kebetulan ramai; dan umur >= 1 jam.
-  let top: PonsHighlights['top'] = null
+  const launches: PonsHighlights['launches'] = []
   for (const row of busy) {
     const f = await loadTokenFacts(db, row.token, now)
     if (!f || f.ageSeconds < minAgeSeconds || f.ageSeconds * 1000 > DAY_MS) continue
-    top = { ...f, trades24h: Number(row.n) }
-    break
+    launches.push({ ...f, trades24h: Number(row.n) })
+    if (launches.length === PULSE_CANDIDATES) break
   }
 
-  const grads = await db.select().from(ponsTokens).where(gte(ponsTokens.graduatedAt, since)).orderBy(desc(ponsTokens.graduatedAt)).limit(5)
+  const grads = await db.select().from(ponsTokens).where(gte(ponsTokens.graduatedAt, since)).orderBy(desc(ponsTokens.graduatedAt)).limit(PULSE_CANDIDATES * 2)
   const graduated: TokenFacts[] = []
   for (const g of grads) {
     const f = await loadTokenFacts(db, g.address, now)
     if (f && f.ageSeconds >= minAgeSeconds) graduated.push(f)
-    if (graduated.length === 2) break
+    if (graduated.length === PULSE_CANDIDATES) break
   }
-  return { top, graduated }
+  return { top: launches[0] ?? null, launches, graduated }
 }
 
 export interface WhaleSummary {

@@ -1,6 +1,6 @@
 import { and, count, desc, eq, gte, inArray, ne } from 'drizzle-orm'
 import { postQueue } from '@elysia/db'
-import { DAY_MS, loadPonsHighlights } from './facts'
+import { loadPonsHighlights } from './facts'
 import { buildGraduationFrom, buildLaunchFrom, buildSummary, type Built, type ReportDeps } from './reports'
 import { enqueuePost } from './queue'
 
@@ -33,8 +33,8 @@ export type PulseStep = 'wait' | 'backlog' | 'cap_reached' | 'retry_later' | 'no
 
 export const newPulseState = (): PulseDeps['state'] => ({ lastAttemptAt: 0, failures: new Map() })
 
-/** Jendela bawaan: token Pons sekali sehari, Stock Token tiap 4 jam. */
-export const DEFAULT_PULSE_WINDOWS = { tokenRepeatMs: DAY_MS, stockRepeatMs: 4 * 3_600_000 }
+/** Jendela bawaan: token Pons tiap 6 jam, Stock Token tiap 2 jam. */
+export const DEFAULT_PULSE_WINDOWS = { tokenRepeatMs: 6 * 3_600_000, stockRepeatMs: 2 * 3_600_000 }
 
 interface Topic {
   key: string
@@ -96,8 +96,8 @@ export async function runPulse(d: PulseDeps, now = new Date()): Promise<PulseSte
       build: () => buildGraduationFrom(d.report, g),
     })
   }
-  const top = highlights.top
-  if (top?.symbol) {
+  for (const top of highlights.launches) {
+    if (!top.symbol) continue
     topics.push({
       key: `launch:${top.address}`,
       symbol: top.symbol,
