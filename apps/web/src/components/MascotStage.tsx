@@ -22,8 +22,9 @@ const range = (from: number, to: number): number[] => {
 
 // Frames 1-37: eyes down. 63-79: eyes up. 81-109: head turns right. 181 back to 153: head turns left.
 // Frames 40-52 (eyes closing) and 141-149 (eyes closed) are skipped on purpose.
-const X_NEG = range(153, 181) // extreme left .. neutral
-const X_POS = range(81, 109) // neutral .. extreme right
+// The head turn stops short of the full profile: a moderate turn with the eyes leading looks natural (frame 169 left, 85 right).
+const X_NEG = range(169, 181) // max left .. neutral
+const X_POS = range(81, 85) // neutral .. max right
 const Y_NEG = range(63, 79) // extreme up .. neutral
 const Y_POS = range(1, 37) // neutral .. extreme down
 
@@ -38,18 +39,26 @@ const densify = (nums: number[]): string[] =>
     return [key(n), ...(next > n ? [`${low}_1`, `${low}_2`] : [`${low}_2`, `${low}_1`])]
   })
 
-const X_NEG_D = densify(X_NEG)
-const X_POS_D = densify(X_POS)
-const Y_NEG_D = densify(Y_NEG)
-const Y_POS_D = densify(Y_POS)
+// The arms of the take end on different neutral poses (frames 1 and 181 sit lower, 79 and 81 higher). Every arm is bridged to
+// ONE shared centre frame (79) by flow in-betweens (frame_bNNNN_i.webp, scripts/mascot-inbetween.py), so crossing the centre
+// or switching axis never pops and the head never dips. Keep BRIDGE_STEPS in sync with BRIDGES in that script.
+const CENTER_KEY = key(79)
+const BRIDGE_STEPS: Record<number, number> = { 181: 6, 1: 6, 81: 3 }
+/** Bridge frames that move from the arm end towards the centre. */
+const bridgeIn = (end: number) => Array.from({ length: BRIDGE_STEPS[end] ?? 0 }, (_, i) => `b${key(end)}_${i + 1}`)
+
+const X_NEG_D = [...densify(X_NEG), ...bridgeIn(181), CENTER_KEY] // max left .. centre
+const X_POS_D = [...bridgeIn(81).reverse(), ...densify(X_POS)] // after the centre .. max right
+const Y_NEG_D = densify(Y_NEG) // max up .. centre (ends on frame 79)
+const Y_POS_D = [...bridgeIn(1).reverse(), ...densify(Y_POS)] // after the centre .. max down
 const AXIS_X = [...X_NEG_D, ...X_POS_D]
 const AXIS_Y = [...Y_NEG_D, ...Y_POS_D]
 
-const CENTER_FRAME = key(1)
+const CENTER_FRAME = CENTER_KEY
 
 // Pointer physics
-const MAX_VELOCITY = 0.036 // max axis step per tick (60FPS) so fast flicks do not skip poses
-const DAMPING_FACTOR = 0.08 // responsive but still inertial: the dense frames hide the steps
+const MAX_VELOCITY = 0.05 // max axis step per tick (60FPS) so fast flicks do not skip poses
+const DAMPING_FACTOR = 0.11 // responsive but still inertial: the dense frames hide the steps
 const DEAD_ZONE = 0.05
 const AXIS_SWITCH_MARGIN = 0.12 // how much the other axis must lead before the pose switches
 
@@ -60,7 +69,7 @@ const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min)
 const frameSrc = (k: string) => `/mascot/frame_${k}.webp`
 
 /** Axis position in [-1, 1] -> index into the axis frame list. Neutral sits at the join of both halves. */
-const axisIndex = (p: number, nNeg: number, nPos: number) => Math.round(p < 0 ? (1 + p) * (nNeg - 1) : nNeg - 1 + p * nPos)
+const axisPos = (p: number, nNeg: number, nPos: number) => (p < 0 ? (1 + p) * (nNeg - 1) : nNeg - 1 + p * nPos)
 
 export function MascotStage() {
   const root = useRef<HTMLDivElement>(null)
@@ -94,7 +103,11 @@ export function MascotStage() {
       if (images.has(k)) return
       const img = new Image()
       img.decoding = 'async'
-      img.onload = () => onLoadFrame(k)
+      img.onload = () => {
+        onLoadFrame(k)
+        // Decode ahead of time so the first draw of a pose never stalls the frame
+        void img.decode().catch(() => undefined)
+      }
       img.src = frameSrc(k)
       images.set(k, img)
     }
@@ -109,7 +122,7 @@ export function MascotStage() {
     const nY = [pick(Y_NEG_D).length, pick(Y_POS_D).length] as const
 
     // Priority: neutral poses and the extremes of each axis, then the other source frames, then the in-betweens
-    const priority = [CENTER_FRAME, ...[181, 81, 79, 153, 109, 63, 37].map(key)]
+    const priority = [CENTER_FRAME, ...[181, 81, 79, 169, 85, 63, 37].map(key)]
     for (const k of priority) load(k)
     const all = [...axisX, ...axisY]
     for (const k of all) if (!k.includes('_')) load(k)
@@ -190,9 +203,11 @@ export function MascotStage() {
     const tick = (now: number) => {
       const t = (now - start) / 1000
 
-      // Auto-idle: after 3.5s a slow, small sway around the center
+      // Auto-idle: after 3.5s the head sweeps left and right through real frames. The sweep is wide and brisk enough
+      // (peak ~45 poses per second) that the pose changes on almost every refresh, like playing the video. A tiny, slow
+      // sway would hold each pose for a few hundred milliseconds and read as stutter.
       const isIdle = now - lastMoveTime > 3500
-      const goalX = isIdle ? Math.sin(t * 0.45) * 0.12 : target.x
+      const goalX = isIdle ? Math.sin(t * 0.8) * 0.45 + Math.sin(t * 1.7 + 1) * 0.1 : target.x
       const goalY = isIdle ? 0 : target.y
 
       // Physics: ease toward the goal with a velocity clamp
@@ -228,8 +243,14 @@ export function MascotStage() {
           return null
         }
 
-        const index = axis === 'x' ? axisIndex(current.x, ...nX) : axisIndex(current.y, ...nY)
-        const img = imageAt(axis === 'x' ? axisX : axisY, index)
+        // Fractional position along the axis. With in-betweens the two nearest poses differ by a hair, so cross-fading them
+        // gives continuous sub-frame motion (no ghost: unlike distant frames, neighbours are almost identical).
+        const frames = axis === 'x' ? axisX : axisY
+        const pos = clamp(axis === 'x' ? axisPos(current.x, ...nX) : axisPos(current.y, ...nY), 0, frames.length - 1)
+        const i0 = Math.floor(pos)
+        const mix = withMids ? pos - i0 : 0
+        const img = imageAt(frames, mix < 0.5 ? i0 : i0 + 1)
+        const next = mix > 0.02 && mix < 0.98 ? imageAt(frames, mix < 0.5 ? i0 + 1 : i0) : null
 
         if (img) {
           mainCtx.save()
@@ -252,6 +273,11 @@ export function MascotStage() {
             offsetX = (cw - renderWidth) / 2
           }
           mainCtx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight)
+          if (next && next !== img) {
+            // Draw the nearer pose opaque and lay the other over it by its distance, so the blend never dips in brightness
+            mainCtx.globalAlpha = mix < 0.5 ? mix : 1 - mix
+            mainCtx.drawImage(next, offsetX, offsetY, renderWidth, renderHeight)
+          }
           mainCtx.restore()
         }
       }
