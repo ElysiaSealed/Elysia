@@ -37,7 +37,7 @@ a.pg-row:hover{border-color:var(--line-2)}
 .pg-note{color:var(--ink-3);font-size:13px;line-height:1.6;max-width:760px}
 .pg-empty{padding:34px 24px;text-align:center;color:var(--ink-2);border:1px dashed var(--line-2);border-radius:var(--r)}
 .pg-empty b{display:block;color:var(--ink);font-weight:500;margin-bottom:6px;font-size:17px}
-.pg-link{color:var(--org);border-bottom:1px solid rgba(140,255,97,.35);transition:border-color .2s,color .2s}
+.pg-link{display:inline-flex;align-items:center;min-height:32px;color:var(--org);border-bottom:1px solid rgba(140,255,97,.35);transition:border-color .2s,color .2s}
 .pg-link:hover{border-color:var(--org);color:var(--org-2)}
 .pg-form{display:grid;gap:12px;max-width:640px}
 .pg-form label{display:grid;gap:6px}
