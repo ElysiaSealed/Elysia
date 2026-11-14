@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from 'react'
  * Each axis is an ordered list of frames from its negative end (left, up) to its positive end (right, down).
  * Exactly one real frame is drawn at a time (the nearest one): blending frames leaves a ghost of the face.
  * Smoothness comes from the frame density and from soft, velocity-clamped easing of the gaze.
+ * Between every two source frames sit two optical-flow in-betweens (public/mascot/frame_NNNN_1|2.webp, made by
+ * scripts/mascot-inbetween.py), so the head and eyes move through three times as many poses, like video.
  */
 
 const range = (from: number, to: number): number[] => {
@@ -24,14 +26,30 @@ const X_NEG = range(153, 181) // extreme left .. neutral
 const X_POS = range(81, 109) // neutral .. extreme right
 const Y_NEG = range(63, 79) // extreme up .. neutral
 const Y_POS = range(1, 37) // neutral .. extreme down
-const AXIS_X = [...X_NEG, ...X_POS]
-const AXIS_Y = [...Y_NEG, ...Y_POS]
 
-const CENTER_FRAME = 1
+// A frame is identified by its file key: "0095" for a source frame, "0095_1" / "0095_2" for the in-betweens after it.
+const key = (n: number) => String(n).padStart(4, '0')
+/** Source frames plus their two in-betweens, in travel order. No in-betweens are inserted across a gap in numbering. */
+const densify = (nums: number[]): string[] =>
+  nums.flatMap((n, i) => {
+    const next = nums[i + 1]
+    if (next === undefined || Math.abs(next - n) !== 1) return [key(n)]
+    const low = key(Math.min(n, next))
+    return [key(n), ...(next > n ? [`${low}_1`, `${low}_2`] : [`${low}_2`, `${low}_1`])]
+  })
+
+const X_NEG_D = densify(X_NEG)
+const X_POS_D = densify(X_POS)
+const Y_NEG_D = densify(Y_NEG)
+const Y_POS_D = densify(Y_POS)
+const AXIS_X = [...X_NEG_D, ...X_POS_D]
+const AXIS_Y = [...Y_NEG_D, ...Y_POS_D]
+
+const CENTER_FRAME = key(1)
 
 // Pointer physics
 const MAX_VELOCITY = 0.036 // max axis step per tick (60FPS) so fast flicks do not skip poses
-const DAMPING_FACTOR = 0.045 // soft natural inertia
+const DAMPING_FACTOR = 0.08 // responsive but still inertial: the dense frames hide the steps
 const DEAD_ZONE = 0.05
 const AXIS_SWITCH_MARGIN = 0.12 // how much the other axis must lead before the pose switches
 
@@ -39,7 +57,7 @@ const NATIVE_WIDTH = 1280
 const NATIVE_HEIGHT = 720
 
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max)
-const frameSrc = (n: number) => `/mascot/frame_${String(n).padStart(4, '0')}.webp`
+const frameSrc = (k: string) => `/mascot/frame_${k}.webp`
 
 /** Axis position in [-1, 1] -> index into the axis frame list. Neutral sits at the join of both halves. */
 const axisIndex = (p: number, nNeg: number, nPos: number) => Math.round(p < 0 ? (1 + p) * (nNeg - 1) : nNeg - 1 + p * nPos)
@@ -64,27 +82,38 @@ export function MascotStage() {
     if (reducedMotion) return
 
     // 1. Preload the frames used by both axes into memory
-    const images: Map<number, HTMLImageElement> = new Map()
+    const images: Map<string, HTMLImageElement> = new Map()
     let loadedCount = 0
 
-    const onLoadFrame = (frameNum: number) => {
+    const onLoadFrame = (frameKey: string) => {
       loadedCount++
-      if (frameNum === CENTER_FRAME || loadedCount >= 8) setIsLoaded(true)
+      if (frameKey === CENTER_FRAME || loadedCount >= 8) setIsLoaded(true)
     }
 
-    const load = (fNum: number) => {
-      if (images.has(fNum)) return
+    const load = (k: string) => {
+      if (images.has(k)) return
       const img = new Image()
       img.decoding = 'async'
-      img.onload = () => onLoadFrame(fNum)
-      img.src = frameSrc(fNum)
-      images.set(fNum, img)
+      img.onload = () => onLoadFrame(k)
+      img.src = frameSrc(k)
+      images.set(k, img)
     }
 
-    // Priority: neutral poses and the extremes of each axis, then everything else
-    const priority = [CENTER_FRAME, 181, 81, 79, 153, 109, 63, 37]
-    for (const fNum of priority) load(fNum)
-    for (const fNum of [...AXIS_X, ...AXIS_Y]) load(fNum)
+    // Every decoded frame is ~3.7 MB of memory: phones and low-memory devices keep to the source frames only.
+    const nav = navigator as Navigator & { deviceMemory?: number }
+    const withMids = window.innerWidth >= 768 && (nav.deviceMemory === undefined || nav.deviceMemory >= 4)
+    const pick = (frames: string[]) => (withMids ? frames : frames.filter((k) => !k.includes('_')))
+    const axisX = pick(AXIS_X)
+    const axisY = pick(AXIS_Y)
+    const nX = [pick(X_NEG_D).length, pick(X_POS_D).length] as const
+    const nY = [pick(Y_NEG_D).length, pick(Y_POS_D).length] as const
+
+    // Priority: neutral poses and the extremes of each axis, then the other source frames, then the in-betweens
+    const priority = [CENTER_FRAME, ...[181, 81, 79, 153, 109, 63, 37].map(key)]
+    for (const k of priority) load(k)
+    const all = [...axisX, ...axisY]
+    for (const k of all) if (!k.includes('_')) load(k)
+    for (const k of all) if (k.includes('_')) load(k)
 
     // Pointer tracking: target and current gaze in [-1, 1] on both axes
     const target = { x: 0, y: 0 }
@@ -188,8 +217,8 @@ export function MascotStage() {
         }
 
         // A frame that has not loaded yet falls back to the nearest loaded neighbour on the same axis
-        const imageAt = (frames: number[], i: number): HTMLImageElement | null => {
-          for (let dist = 0; dist <= 6; dist++) {
+        const imageAt = (frames: string[], i: number): HTMLImageElement | null => {
+          for (let dist = 0; dist <= 8; dist++) {
             for (const j of [i - dist, i + dist]) {
               const frame = frames[clamp(j, 0, frames.length - 1)]
               const img = frame === undefined ? undefined : images.get(frame)
@@ -199,8 +228,8 @@ export function MascotStage() {
           return null
         }
 
-        const index = axis === 'x' ? axisIndex(current.x, X_NEG.length, X_POS.length) : axisIndex(current.y, Y_NEG.length, Y_POS.length)
-        const img = imageAt(axis === 'x' ? AXIS_X : AXIS_Y, index)
+        const index = axis === 'x' ? axisIndex(current.x, ...nX) : axisIndex(current.y, ...nY)
+        const img = imageAt(axis === 'x' ? axisX : axisY, index)
 
         if (img) {
           mainCtx.save()
