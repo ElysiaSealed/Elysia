@@ -95,7 +95,7 @@ export default async function SignalsPage() {
             <>
               Message ELYSIA on{' '}
               <a className="pg-link" href={X_URL} target="_blank" rel="noopener">
-                X
+                X as @{X_HANDLE}
               </a>{' '}
               to request one.
             </>
