@@ -124,7 +124,7 @@ export function Token() {
           </div>
           {' '}
           <div className="vault">
-            <canvas id="embers" aria-hidden="true" />
+            <img className="vault-logo" src="/logo.png" alt="" width={160} height={160} />
             <div className="vl">
               <span>
                 Burn

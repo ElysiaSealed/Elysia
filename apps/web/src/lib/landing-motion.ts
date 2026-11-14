@@ -141,42 +141,6 @@ export function initMotion(NX_DATA) {
     });
   }
 
-  // burn: rotating dial, glowing slot, rising embers
-  const ec=document.getElementById('embers'), ex=ec.getContext('2d'); let eOn=false;
-  new IntersectionObserver(es=>eOn=es[0].isIntersecting).observe(ec);
-  const spr=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(235,255,225,1)');r.addColorStop(.25,'rgba(140,255,97,.7)');r.addColorStop(1,'rgba(140,255,97,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return c})();
-  const spawn=init=>({x:(Math.random()-.5),y:init?Math.random()*.8:0,vx:(Math.random()-.5)*.06,vy:.16+Math.random()*.3,life:init?Math.random()*1.5:0,max:1+Math.random()*1.6,r:.5+Math.random()*1.4,w:Math.random()*6.28});
-  const em=[...Array(120)].map(()=>spawn(true)); let rot=0;
-  function sizeE(){const d=Math.min(devicePixelRatio,2),r=ec.getBoundingClientRect();ec.width=r.width*d;ec.height=r.height*d}
-  sizeE(); addEventListener('resize',sizeE);
-  function drawE(t,dt){
-    const W=ec.width,H=ec.height,d=Math.min(devicePixelRatio,2); ex.clearRect(0,0,W,H);
-    const cx=W/2, cy=H*.47, R=Math.min(W*.4,H*.36); if(!reduce) rot+=dt*.25;
-    let g=ex.createRadialGradient(cx,cy,R*.2,cx,cy,R*2.1); g.addColorStop(0,'rgba(140,255,97,.2)'); g.addColorStop(1,'rgba(140,255,97,0)'); ex.fillStyle=g; ex.fillRect(0,0,W,H);
-    ex.save(); ex.translate(cx,cy); ex.rotate(rot*.3);
-    for(let i=0;i<120;i++){const a=i/120*Math.PI*2,lg=i%10===0,r1=R*(lg?.89:.94);ex.strokeStyle=lg?'rgba(140,255,97,.75)':'rgba(140,255,97,.22)';ex.lineWidth=(lg?1.6:1)*d;ex.beginPath();ex.moveTo(Math.cos(a)*r1,Math.sin(a)*r1);ex.lineTo(Math.cos(a)*R,Math.sin(a)*R);ex.stroke()}
-    ex.restore();
-    ex.save(); ex.translate(cx,cy); ex.rotate(-rot*.8); ex.lineCap='round';
-    for(let k=0;k<3;k++){const a0=k*2.094,gr=ex.createLinearGradient(Math.cos(a0)*R,Math.sin(a0)*R,Math.cos(a0+1.4)*R,Math.sin(a0+1.4)*R);gr.addColorStop(0,'rgba(140,255,97,0)');gr.addColorStop(1,'rgba(140,255,97,.95)');ex.strokeStyle=gr;ex.lineWidth=3*d;ex.beginPath();ex.arc(0,0,R*.8,a0,a0+1.4);ex.stroke()}
-    ex.restore();
-    g=ex.createRadialGradient(cx-R*.2,cy-R*.25,R*.05,cx,cy,R*.7); g.addColorStop(0,'#0f260b'); g.addColorStop(1,'#050d03'); ex.fillStyle=g; ex.beginPath(); ex.arc(cx,cy,R*.66,0,7); ex.fill();
-    ex.strokeStyle='rgba(140,255,97,.28)'; ex.lineWidth=d; ex.beginPath(); ex.arc(cx,cy,R*.66,0,7); ex.stroke();
-    ex.strokeStyle='rgba(200,255,180,.16)'; ex.lineWidth=2*d; ex.beginPath(); ex.arc(cx,cy,R*.6,Math.PI*1.08,Math.PI*1.62); ex.stroke();
-    const sw=R*.92, sh=R*.15, pulse=.85+.15*Math.sin(t*.003);
-    ex.fillStyle='#050404'; ex.beginPath(); ex.roundRect(cx-sw/2-3*d,cy-sh/2-3*d,sw+6*d,sh+6*d,sh); ex.fill();
-    ex.globalCompositeOperation='lighter'; ex.globalAlpha=.55*pulse; ex.drawImage(spr,cx-sw,cy-sh*3,sw*2,sh*6); ex.globalAlpha=1; ex.globalCompositeOperation='source-over';
-    g=ex.createLinearGradient(cx-sw/2,0,cx+sw/2,0); g.addColorStop(0,'#113608'); g.addColorStop(.28,'#4ade80'); g.addColorStop(.5,'#caffb8'); g.addColorStop(.72,'#8cff61'); g.addColorStop(1,'#113608');
-    ex.fillStyle=g; ex.globalAlpha=pulse; ex.beginPath(); ex.roundRect(cx-sw/2,cy-sh/2,sw,sh,sh/2); ex.fill(); ex.globalAlpha=1;
-    ex.globalCompositeOperation='lighter';
-    em.forEach((p,i)=>{
-      if(!reduce){p.life+=dt;p.y+=p.vy*dt*.45;p.x+=(p.vx+Math.sin(p.w+t*.0018)*.025)*dt;if(p.life>p.max)em[i]=spawn(false)}
-      const k=Math.min(1,p.life/p.max), a=(1-k)*Math.min(1,k*8);
-      const px=cx+p.x*sw*.9, py=cy-p.y*H*.9, s=p.r*d*(1-k*.5)*5;
-      ex.globalAlpha=Math.max(0,a); ex.drawImage(spr,px-s,py-s,s*2,s*2);
-    });
-    ex.globalAlpha=1; ex.globalCompositeOperation='source-over';
-  }
-
   // marquee
   const mq=document.getElementById('mq'); mq.innerHTML+=mq.innerHTML;
   let mqX=0,lastY=scrollY,vel=0,dir=1,lt=performance.now();
@@ -207,7 +171,6 @@ export function initMotion(NX_DATA) {
     roadFill.style.transform=`scaleX(${rp})`;
     wks.forEach((w,i)=>w.classList.toggle('lit', innerWidth>1080 ? rp>=i/wks.length+.02 : w.getBoundingClientRect().top<vh*.85));
     const cr=cta.getBoundingClientRect(); __NX.ctaP=clamp((vh-cr.top)/(cr.height+vh));
-    if(eOn) drawE(t,dt);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
