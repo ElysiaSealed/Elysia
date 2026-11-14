@@ -10,7 +10,7 @@ ELYSIA is an independent project. It grew from an existing codebase but is a sep
 
 ## Status
 
-Branch `dev-rh` targets **Robinhood Chain mainnet (chain ID 4663)**.
+Branch `main` targets **Robinhood Chain mainnet (chain ID 4663)**.
 
 - `ElysiaLedger` is deployed on mainnet: `0x89D5E9A903af6dA38977BaD6954E0Bd380429B53` ([explorer](https://robinhoodchain.blockscout.com/address/0x89D5E9A903af6dA38977BaD6954E0Bd380429B53)). Addresses live in [packages/contracts-abi/addresses/mainnet.json](packages/contracts-abi/addresses/mainnet.json).
 - Live mode is being enabled. The automated X account is `@ElysiaSealed`.
@@ -77,7 +77,7 @@ Copy `.env.example` to `.env` and fill it locally. Never commit real values. Dat
 - Never commit `.env` files, private keys, keystores or database dumps.
 - Do not broadcast any transaction, including deploys and test payments, without explicit approval.
 - Use only Elysia-owned repositories, projects, databases and credentials.
-- Push `dev-rh` with `pnpm push:dev-rh`. The pre-push hook allows only `main` and `dev-rh`.
+- Push `main` with `pnpm push`. The pre-push hook allows only `main` and `dev-rh`.
 
 ## Documents
 
