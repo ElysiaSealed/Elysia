@@ -125,17 +125,6 @@ export function Token() {
           {' '}
           <div className="vault">
             <img className="vault-logo" src="/logo.png" alt="" width={160} height={160} />
-            <div className="vl">
-              <span>
-                Burn
-              </span>
-              <span>
-                {'Contract '}
-                <b>
-                  pending
-                </b>
-              </span>
-            </div>
           </div>
         </div>
       </div>
