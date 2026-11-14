@@ -7,7 +7,7 @@
 .mxp .note{margin-top:34px}
 
 .mx{position:relative;width:100%;max-width:1240px;aspect-ratio:16/9;margin-inline:auto;--lx:0;--ly:0}
-.mx-halo{position:absolute;inset:4% 14%;border-radius:50%;background:radial-gradient(closest-side,rgba(140,255,97,.35),rgba(140,255,97,.12) 55%,transparent 75%);filter:blur(24px);will-change:transform;pointer-events:none;z-index:1}
+.mx-halo{position:absolute;inset:4% 14%;border-radius:50%;display:none;will-change:transform;pointer-events:none;z-index:1}
 .mx-embers{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .mx-ring{display:none}
 .mx-body{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform;z-index:3}

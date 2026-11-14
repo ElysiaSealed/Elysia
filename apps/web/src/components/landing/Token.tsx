@@ -43,7 +43,7 @@ export function Token() {
           <div className="leg">
             <div>
               <b>
-                —
+                -
               </b>
               <span>
                 read from the contract
@@ -51,7 +51,7 @@ export function Token() {
             </div>
             <div>
               <b>
-                —
+                -
               </b>
               <span>
                 every burn links to the explorer
@@ -81,7 +81,7 @@ export function Token() {
           <div className="leg">
             <div>
               <b>
-                —
+                -
               </b>
               <span>
                 Paid: Pro, Signals, Sponsored
@@ -89,7 +89,7 @@ export function Token() {
             </div>
             <div>
               <b>
-                —
+                -
               </b>
               <span>
                 Free: Ask and the public feed

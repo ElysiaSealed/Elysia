@@ -193,19 +193,19 @@ export function ProPanel({ apiUrl }: { apiUrl: string | undefined }) {
         <div className="pg-kv">
           <div>
             <span className="k">Price</span>
-            <span className="v">{plan ? `$${plan.price.formatted} in USDG` : '—'}</span>
+            <span className="v">{plan ? `$${plan.price.formatted} in USDG` : '-'}</span>
           </div>
           <div>
             <span className="k">Period</span>
-            <span className="v">{plan ? `${plan.durationDays} days per payment` : '—'}</span>
+            <span className="v">{plan ? `${plan.durationDays} days per payment` : '-'}</span>
           </div>
           <div>
             <span className="k">Network</span>
-            <span className="v">{plan ? `Chain ID ${plan.chainId}` : '—'}</span>
+            <span className="v">{plan ? `Chain ID ${plan.chainId}` : '-'}</span>
           </div>
           <div>
             <span className="k">Pay to</span>
-            <span className="v">{plan ? plan.recipient : '—'}</span>
+            <span className="v">{plan ? plan.recipient : '-'}</span>
           </div>
         </div>
         <ul className="pg-steps">

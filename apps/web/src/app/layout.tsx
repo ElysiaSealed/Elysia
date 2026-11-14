@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     url: '/',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     ...(X_HANDLE ? { site: `@${X_HANDLE}` } : {}),
     title: OG_TITLE,
     description: OG_DESCRIPTION,

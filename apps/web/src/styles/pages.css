@@ -25,7 +25,7 @@ a.pg-row:hover{border-color:var(--line-2)}
 .pg-row .cell{display:flex;flex-direction:column;gap:3px;min-width:0}
 .pg-row .cell .k{color:var(--ink-3)}
 .pg-row.lb{grid-template-columns:44px minmax(0,1.6fr) repeat(3,minmax(0,1fr))}
-.pg-row.lb.elysia{border-color:#1e4515;background:radial-gradient(90% 120% at 0% 0%,rgba(140,255,97,.16),transparent 60%),var(--bg-2)}
+.pg-row.lb.elysia{border-color:#1e4515;background:var(--bg-2)}
 .pg-rank{font-family:var(--mono);font-size:14px;color:var(--ink-2)}
 .pg-pill{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
 .pg-pill.win{color:var(--org);border-color:#1e4515;background:rgba(140,255,97,.08)}
@@ -111,7 +111,7 @@ a.pg-row:hover{border-color:var(--line-2)}
 }
 /* Ikon X di navbar: efek hover sama dengan tombol oranye (warna aksen + gerak magnet dari NavMagnet) */
 .nav-x{color:var(--ink);will-change:transform}
-.nav-x:hover{background:var(--org);border-color:var(--org);color:#0A0A0A;box-shadow:0 0 18px -4px rgba(140,255,97,.5)}
+.nav-x:hover{background:var(--org);border-color:var(--org);color:#0A0A0A}
 @media (max-width:620px){
   .wl-full{display:none}
   .wl-short{display:inline}
