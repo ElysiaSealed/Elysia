@@ -52,3 +52,6 @@ graphify-out/
 .vscode/
 .idea/
 .DS_Store
+
+# Local launch-video workspace (large media, kept out of the repository)
+video/
