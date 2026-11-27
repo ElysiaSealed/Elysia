@@ -6,13 +6,13 @@ export async function Pricing() {
   const pricing = await getPricing()
   const pro = findItem(pricing, 'pro')
   const ask = findItem(pricing, 'ask')
-  const signals = findItem(pricing, 'signals')
   const sponsored = findItem(pricing, 'sponsored')
   const note = (paid: boolean) => (paid && !pricing.paymentsOpen ? ' Not open yet.' : '')
   const plans = [
     { href: '/pro', name: 'ELYSIA Pro', item: pro, text: `Alerts the moment a post is approved, 15 minutes before it goes public on X. Paid in USDG.${note(!pro.free)}`, hot: true },
     { href: '/ask', name: 'Ask ELYSIA', item: ask, text: 'A risk report for one contract or token address, from data ELYSIA has indexed.' },
-    { href: '/signals', name: 'Signals API', item: signals, text: `A JSON feed of public ELYSIA posts for bots, dashboards and communities. Paid in USDG.${note(!signals.free)}` },
+    // No item: not on sale yet, so the card shows no price.
+    { href: '/signals', name: 'Signals API', item: null, text: 'A JSON feed of public ELYSIA posts for bots, dashboards and communities.' },
     { href: '/sponsored', name: 'Sponsored report', item: sponsored, text: `Project research labelled Sponsored, with no buy recommendation. Paid in USDG.${note(!sponsored.free)}` },
   ]
   return (
@@ -27,7 +27,7 @@ export async function Pricing() {
         </div>
         {' '}
         <p className="lede" data-reveal="">
-          The public feed and Ask are free. Pro, the Signals API and Sponsored reports are paid in USDG. Prices are temporary and can change.
+          The public feed and Ask are free. Pro and Sponsored reports are paid in USDG. The Signals API is coming soon. Prices are temporary and can change.
         </p>
       </div>
       {' '}
@@ -35,8 +35,10 @@ export async function Pricing() {
         {plans.map((p) => (
           <Link key={p.name} href={p.href} className={`card plan${p.hot ? ' hot' : ''} tilt spot`}>
             <span className="mono">{p.name}</span>
-            <div className="amt">{priceLabel(p.item)}</div>
-            <span className="per">{p.item.free ? 'no payment, no login' : unitLabel(p.item)}</span>
+            <div className="amt" style={p.item ? undefined : { fontSize: 34 }}>
+              {p.item ? priceLabel(p.item) : 'Coming soon'}
+            </div>
+            <span className="per">{!p.item ? 'not open yet' : p.item.free ? 'no payment, no login' : unitLabel(p.item)}</span>
             <p>{p.text}</p>
           </Link>
         ))}
