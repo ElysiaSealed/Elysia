@@ -5,8 +5,6 @@ import { findItem, getPricing, priceLabel, unitLabel } from '@/lib/pricing'
 
 export const metadata: Metadata = { title: 'Signals API · ELYSIA', alternates: { canonical: '/signals' } }
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'https://<api-host>'
-
 const POSTS_EXAMPLE = `{
   "items": [
     {
@@ -64,7 +62,6 @@ export default async function SignalsPage() {
             <span className="v">60 requests per minute per key</span>
           </div>
         </div>
-        <pre className="pg-code">{`curl -H "x-api-key: $ELYSIA_KEY" "${API}/signals?limit=20"`}</pre>
       </div>
 
       <div className="card pg-card">
