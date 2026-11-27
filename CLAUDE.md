@@ -46,7 +46,7 @@ Aturan:
 - **PENDING (jangan ditetapkan sendiri):** (a) aturan umur token, termasuk token < 1 jam: jangan menganggapnya otomatis dilarang atau otomatis boleh dipublikasikan; (b) aturan URL di post. Klasifikasi aturan RiskGuard ada di `.claude/skills/riskguard-rule/SKILL.md`.
 - Integritas bukti: hash commit sebelum publikasi, tx hash tersimpan, salt dan preimage terenkripsi dan tidak pernah di log.
 - Pipeline: AI → RiskGuard → commit terkonfirmasi → antrian persetujuan manusia → post. Mode X `dry` sampai ada izin eksplisit untuk `live`. Balasan di X manual, tanpa auto-reply.
-- Jangan klaim afiliasi resmi dengan Robinhood atau Pons. Konten publik **berbahasa Inggris** dan memuat: "Not affiliated with Robinhood" (teks final menunggu konfirmasi). Akun X: `@ElysiaSealed`.
+- Jangan klaim afiliasi resmi dengan Robinhood atau Pons. Konten publik **berbahasa Inggris** dan memuat: "Not affiliated with Robinhood" (teks final menunggu konfirmasi). Akun X: `@TheElysiaSealed`.
 - Logo dan aset brand belum ada: tandai pending; jangan membuat placeholder atau memakai aset proyek sumber.
 
 ## 6. Aturan keselamatan perubahan

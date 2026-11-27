@@ -16,7 +16,7 @@ Status: rencana akhir untuk branch `dev-rh` (2026-11-13). Nilai rahasia tidak pe
 | Wallet Treasury | `0x582660f6C3D5560D7797e1BC79DbB571Dd5a8121` | Alamat publik; penerima pembayaran USDG |
 | Wallet Keeper | Tidak diperlukan di mainnet | Ledger membaca feed Chainlink langsung; Keeper hanya untuk mirror feed testnet |
 | Saldo ETH untuk gas (mainnet) | Belum dikonfirmasi | Deployer dan Agent perlu ETH di Robinhood Chain |
-| Akun X | `@ElysiaSealed` | Mode `dry`; label Automated |
+| Akun X | `@TheElysiaSealed` | Mode `dry`; label Automated |
 | Bot Telegram | Belum dikonfirmasi | Bot baru; username di `TELEGRAM_BOT_USERNAME` |
 | LLM | Xiaomi MiMo: `mimo-v2.6-flash` dan `mimo-v2.6-pro` | Kunci API baru milik ELYSIA belum diisi; tanpa kunci worker memakai mock |
 | RPC | `https://rpc.mainnet.chain.robinhood.com` | Publik; chain ID 4663 diverifikasi |
@@ -53,7 +53,7 @@ Project baru, Root Directory `apps/web`, `NEXT_PUBLIC_API_URL` ke API ELYSIA, `N
 
 ## 7. Telegram dan X
 - Bot Telegram baru (token baru, chat dan channel baru), tidak berbagi dengan proyek sumber. Chat Pro privat; channel publik cadangan.
-- Akun X `@ElysiaSealed` berlabel Automated, tertaut akun founder, bio memuat "Not affiliated with Robinhood." `X_POST_MODE=dry` sampai R5. Balasan manual, tanpa auto-reply.
+- Akun X `@TheElysiaSealed` berlabel Automated, tertaut akun founder, bio memuat "Not affiliated with Robinhood." `X_POST_MODE=dry` sampai R5. Balasan manual, tanpa auto-reply.
 
 ## 8. Environment variable (nama saja; nilai default ada di `.env.example`)
 - Chain dan RPC: `CHAIN_ID=4663`, `CHAIN_ENV=mainnet`, `RPC_URL`, `ORACLE_RPC_URL`, `EXPLORER_URL`, `EXPLORER_TX_PATH`, `TOKEN_EXPLORER_URL`.

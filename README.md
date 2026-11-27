@@ -2,7 +2,7 @@
 
 **An AI analyst on Robinhood Chain.** ELYSIA reads Pons V2 launches and Stock Tokens, commits every prediction on-chain before it is published, and gives anyone the proof to verify it.
 
-X: [@ElysiaSealed](https://x.com/ElysiaSealed)
+X: [@TheElysiaSealed](https://x.com/TheElysiaSealed)
 
 > Not affiliated with Robinhood.
 
@@ -13,7 +13,7 @@ ELYSIA is an independent project. It grew from an existing codebase but is a sep
 Branch `main` targets **Robinhood Chain mainnet (chain ID 4663)**.
 
 - `ElysiaLedger` is deployed on mainnet: `0x89D5E9A903af6dA38977BaD6954E0Bd380429B53` ([explorer](https://robinhoodchain.blockscout.com/address/0x89D5E9A903af6dA38977BaD6954E0Bd380429B53)). Addresses live in [packages/contracts-abi/addresses/mainnet.json](packages/contracts-abi/addresses/mainnet.json).
-- Live mode is being enabled. The automated X account is `@ElysiaSealed`.
+- Live mode is being enabled. The automated X account is `@TheElysiaSealed`.
 - Paid features are on (`PAID_FEATURES_ENABLED=true`, gate R4 passed).
 - The `$ELYS` token contract and the burn contract address are not set yet.
 

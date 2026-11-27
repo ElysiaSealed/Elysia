@@ -236,3 +236,6 @@ Catatan ini mencatat pekerjaan nyata dan tidak mengubah status keputusan FINAL a
 - Numbers set with this decision (editable constants): the main pair is the one with the most liquidity (pairs under $100 are ignored when picking it); liquidity signal watch below $5,000 and risk below $1,000; lookups cached 60 s per address. No new DB tables or migrations; no price targets or buy/sell wording.
 - The 422 text on the web no longer says "not enough data". The API still tells `token_too_new` and `no_data` apart; the web shows one combined message because the client only exposes the HTTP code.
 - Risks: DexScreener and Blockscout data is third-party and unverified; public rate limits apply; chain coverage by DexScreener is documented only by third parties.
+
+**2026-11-27 — Handle X diganti (keputusan developer).**
+- Handle X publik sekarang `TheElysiaSealed`, menggantikan `ElysiaSealed` pada entri 2026-11-13. Organisasi GitHub (`ElysiaSealed/Elysia`) dan username bot Telegram tidak berubah.

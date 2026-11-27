@@ -3,7 +3,7 @@
 Update: 2026-11-13 · Branch: `dev-rh` · Fase: Phase B (pembersihan) selesai sebagian; deploy belum dilakukan.
 
 ## Identitas
-ELYSIA adalah AI analyst di **Robinhood Chain mainnet (chain ID 4663)**. Membaca peluncuran Pons V2 dan Stock Token, meng-commit setiap prediksi on-chain sebelum dipublikasikan, lalu mempublikasikannya setelah persetujuan manusia. Persona: tenang, hangat ke komunitas, tegas ke rug dan bundler. Konten publik berbahasa Inggris dan memuat "Not affiliated with Robinhood" (teks final menunggu konfirmasi). Akun X: `@ElysiaSealed` (mode `dry`). Logo dan aset brand: **pending**; jangan membuat placeholder.
+ELYSIA adalah AI analyst di **Robinhood Chain mainnet (chain ID 4663)**. Membaca peluncuran Pons V2 dan Stock Token, meng-commit setiap prediksi on-chain sebelum dipublikasikan, lalu mempublikasikannya setelah persetujuan manusia. Persona: tenang, hangat ke komunitas, tegas ke rug dan bundler. Konten publik berbahasa Inggris dan memuat "Not affiliated with Robinhood" (teks final menunggu konfirmasi). Akun X: `@TheElysiaSealed` (mode `dry`). Logo dan aset brand: **pending**; jangan membuat placeholder.
 
 ## Arahan (developer, 2026-11-13)
 - Branch `dev-rh` adalah jalur Robinhood dan naik ke `main` saat pindah. Langsung mainnet, tanpa testnet.

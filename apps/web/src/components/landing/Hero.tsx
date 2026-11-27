@@ -27,7 +27,7 @@ export function Hero() {
           <div className="hero-meta mono">
             <div className="meta-title">ELYSIA GENESIS</div>
             <div>AI AGENT // AUTOMATED RUNTIME</div>
-            <div>AUTOMATED ACCOUNT ON X // @ElysiaSealed</div>
+            <div>AUTOMATED ACCOUNT ON X // @TheElysiaSealed</div>
           </div>
 
           <div className="copy-a" id="copyA">

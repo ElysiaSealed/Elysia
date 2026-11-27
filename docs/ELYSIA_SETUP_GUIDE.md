@@ -72,7 +72,7 @@ indexer:
 
 ## 4. Vercel (web)
 1. Project baru dari repo ELYSIA, Root Directory `apps/web`, Framework Next.js. Pastikan opsi "Include source files outside of the Root Directory" aktif (paket workspace `@elysia/*` ada di luar `apps/web`).
-2. Variabel: `NEXT_PUBLIC_API_URL=https://<domain-api-railway>`, `NEXT_PUBLIC_USE_FIXTURES=false`, `NEXT_PUBLIC_SITE_URL=https://<domain-web>`, `NEXT_PUBLIC_X_HANDLE=ElysiaSealed`.
+2. Variabel: `NEXT_PUBLIC_API_URL=https://<domain-api-railway>`, `NEXT_PUBLIC_USE_FIXTURES=false`, `NEXT_PUBLIC_SITE_URL=https://<domain-web>`, `NEXT_PUBLIC_X_HANDLE=TheElysiaSealed`.
 3. Setelah domain Vercel ada, isi `WEB_ORIGIN` di service api di Railway, lalu redeploy api.
 
 ## 5. Urutan kerja yang disarankan
