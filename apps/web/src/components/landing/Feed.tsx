@@ -39,7 +39,7 @@ export function Feed({ market, radar }: { market: MarketResponse | null; radar: 
           </h3>
           {" "}
           <p>
-            Price context for the assets ELYSIA tracks. The price feed is not connected yet.
+            Price context for the assets ELYSIA tracks.
           </p>
           {" "}
           <div className="viz">
