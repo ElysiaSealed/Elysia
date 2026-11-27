@@ -14,7 +14,7 @@ Branch `main` targets **Robinhood Chain mainnet (chain ID 4663)**.
 
 - `ElysiaLedger` is deployed on mainnet: `0x89D5E9A903af6dA38977BaD6954E0Bd380429B53` ([explorer](https://robinhoodchain.blockscout.com/address/0x89D5E9A903af6dA38977BaD6954E0Bd380429B53)). Addresses live in [packages/contracts-abi/addresses/mainnet.json](packages/contracts-abi/addresses/mainnet.json).
 - Live mode is being enabled. The automated X account is `@TheElysiaSealed`.
-- Paid features are on (`PAID_FEATURES_ENABLED=true`, gate R4 passed).
+- Paid features are on (`PAID_FEATURES_ENABLED=true`, gate R4 passed). The Signals API is coming soon.
 - The `$ELYS` token contract and the burn contract address are not set yet.
 
 Phases and approval gates: [docs/ELYSIA_IMPLEMENTATION_ROADMAP.md](docs/ELYSIA_IMPLEMENTATION_ROADMAP.md).
@@ -22,7 +22,7 @@ Phases and approval gates: [docs/ELYSIA_IMPLEMENTATION_ROADMAP.md](docs/ELYSIA_I
 ## Product
 
 - **Free:** public feed, Prediction of the Day, Proof of Intelligence, Rug radar, Ask, Burn tracker.
-- **Paid in USDG:** Pro (earlier alerts), Signals API, Sponsored reports. Prices are editable through env vars and served by `GET /pricing`. Payments are live.
+- **Paid in USDG:** Pro (earlier alerts) and Sponsored reports. The Signals API is coming soon. Prices are editable through env vars and served by `GET /pricing`.
 - **Token:** `$ELYS`. The Burn tracker reads history from a burn contract supplied by the PM.
 - Public content is in English.
 

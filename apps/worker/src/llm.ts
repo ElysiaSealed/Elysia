@@ -137,6 +137,9 @@ export function llmFromEnv(env: Record<string, string | undefined>): OpenAiCompa
 
 export class LlmOutputError extends Error {}
 
+/** Public copy carries no em dashes. Replaced here, before RiskGuard and the commit hash see the text. */
+const EM_DASH = /\s*(?:—|\\u2014)\s*/g
+
 function stripFence(text: string): string {
   return text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')
 }
@@ -157,7 +160,7 @@ export async function generateStructured<T>(
     const res = await llm.chat({ ...req, user, json: true })
     usages.push(res.usage)
     try {
-      return { value: schema.parse(JSON.parse(stripFence(res.text))), usages }
+      return { value: schema.parse(JSON.parse(stripFence(res.text).replace(EM_DASH, ', '))), usages }
     } catch (e) {
       lastError = (e instanceof Error ? e.message : 'invalid').slice(0, 200)
     }

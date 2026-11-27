@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { MIMO_V26_PRICING, OpenAiCompatibleLlm, costMicros, pricingFromEnv } from '../src/llm'
+import { z } from 'zod'
+import { MIMO_V26_PRICING, MockLlm, OpenAiCompatibleLlm, costMicros, generateStructured, pricingFromEnv } from '../src/llm'
 
 describe('harga LLM', () => {
   it('costMicros: 1 juta token masuk + 1 juta keluar = jumlah harga per juta', () => {
@@ -13,6 +14,12 @@ describe('harga LLM', () => {
     expect(p.large.outPerMTokUsdMicros).toBe(1_000_000n)
     expect(p.large.inPerMTokUsdMicros).toBe(435_000n)
     expect(p.small).toEqual(MIMO_V26_PRICING.small)
+  })
+
+  it('generateStructured removes em dashes, raw or escaped', async () => {
+    const llm = new MockLlm(() => '{"a":"up — slightly","b":"thin\\u2014weigh it"}')
+    const { value } = await generateStructured(llm, z.object({ a: z.string(), b: z.string() }), { tier: 'small', system: '', user: '' })
+    expect(value).toEqual({ a: 'up, slightly', b: 'thin, weigh it' })
   })
 
   it('adapter memakai harga sesuai tier model yang dipakai', async () => {
