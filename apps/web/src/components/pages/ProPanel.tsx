@@ -129,13 +129,15 @@ export function ProPanel({ apiUrl }: { apiUrl: string | undefined }) {
     setBusy('pay')
     setNote(null)
     try {
-      const paid = await sendUsdgPayment(plan, me.address, () => setNote({ kind: 'ok', text: 'Payment sent. Waiting for it to confirm…' }))
+      const paid = await sendUsdgPayment(plan, me.address, (hash) => {
+        // Kept in the field so a failed activation can be retried in one click; cleared on success.
+        setTxHash(hash)
+        setNote({ kind: 'ok', text: 'Payment sent. Waiting for it to confirm…' })
+      })
       if (paid.confirmed) {
         await activate(paid.hash)
         return
       }
-      const hash = paid.hash
-      setTxHash(hash)
       setNote({ kind: 'ok', text: 'The payment is still confirming. Press "Activate with a transaction hash" in a minute.' })
     } catch (err) {
       setNote({ kind: 'err', text: walletMessage(err) ?? (err instanceof Error && err.message === PAYMENT_FAILED ? err.message : 'Something went wrong. Try again in a moment.') })

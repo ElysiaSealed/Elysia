@@ -18,18 +18,30 @@ export interface AskConfig {
   /** Chain pembayaran dan datanya untuk menambahkan jaringan di wallet (hanya untuk GET /ask/plan). */
   chainId?: number
   chain?: { name: string; rpcUrl: string; explorerUrl: string }
+  /** Waits between receipt lookups. Default RECEIPT_RETRY_MS; tests pass their own. */
+  receiptRetryMs?: readonly number[]
 }
 
 export type PaymentCheck = { ok: true; payer: string; amount: bigint } | { ok: false; reason: 'tx_not_found' | 'tx_failed' | 'no_payment' | 'underpaid' }
 
+/** The server RPC can lag a few seconds behind the payer's wallet, so one failed lookup is not final (10 s in total). */
+const RECEIPT_RETRY_MS = [1000, 2000, 3000, 4000]
+
+async function findReceipt(cfg: AskConfig, hash: Hex) {
+  for (const ms of cfg.receiptRetryMs ?? RECEIPT_RETRY_MS) {
+    try {
+      return await cfg.client.getTransactionReceipt({ hash })
+    } catch {
+      await new Promise((r) => setTimeout(r, ms))
+    }
+  }
+  return cfg.client.getTransactionReceipt({ hash }).catch(() => null)
+}
+
 /** Pembayaran sah = transfer USDG ke penerima di tx yang sukses, nilai >= harga. Dicek SEBELUM LLM/analisis. */
 export async function verifyUsdgPayment(cfg: AskConfig, txHash: Hex): Promise<PaymentCheck> {
-  let receipt
-  try {
-    receipt = await cfg.client.getTransactionReceipt({ hash: txHash })
-  } catch {
-    return { ok: false, reason: 'tx_not_found' }
-  }
+  const receipt = await findReceipt(cfg, txHash)
+  if (!receipt) return { ok: false, reason: 'tx_not_found' }
   if (receipt.status !== 'success') return { ok: false, reason: 'tx_failed' }
   const transfers = parseEventLogs({ abi: erc20Transfer, logs: receipt.logs, eventName: 'Transfer' }).filter(
     (l) => l.address.toLowerCase() === cfg.usdg.toLowerCase() && l.args.to.toLowerCase() === cfg.recipient.toLowerCase(),

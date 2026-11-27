@@ -76,6 +76,7 @@ const payment = (): ProConfig['payment'] => ({
   usdg: USDG,
   recipient: TREASURY,
   minAmount: PRICE,
+  receiptRetryMs: [],
 })
 
 const mk = (o: { paid?: boolean; pro?: Partial<ProConfig> | null; now?: () => Date } = {}) =>
