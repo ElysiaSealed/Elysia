@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { CHAINS } from '@elysia/shared'
 import testnetAddresses from '../../../packages/contracts-abi/addresses/testnet.json'
 import { createDb } from '@elysia/db'
-import { configureRiskGuard } from './queue'
+import { configurePostGap, configureRiskGuard, releaseDueAlerts } from './queue'
 import { createXClient } from './x'
 import { publishDue, revealMatured, type CycleDeps, type PublishDeps } from './cycle'
 import { newDailyState, runDailyPrediction, type DailyDeps } from './daily'
@@ -92,6 +92,7 @@ const env = z
 const rpcUrl = resolveRpcUrl(env.CHAIN_ID, env.RPC_URL)
 
 configureRiskGuard({ approvalMode: env.APPROVAL_MODE })
+configurePostGap(env.POST_INTERVAL_MINUTES * 60_000)
 
 // Mode live hanya diaktifkan pemilik proyek (env di dashboard) dan butuh kredensial X lengkap.
 const xCreds = env.X_API_KEY && env.X_API_SECRET && env.X_ACCESS_TOKEN && env.X_ACCESS_SECRET
@@ -320,6 +321,8 @@ async function tick(): Promise<void> {
     lastMarketAt = Date.now()
     await recordMarketSnapshots(market).catch((e) => console.error('worker: snapshot harga gagal:', e instanceof Error ? e.message : String(e)))
   }
+  // Not tied to the Telegram bot: the web alert stream reads the same rows.
+  await releaseDueAlerts(db)
   if (proBot) {
     const d = await dispatchProAlerts(db, proBot)
     if (d.alerts) console.log(`worker: alert Pro: ${d.alerts} alert, ${d.sent} terkirim, ${d.failed} gagal, ${d.skippedPublic} sudah publik`)

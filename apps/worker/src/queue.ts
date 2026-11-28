@@ -15,8 +15,14 @@ export type PostMode = 'dry' | 'live'
 /** Post publik ditunda 15 menit dari alert Pro (brief, aturan pipeline 5). */
 export const PUBLIC_POST_DELAY_MS = 15 * 60 * 1000
 
-/** Jeda minimum antar post publik: 30 menit. Dijaga lewat slot di antrian, jadi jam di alert Pro sama dengan jam terbit di X. */
+/** Default minimum gap between public posts (30 minutes). */
 export const POST_GAP_MS = 30 * 60 * 1000
+
+let postGapMs = POST_GAP_MS
+/** Slot spacing. Must match the publisher gap (POST_INTERVAL_MINUTES), or Pro alerts announce a time X will not keep. */
+export function configurePostGap(ms: number): void {
+  postGapMs = ms
+}
 
 /** Jenis post yang didahulukan di antrian slot: prediksi harian dan ringkasan Stock Token harian. */
 export const PRIORITY_KINDS: readonly string[] = ['prediction', 'daily_summary']
@@ -40,7 +46,7 @@ export async function lastSlotAt(db: Db): Promise<Date | null> {
 }
 
 /**
- * Membagi slot untuk semua post yang sudah disetujui dan belum terbit, dengan jeda minimal POST_GAP_MS antar post.
+ * Membagi slot untuk semua post yang sudah disetujui dan belum terbit, dengan jeda minimal postGapMs antar post.
  * Slot dihitung dari persetujuan + 15 menit untuk `newId`; post lain tidak pernah dimajukan, hanya digeser ke belakang.
  * Post yang alert Pro-nya sudah keluar (jadwal <= sekarang + 15 menit) atau sudah terbit tidak digeser. Jenis prioritas
  * (PRIORITY_KINDS) dilayani lebih dulu, sisanya menurut urutan pembuatan. Jadwal alert yang belum terkirim ikut diperbarui.
@@ -63,14 +69,15 @@ export async function assignSlots(db: Db, now: Date, newId: number): Promise<voi
     .where(eq(postQueue.status, 'posted'))
     .orderBy(desc(sql`coalesce(${postQueue.postedAt}, ${postQueue.scheduledAt})`))
     .limit(1)
-  let prev = Math.max(
-    posted ? (posted.posted ?? posted.scheduled)?.getTime() ?? -Infinity : -Infinity,
-    ...frozen.map((r) => r.scheduledAt?.getTime() ?? -Infinity),
-  )
+  let prev = (posted?.posted ?? posted?.scheduled)?.getTime() ?? -Infinity
+  // A frozen post still held by the publisher gap goes out later than its stored slot: count from that later time.
+  for (const at of frozen.map((r) => r.scheduledAt?.getTime() ?? -Infinity).sort((a, b) => a - b)) {
+    prev = Math.max(at, prev + postGapMs)
+  }
 
   for (const r of free) {
     const earliest = r.id === newId ? horizon : (r.scheduledAt?.getTime() ?? horizon)
-    const slot = Math.max(earliest, prev + POST_GAP_MS)
+    const slot = Math.max(earliest, prev + postGapMs)
     prev = slot
     if (slot === r.scheduledAt?.getTime()) continue
     const at = new Date(slot)
@@ -129,7 +136,7 @@ export async function enqueuePost(db: Db, p: EnqueueParams): Promise<EnqueueResu
   await db.insert(riskguardLog).values(entry)
 
   const status = !decision.allowed ? 'rejected' : decision.requiresApproval ? 'pending_approval' : 'approved'
-  // Post yang lolos tanpa persetujuan manusia langsung menjadi alert Pro; post dan alert dibuat atomik.
+  // An auto-approved post gets its slot (and its Pro alert, if already due) atomically.
   const row = await db.transaction(async (tx) => {
     const [post] = await tx
       .insert(postQueue)
@@ -146,9 +153,8 @@ export async function enqueuePost(db: Db, p: EnqueueParams): Promise<EnqueueResu
       .returning()
     if (status === 'approved') {
       await assignSlots(tx as unknown as Db, now, post!.id)
-      const [fresh] = await tx.select().from(postQueue).where(eq(postQueue.id, post!.id))
-      await recordProAlert(tx as unknown as Db, fresh!)
-      return fresh!
+      await releaseDueAlerts(tx as unknown as Db, now)
+      return post!
     }
     return post!
   })
@@ -156,9 +162,20 @@ export async function enqueuePost(db: Db, p: EnqueueParams): Promise<EnqueueResu
 }
 
 /**
- * Alert Pro: dibuat saat post disetujui (manusia atau otomatis), 15 menit sebelum post publik di X.
- * Sumber stream SSE dan pengiriman Telegram ke pelanggan. Idempoten per post.
+ * Creates the Pro alert of every approved post whose public slot is at most 15 minutes away. Runs on approval and on
+ * every worker cycle, so a post waiting for a later slot stays hidden from Pro until its lead window opens.
  */
+export async function releaseDueAlerts(db: Db, now = new Date()): Promise<void> {
+  const due = await db
+    .select({ id: postQueue.id, kind: postQueue.kind, content: postQueue.content, scheduledAt: postQueue.scheduledAt })
+    .from(postQueue)
+    .leftJoin(proAlerts, eq(proAlerts.postId, postQueue.id))
+    .where(and(eq(postQueue.status, 'approved'), lte(postQueue.scheduledAt, new Date(now.getTime() + PUBLIC_POST_DELAY_MS)), isNull(proAlerts.id)))
+    .orderBy(asc(postQueue.scheduledAt))
+  for (const post of due) await recordProAlert(db, post)
+}
+
+/** Alert Pro: sumber stream SSE dan pengiriman Telegram ke pelanggan. Idempoten per post. */
 export async function recordProAlert(db: Db, post: { id: number; kind: string; content: string; scheduledAt: Date | null }): Promise<void> {
   await db
     .insert(proAlerts)
@@ -179,16 +196,15 @@ async function transition(db: Db, id: number, to: 'approved' | 'rejected', now =
   await db.transaction(async (tx) => {
     const updated = await tx
       .update(postQueue)
-      // Disetujui manusia: alert Pro keluar sekarang, X menyusul 15 menit kemudian (aturan pipeline 5). Jadwal dihitung dari
-      // persetujuan, bukan dari pembuatan post, supaya keunggulan Pro tidak hilang bila persetujuan datang terlambat.
+      // Human approval: the slot counts from approval, not creation, so a late approval keeps the 15 minute Pro lead.
+      // The alert goes out now if the slot is free, otherwise 15 minutes before the later slot.
       .set(to === 'approved' ? { status: to, scheduledAt: new Date(now.getTime() + PUBLIC_POST_DELAY_MS) } : { status: to })
       .where(and(eq(postQueue.id, id), eq(postQueue.status, 'pending_approval')))
       .returning()
     if (updated.length === 0) throw new PipelineError(`post ${id} tidak ada atau tidak sedang menunggu persetujuan`)
     if (to === 'approved') {
       await assignSlots(tx as unknown as Db, now, id)
-      const [fresh] = await tx.select().from(postQueue).where(eq(postQueue.id, id))
-      await recordProAlert(tx as unknown as Db, fresh!)
+      await releaseDueAlerts(tx as unknown as Db, now)
     }
   })
 }

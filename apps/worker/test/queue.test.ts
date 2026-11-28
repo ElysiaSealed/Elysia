@@ -6,12 +6,14 @@ import {
   PUBLIC_POST_DELAY_MS,
   PipelineError,
   approvePost,
+  configurePostGap,
   configureRiskGuard,
   dueForPublish,
   enqueuePost,
   getPost,
   listPending,
   rejectPost,
+  releaseDueAlerts,
   type Db,
 } from '../src/queue'
 import { testDb } from './test-db'
@@ -120,12 +122,45 @@ describe.skipIf(!dbUp)('antrian persetujuan', () => {
     expect(alert?.publicAt?.getTime()).toBe(due)
   })
 
+  it('slot: a 120 minute gap spaces posts, and each Pro alert is created only 15 minutes before its slot', async () => {
+    configurePostGap(120 * 60_000)
+    try {
+      const risky = { now: T0, riskguardConfig: { approvalMode: 'risky' } } as const
+      await enqueuePost(db, { ...summary('Selisih DEX vs oracle NVDA 0.4%.'), ...risky })
+      const b = await enqueuePost(db, { ...summary('Selisih DEX vs oracle ETH 0.3%.'), ...risky })
+      const slot = T0.getTime() + PUBLIC_POST_DELAY_MS + 120 * 60_000
+      expect((await getPost(db, b.id))?.scheduledAt?.getTime()).toBe(slot)
+      await releaseDueAlerts(db, new Date(slot - PUBLIC_POST_DELAY_MS - 1))
+      expect(await db.select().from(proAlerts)).toHaveLength(1)
+      await releaseDueAlerts(db, new Date(slot - PUBLIC_POST_DELAY_MS))
+      const [alert] = await db.select().from(proAlerts).where(eq(proAlerts.postId, b.id))
+      expect(alert?.publicAt?.getTime()).toBe(slot)
+    } finally {
+      configurePostGap(POST_GAP_MS)
+    }
+  })
+
+  it('slot: a post held past its stored slot pushes the next one by the full gap', async () => {
+    configurePostGap(120 * 60_000)
+    try {
+      const row = { kind: 'pulse', content: 'x', mode: 'dry' } as const
+      const postedAt = new Date(T0.getTime() - 45 * 60_000)
+      await db.insert(postQueue).values({ ...row, status: 'posted', postedAt })
+      await db.insert(postQueue).values({ ...row, status: 'approved', scheduledAt: new Date(T0.getTime() + PUBLIC_POST_DELAY_MS) })
+      const r = await enqueuePost(db, { ...summary('Selisih DEX vs oracle ETH 0.3%.'), riskguardConfig: { approvalMode: 'risky' } })
+      expect((await getPost(db, r.id))?.scheduledAt?.getTime()).toBe(postedAt.getTime() + 2 * 120 * 60_000)
+    } finally {
+      configurePostGap(POST_GAP_MS)
+    }
+  })
+
   it('slot: dua post disetujui bersamaan terbit berjarak 30 menit, dan alert memuat jam yang sama', async () => {
     const a = await enqueuePost(db, { ...summary('Selisih DEX vs oracle NVDA 0.4%.'), kind: 'pulse', now: T0, riskguardConfig: { approvalMode: 'risky' } })
     const b = await enqueuePost(db, { ...summary('Selisih DEX vs oracle ETH 0.3%.'), kind: 'pulse', now: T0, riskguardConfig: { approvalMode: 'risky' } })
     const [pa, pb] = [await getPost(db, a.id), await getPost(db, b.id)]
     expect(pa?.scheduledAt?.getTime()).toBe(T0.getTime() + PUBLIC_POST_DELAY_MS)
     expect(pb?.scheduledAt?.getTime()).toBe(T0.getTime() + PUBLIC_POST_DELAY_MS + POST_GAP_MS)
+    await releaseDueAlerts(db, new Date(T0.getTime() + POST_GAP_MS))
     const [alert] = await db.select().from(proAlerts).where(eq(proAlerts.postId, b.id))
     expect(alert?.publicAt?.getTime()).toBe(pb?.scheduledAt?.getTime())
   })

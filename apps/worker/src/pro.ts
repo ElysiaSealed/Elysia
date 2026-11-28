@@ -23,8 +23,8 @@ export interface DispatchResult {
  */
 export async function dispatchProAlerts(db: Db, sender: ChatSender, now: Date = new Date()): Promise<DispatchResult> {
   const res: DispatchResult = { alerts: 0, sent: 0, failed: 0, skippedPublic: 0 }
-  // Alert keluar tepat 15 menit sebelum jadwal publik. Jadwal ditentukan antrian slot (jeda minimal 30 menit antar post),
-  // jadi alert juga berjarak sama; alert tanpa jadwal langsung dikirim.
+  // Alerts go out 15 minutes before the public slot. Slots are spaced by the post gap, so alerts are spaced the same;
+  // an alert without a slot is sent immediately.
   const due = or(isNull(proAlerts.publicAt), lte(proAlerts.publicAt, new Date(now.getTime() + PUBLIC_POST_DELAY_MS)))
   const pending = await db.select().from(proAlerts).where(and(isNull(proAlerts.telegramDispatchedAt), due)).orderBy(asc(proAlerts.id)).limit(BATCH)
   for (const alert of pending) {

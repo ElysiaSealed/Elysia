@@ -1,5 +1,5 @@
 import { createDb } from '@elysia/db'
-import { getPost, listPending, rejectPost } from '../queue'
+import { configurePostGap, getPost, listPending, rejectPost } from '../queue'
 import { DryTelegram, TelegramBot, approveAndAlert, type Notifier } from '../telegram'
 
 const USAGE = `CLI persetujuan post Elysia
@@ -14,6 +14,8 @@ if (!url) {
   process.exit(1)
 }
 
+// Use the same value as the worker, so an approval from this CLI gets the same slot spacing.
+configurePostGap((Number(process.env.POST_INTERVAL_MINUTES) || 30) * 60_000)
 const [cmd, idArg] = process.argv.slice(2)
 const { db, client } = createDb(url)
 // Alert Pro: chat PRIBADI (TELEGRAM_PRO_CHAT_ID), bukan kanal publik (TELEGRAM_CHAT_ID), karena alert Pro harus
