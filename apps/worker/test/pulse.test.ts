@@ -211,11 +211,14 @@ describe.skipIf(!dbUp)('pulse', () => {
     expect(await runPulse(d, NOW)).toBe('queued')
   })
 
-  it('post yang ditolak manusia tidak menahan pulse berikutnya', async () => {
+  it('a rejected post does not hold the next pulse, and its topic is not replayed', async () => {
     await seedLaunch()
-    const d = make(new MockLlm(() => json(ponsText)))
+    const llm = new MockLlm((u) => json(u.user.includes('oraclePrice') ? stockText : ponsText))
+    const d = make(llm, { stock: true })
     expect(await runPulse(d, NOW)).toBe('queued')
     await db.update(postQueue).set({ status: 'rejected' })
     expect(await runPulse(d, NOW)).toBe('queued')
+    const rows = await db.select().from(postQueue).orderBy(postQueue.id)
+    expect(rows[1]!.content).toBe(stockText)
   })
 })

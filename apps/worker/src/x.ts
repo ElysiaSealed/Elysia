@@ -19,6 +19,8 @@ export class XApiError extends Error {
     readonly status: number,
     /** true = galat sementara (batas laju, gangguan X); post boleh dicoba lagi. */
     readonly retryable: boolean,
+    /** The account or its keys are refused, so every further post would fail the same way. */
+    readonly accountBlocked = false,
   ) {
     super(message)
   }
@@ -94,7 +96,8 @@ export function createXClient(creds: XCredentials, fetchFn: typeof fetch = fetch
       if (!res.ok) {
         // Isi galat dari X dipakai apa adanya untuk diagnosis; tidak memuat kunci kita.
         const detail = await res.text().catch(() => '')
-        throw new XApiError(`X menolak post (${res.status}): ${detail.slice(0, 300)}`, res.status, false)
+        const blocked = res.status === 401 || (res.status === 403 && /temporarily locked/i.test(detail))
+        throw new XApiError(`X menolak post (${res.status}): ${detail.slice(0, 300)}`, res.status, false, blocked)
       }
       const parsed = createdSchema.safeParse(await res.json().catch(() => null))
       if (!parsed.success) throw new XApiError('jawaban X tidak dikenali', res.status, false)

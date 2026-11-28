@@ -145,6 +145,33 @@ describe.skipIf(!dbUp)('penerbit X (mode live)', () => {
     expect(sent).toHaveLength(1)
   })
 
+  it('rejects stale live posts, even while paused, and sends only fresh ones', async () => {
+    const { x, sent } = fakeX()
+    const old = await seed('daily_summary', 'old')
+    const fresh = await seed('daily_summary', 'fresh')
+    await db.update(postQueue).set({ createdAt: new Date(T0.getTime() - 13 * 60 * MIN) }).where(eq(postQueue.id, old))
+    await db.update(postQueue).set({ createdAt: new Date(T0.getTime() - 11 * 60 * MIN) }).where(eq(postQueue.id, fresh))
+    const policy = { x, minGapMs: 0, maxAgeMs: 12 * 60 * MIN }
+    expect(await publishDue(deps({ ...policy, liveCap: 0 }), T0)).toEqual([])
+    expect((await statusOf(old)).status).toBe('rejected')
+    expect((await statusOf(fresh)).status).toBe('approved')
+    expect(await publishDue(deps({ ...policy, liveCap: 10 }), T0)).toEqual([fresh])
+    expect(sent).toEqual(['fresh'])
+  })
+
+  it('halts after an account block: the failed post is not retried and the rest stay queued', async () => {
+    const { x, sent } = fakeX(async () => {
+      throw new XApiError('X menolak post (403): temporarily locked', 403, false, true)
+    })
+    const policy = { x, liveCap: 10, minGapMs: 0 }
+    const [a, b] = [await seed('daily_summary', 'one'), await seed('daily_summary', 'two')]
+    await publishDue(deps(policy), T0)
+    await publishDue(deps(policy), new Date(T0.getTime() + MIN))
+    expect(sent).toEqual(['one'])
+    expect((await statusOf(a)).status).toBe('rejected')
+    expect((await statusOf(b)).status).toBe('approved')
+  })
+
   it('post dry tidak pernah menyentuh X', async () => {
     const { x, sent } = fakeX()
     const id = await seed('daily_summary', 'a', 'dry')

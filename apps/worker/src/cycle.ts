@@ -36,6 +36,10 @@ export interface PublishPolicy {
   minGapMs: number
   /** Jenis post (kind) yang boleh keluar ke X; kosong/tidak diisi = semua. */
   kinds?: string[]
+  /** Live posts created longer ago than this are rejected instead of sent (missed posts are not replayed). Unset = no expiry. */
+  maxAgeMs?: number
+  /** Set by the publisher when X refuses the account; nothing is sent until the worker restarts. */
+  halted?: boolean
 }
 
 interface Preimage {
@@ -170,6 +174,16 @@ export async function publishDue(deps: PublishDeps, now = new Date()): Promise<n
     if (post.mode === 'live') {
       const policy = deps.publish
       if (!policy) continue // tanpa kredensial X: post live menunggu, tidak membuat siklus gagal
+      // Runs before the cap, gap and kind checks, so a paused publisher still drops stale posts.
+      if (policy.maxAgeMs !== undefined && now.getTime() - post.createdAt.getTime() > policy.maxAgeMs) {
+        await deps.db
+          .update(postQueue)
+          .set({ status: 'rejected' })
+          .where(and(eq(postQueue.id, post.id), eq(postQueue.status, 'approved')))
+        console.log(`[x:live] post #${post.id} (${post.kind}) expired, not sent`)
+        continue
+      }
+      if (policy.halted) continue
       if (policy.kinds && policy.kinds.length > 0 && !policy.kinds.includes(post.kind)) continue
       const livePosted = await deps.db.select({ n: count() }).from(postQueue).where(and(eq(postQueue.mode, 'live'), eq(postQueue.status, 'posted')))
       if (Number(livePosted[0]?.n ?? 0) >= policy.liveCap) break // batas tercapai: penerbit berhenti sampai batas dinaikkan
@@ -200,6 +214,10 @@ export async function publishDue(deps: PublishDeps, now = new Date()): Promise<n
           .set(retryable ? { status: 'approved', postedAt: null, externalId: null } : { status: 'rejected', externalId: null })
           .where(eq(postQueue.id, post.id))
         console.error(`[x:live] post #${post.id} gagal${retryable ? ' (akan dicoba lagi)' : ' (ditolak, tidak diulang)'}: ${err instanceof Error ? err.message : String(err)}`)
+        if (err instanceof XApiError && err.accountBlocked) {
+          policy.halted = true
+          console.error('[x:live] publisher halted: X refused the account. Fix the account, then restart the worker.')
+        }
         break
       }
     } else {

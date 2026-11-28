@@ -41,6 +41,8 @@ const env = z
     X_LIVE_POST_CAP: z.union([z.literal('unlimited'), z.coerce.number().int().min(0)]).default(0),
     /** Jeda minimum antar post live (menit). Arahan head dev: 30. */
     POST_INTERVAL_MINUTES: z.coerce.number().int().min(1).default(30),
+    /** Approved live posts older than this (hours since creation) are rejected instead of sent. */
+    POST_MAX_AGE_HOURS: z.coerce.number().int().min(1).default(12),
     /** Jenis post yang boleh keluar ke X, dipisah koma (mis. daily_summary,pons_report). Kosong = semua jenis. */
     X_POST_KINDS: z.string().optional(),
     /** all = semua post menunggu persetujuan manusia (30 hari pertama, brief); risky = hanya yang berisiko (sponsored, balasan, laporan risiko, yang diblokir). */
@@ -101,6 +103,7 @@ const publish = env.X_POST_MODE === 'live' && xCreds
       x: createXClient(xCreds),
       liveCap: env.X_LIVE_POST_CAP === 'unlimited' ? Number.POSITIVE_INFINITY : env.X_LIVE_POST_CAP,
       minGapMs: env.POST_INTERVAL_MINUTES * 60_000,
+      maxAgeMs: env.POST_MAX_AGE_HOURS * 3_600_000,
       ...(env.X_POST_KINDS ? { kinds: env.X_POST_KINDS.split(',').map((k) => k.trim()).filter(Boolean) } : {}),
     }
   : undefined

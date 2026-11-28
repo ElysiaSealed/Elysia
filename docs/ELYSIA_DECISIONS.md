@@ -239,3 +239,11 @@ Catatan ini mencatat pekerjaan nyata dan tidak mengubah status keputusan FINAL a
 
 **2026-11-27 — Handle X diganti (keputusan developer).**
 - Handle X publik sekarang `TheElysiaSealed`, menggantikan `ElysiaSealed` pada entri 2026-11-13. Organisasi GitHub (`ElysiaSealed/Elysia`) dan username bot Telegram tidak berubah.
+
+**2026-11-28 — Post live yang terlewat tidak diterbitkan (arah: developer; angka 12 jam masih PENDING).**
+- Arahan developer setelah akun X sempat dikunci: hanya post baru yang terbit, yang terlewat tidak diulang.
+- [di luar brief] Post live `approved` yang umurnya (sejak dibuat) lebih dari `POST_MAX_AGE_HOURS` diubah ke `rejected` tanpa dikirim, termasuk saat penerbit dijeda lewat `X_LIVE_POST_CAP`. Default 12 jam dipilih Claude dan belum disetujui. Prediksi on-chain tidak berubah dan tetap di-reveal.
+
+**2026-11-28 — Topik pulse tidak diulang dan penerbit berhenti saat akun X ditolak (arah: developer; angka 24 jam masih PENDING).**
+- Topik pulse (token Pons dan Stock Token) tidak dibahas lagi selama 24 jam, termasuk topik yang postnya `rejected`. Pengecualian "urgent" 25 menit dihapus. Menggantikan jendela 6 jam dan 2 jam.
+- Jawaban X `401`, atau `403` berisi `temporarily locked`, menghentikan penerbit live sampai worker di-restart. Post yang gagal tetap `rejected` dan tidak diulang; post lain tetap menunggu dan tetap kena aturan kedaluwarsa.

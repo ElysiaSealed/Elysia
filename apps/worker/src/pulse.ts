@@ -1,4 +1,4 @@
-import { and, count, eq, gte, inArray, ne } from 'drizzle-orm'
+import { and, count, eq, gte, inArray } from 'drizzle-orm'
 import { postQueue } from '@elysia/db'
 import { loadPonsHighlights } from './facts'
 import { buildGraduationFrom, buildLaunchFrom, buildSummary, type Built, type ReportDeps } from './reports'
@@ -6,9 +6,6 @@ import { PUBLIC_POST_DELAY_MS, enqueuePost, lastSlotAt } from './queue'
 
 /** Jenis antrian untuk post pulse. Masuk X hanya bila ada di X_POST_KINDS. */
 export const PULSE_KIND = 'pulse'
-
-/** Setelah selama ini tanpa post baru sejak slot terakhir, topik Stock Token yang sudah dibahas boleh diulang. */
-const URGENT_AFTER_MS = 25 * 60_000
 
 export interface PulseConfig {
   /** Jarak minimum antar pulse (ms). Arahan head dev: 30 menit. */
@@ -36,8 +33,8 @@ export type PulseStep = 'wait' | 'backlog' | 'cap_reached' | 'retry_later' | 'no
 
 export const newPulseState = (): PulseDeps['state'] => ({ lastAttemptAt: 0, failures: new Map() })
 
-/** Jendela bawaan: token Pons tiap 6 jam, Stock Token tiap 2 jam. */
-export const DEFAULT_PULSE_WINDOWS = { tokenRepeatMs: 6 * 3_600_000, stockRepeatMs: 2 * 3_600_000 }
+/** A topic is not covered again for 24 hours, which also spans the 24-hour Pons highlight window. */
+export const DEFAULT_PULSE_WINDOWS = { tokenRepeatMs: 24 * 3_600_000, stockRepeatMs: 24 * 3_600_000 }
 
 interface Topic {
   key: string
@@ -77,17 +74,15 @@ export async function runPulse(d: PulseDeps, now = new Date()): Promise<PulseSte
   // dengan prediksi atau ringkasan harian.
   const lastSlot = await lastSlotAt(db)
   if (lastSlot && now.getTime() < lastSlot.getTime() + d.cfg.intervalMs - PUBLIC_POST_DELAY_MS) return 'wait'
-  // Sepi topik: bila slot berikutnya sudah mendekati 1 jam sejak post terakhir, Stock Token boleh dibahas lagi (data oracle
-  // selalu baru) supaya jeda antar post tidak melewati 1 jam.
-  const urgent = lastSlot !== null && now.getTime() - lastSlot.getTime() >= URGENT_AFTER_MS
   if (now.getTime() - d.state.lastAttemptAt < d.cfg.minRetryMs) return 'retry_later'
 
   const widest = Math.max(d.cfg.tokenRepeatMs, d.cfg.stockRepeatMs)
+  // Rejected posts count too: a topic that expired, failed or was declined is not replayed.
   const recent = await db
     .select({ content: postQueue.content, at: postQueue.createdAt })
     .from(postQueue)
-    .where(and(eq(postQueue.kind, PULSE_KIND), ne(postQueue.status, 'rejected'), gte(postQueue.createdAt, new Date(now.getTime() - widest))))
-  const covered = (t: Topic) => !(urgent && t.key.startsWith('stock:')) && recent.some((r) => now.getTime() - r.at.getTime() < t.windowMs && mentions(r.content, t.symbol))
+    .where(and(eq(postQueue.kind, PULSE_KIND), gte(postQueue.createdAt, new Date(now.getTime() - widest))))
+  const covered = (t: Topic) => recent.some((r) => now.getTime() - r.at.getTime() < t.windowMs && mentions(r.content, t.symbol))
 
   const topics: Topic[] = []
   const highlights = await loadPonsHighlights(db, now)

@@ -70,6 +70,19 @@ describe('createXClient.post', () => {
     expect(err.message).not.toContain('cs')
   })
 
+  it('flags a locked account or refused keys, but not other 4xx', async () => {
+    const cases: [number, string, boolean][] = [
+      [403, 'Your account is temporarily locked.', true],
+      [401, 'Unauthorized', true],
+      [403, 'duplicate content', false],
+      [400, 'bad request', false],
+    ]
+    for (const [status, detail, accountBlocked] of cases) {
+      const fetchFn = (async () => reply(status, { detail })) as unknown as typeof fetch
+      await expect(createXClient(CREDS, fetchFn).post('x')).rejects.toMatchObject({ retryable: false, accountBlocked })
+    }
+  })
+
   it('jawaban sukses yang tidak dikenali ditolak', async () => {
     const fetchFn = (async () => reply(200, { aneh: true })) as unknown as typeof fetch
     await expect(createXClient(CREDS, fetchFn).post('x')).rejects.toMatchObject({ retryable: false })
